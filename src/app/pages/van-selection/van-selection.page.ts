@@ -1,0 +1,33 @@
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { IonContent, IonHeader, IonTitle, IonToolbar, IonItem, IonList, IonLabel, IonAccordionGroup, IonAccordion } from '@ionic/angular/standalone';
+import { RouterModule, Router } from '@angular/router';
+
+@Component({
+  selector: 'app-van-selection',
+  templateUrl: './van-selection.page.html',
+  styleUrls: ['./van-selection.page.scss'],
+  standalone: true,
+  imports: [IonLabel, IonAccordion, IonAccordionGroup,  IonList, IonItem, IonContent, IonHeader, IonTitle, IonToolbar, CommonModule, RouterModule ]
+})
+export class VanSelectionPage implements OnInit {
+  vans = ['EDV', 'CDV', 'LMR'];
+
+   numbersMap: Record<string,string[]> = {
+    EDV: Array.from({ length: 14 }, (_, i) => (i + 1).toString()),
+    CDV: Array.from({ length: 10 }, (_, i) => (i + 2).toString()),
+    LMR: ['5217', '7500', '3139']
+  };
+
+  constructor(private router: Router) { }
+
+  ngOnInit() {}
+
+  selectVan(vanType: string, vanNumber: string) {
+    this.router.navigate([
+      '/photo-capture',
+      vanType,
+      vanNumber
+    ], { replaceUrl: true });
+  }
+}

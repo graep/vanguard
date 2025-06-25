@@ -1,0 +1,56 @@
+<!-- src/app/pages/login/login.page.html -->
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Vanguard</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+
+<ion-content class="ion-padding">
+  <div class="wrapper">
+    <div class="login-form-container">
+      <form class="login-form" [formGroup]="form" (ngSubmit)="submit()">
+        <ion-title class="login-label">Login</ion-title>
+        <!-- Email -->
+        <ion-item class="email">
+          <ion-label position="floating">Email</ion-label>
+          <ion-input type="email" formControlName="email"></ion-input>
+        </ion-item>
+        <ion-note
+          *ngIf="form.get('email')?.invalid && form.get('email')?.dirty"
+          color="danger"
+          class="ion-padding-start"
+        >
+          Please enter a valid email.
+        </ion-note>
+      
+        <!-- Password -->
+        <ion-item class="password">
+          <ion-label position="floating">Password</ion-label>
+          <ion-input type="password" formControlName="password"></ion-input>
+        </ion-item>
+        <ion-note
+          *ngIf="form.get('password')?.invalid && form.get('password')?.dirty"
+          color="danger"
+          class="ion-padding-start"
+        >
+          Password is required.
+        </ion-note>
+        <ion-item class="remember" lines="none">
+          <ion-checkbox slot="start" formControlName="rememberMe"></ion-checkbox>
+          <ion-label>Remember Me</ion-label>
+        </ion-item>
+      
+        <!-- Submit -->
+        <ion-button
+          expand="block"
+          type="submit"
+          [disabled]="form.invalid"
+          class="ion-margin-top"
+        >
+          Log In
+        </ion-button>
+      </form>
+    </div>
+  </div>
+</ion-content>

@@ -1,0 +1,68 @@
+.wrapper {
+  display:flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 60vh; 
+}
+
+ion-content {
+  position: relative;
+  --background: none; // clear the Ionic background
+
+  &::before {
+    content: "";
+    background: url('/assets/van-background.jpg') no-repeat center center / cover;
+    opacity: 0.2; // adjust this between 0 (invisible) and 1 (full visible)
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 0;
+  }
+}
+
+
+.login-form-container {
+  width: 100%;
+  max-width: 350px;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 30px;
+  border: 2px solid white; 
+  border-radius: 15px;  
+  box-shadow: 0 5px 12px rgba(255, 255, 255, 0.479);
+}
+
+
+ion-button.ion-margin-top {
+  width:50%;
+  align-self: center;
+}
+
+.login-label {
+  font-size: 2rem;
+  padding: 0.5rem 0;
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.item-inner {
+  border-radius: 15px;
+}
+.email, .password {
+  margin-bottom: 0.75rem;
+  border-radius: 8px;    
+  overflow: hidden;
+  --padding-start: 0.75rem;
+  --inner-border-radius: 8px;
+}
+.remember {
+  margin-left: 0;
+}

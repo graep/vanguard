@@ -1,0 +1,46 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>
+      {{ vanType }} – {{ vanNumber }}
+    </ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <ion-grid>
+    <ion-row *ngFor="let side of sides">
+      <!-- Side label -->
+      <ion-col size="4" class="ion-text-capitalize">
+        {{ side }}
+      </ion-col>
+
+      <!-- Capture/Retake button -->
+      <ion-col size="8" class="ion-text-right">
+        <ion-button (click)="takePhoto(side)">
+          {{ photos[side] ? 'Retake' : 'Capture' }}
+        </ion-button>
+      </ion-col>
+
+      <!-- Preview once taken -->
+      <ion-col size="12" *ngIf="photos[side]">
+        <ion-img [src]="photos[side]!"></ion-img>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+
+  <ion-button
+    expand="block"
+    class="ion-margin-top"
+
+    (click)="submitAll()"
+  >
+    Submit All Photos
+  </ion-button>
+
+  <ion-loading
+    [isOpen]="isLoading"
+    message="Uploading photos…"
+  ></ion-loading>
+
+
+</ion-content>

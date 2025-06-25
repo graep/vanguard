@@ -1,0 +1,35 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>User Review</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <ion-list>
+    <ion-item *ngFor="let insp of inspections">
+      <ion-label>
+        {{ insp.vanType }}-{{ insp.vanNumber }}<br />
+        {{ insp.createdAt?.toDate() | date:'short' }}
+      </ion-label>
+    </ion-item>
+  </ion-list>
+
+  <h2 class="ion-margin-top">Any additional issues to report?</h2>
+  <ng-container *ngFor="let cat of issueCategories">
+    <ion-item>
+      <ion-checkbox slot="start" [(ngModel)]="cat.hasIssue"></ion-checkbox>
+      <ion-label>{{ cat.name }}</ion-label>
+    </ion-item>
+    <ion-item *ngIf="cat.hasIssue">
+      <ion-textarea
+        [(ngModel)]="cat.details"
+        placeholder="Describe issues with {{ cat.name }}"
+        auto-grow="true"
+      ></ion-textarea>
+    </ion-item>
+  </ng-container>
+
+  <ion-button expand="block" class="ion-margin-top" (click)="submitReview()">
+    Submit Review
+  </ion-button>
+</ion-content>
