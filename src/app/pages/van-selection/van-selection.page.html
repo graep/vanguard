@@ -1,30 +1,25 @@
 <!-- src/app/pages/van-selection/van-selection.page.html -->
-<ion-header>
-  <ion-toolbar>
-    <ion-title>Select Your Van</ion-title>
-  </ion-toolbar>
-</ion-header>
+<app-header class="ion-text-center" title="Van Selection"></app-header>
+
 
 <ion-content class="ion-padding">
-  <ion-accordion-group>
-    <ion-accordion *ngFor="let van of vans">
-      <!-- Accordion header: click to expand/collapse -->
-      <ion-item slot="header">
-        <ion-label>{{ van }}</ion-label>
-      </ion-item>
+  <div class="van-options">
+    <ion-accordion-group>
+      <ion-accordion *ngFor="let van of vans">
+        <!-- Accordion header: click to expand/collapse -->
+        <ion-item slot="header">
+          <ion-label class="ion-text-center">{{ van }}</ion-label>
+        </ion-item>
 
-      <!-- Accordion content: list of numbers -->
-      <div slot="content" class="ion-padding-start">
-        <ion-list>
-          <ion-item
-            *ngFor="let num of numbersMap[van]"
-            button
-            (click)="selectVan(van, num)"
-          >
-            <ion-label>{{ num }}</ion-label>
-          </ion-item>
-        </ion-list>
-      </div>
-    </ion-accordion>
-  </ion-accordion-group>
+        <!-- Accordion content: list of numbers -->
+        <div slot="content" class="ion-text-center">
+          <ion-list>
+            <ion-item *ngFor="let num of numbersMap[van]" button (click)="selectVan(van, num)">
+              <ion-label>{{ num }}</ion-label>
+            </ion-item>
+          </ion-list>
+        </div>
+      </ion-accordion>
+    </ion-accordion-group>
+  </div>
 </ion-content>

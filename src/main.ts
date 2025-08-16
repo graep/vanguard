@@ -9,10 +9,15 @@ import { getStorage } from 'firebase/storage';
 import { provideFirestore } from '@angular/fire/firestore';
 import { getFirestore } from 'firebase/firestore';
 import { defineCustomElements } from '@ionic/pwa-elements/loader';
+import { provideAppCheck, ReCaptchaV3Provider, initializeAppCheck } from '@angular/fire/app-check';
 
 import { AppComponent } from './app/app.component';
 import { routes } from './app/app-routing.module';
 import { environment } from './environments/environment';
+
+// if (!environment.production) {
+//   (self as any).FIREBASE_APPCHECK_DEBUG_TOKEN = "7C52EA1A-9D71-459C-BDEB-6FC6D036D26D"; // or a specific token string
+// }
 
 bootstrapApplication(AppComponent, {
   providers: [
@@ -23,6 +28,12 @@ bootstrapApplication(AppComponent, {
     provideAuth(() => getAuth()),
     provideStorage(() => getStorage()),
     provideFirestore(() => getFirestore()),
+    // provideAppCheck(() =>
+    //   initializeAppCheck(undefined, {
+    //     provider: new ReCaptchaV3Provider(environment.appCheck.siteKey),
+    //     isTokenAutoRefreshEnabled: true,
+    //   })
+    // ),
   ]
 }).then(() => {
   defineCustomElements(window);

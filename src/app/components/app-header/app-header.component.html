@@ -1,0 +1,18 @@
+<ion-header>
+  <ion-toolbar>
+    <!-- START slot -->
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/van-selection" text="" icon="chevron-back"></ion-back-button>
+    </ion-buttons>
+    <!-- Title -->
+    <ion-title>{{ title }}</ion-title>
+
+    <!-- END slot -->
+    <ion-buttons slot="end">
+      <ng-content select="[header-end]"></ng-content>
+      <ion-button *ngIf="showLogout" fill="clear" (click)="logout()">
+        <ion-icon name="log-out-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>

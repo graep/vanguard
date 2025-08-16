@@ -1,14 +1,16 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { IonContent, IonHeader, IonTitle, IonToolbar, IonItem, IonList, IonLabel, IonAccordionGroup, IonAccordion } from '@ionic/angular/standalone';
+import { IonContent, IonHeader, IonTitle, IonToolbar, IonItem, IonList, IonLabel, IonAccordionGroup, IonAccordion, IonButtons, IonButton, IonIcon } from '@ionic/angular/standalone';
 import { RouterModule, Router } from '@angular/router';
+import { Auth } from '@angular/fire/auth';
+import { AppHeaderComponent } from '@app/components/app-header/app-header.component';
 
 @Component({
   selector: 'app-van-selection',
   templateUrl: './van-selection.page.html',
   styleUrls: ['./van-selection.page.scss'],
   standalone: true,
-  imports: [IonLabel, IonAccordion, IonAccordionGroup,  IonList, IonItem, IonContent, IonHeader, IonTitle, IonToolbar, CommonModule, RouterModule ]
+  imports: [ IonLabel, IonAccordion, IonAccordionGroup,  IonList, IonItem, IonContent, CommonModule, RouterModule, AppHeaderComponent ]
 })
 export class VanSelectionPage implements OnInit {
   vans = ['EDV', 'CDV', 'LMR'];
@@ -19,10 +21,17 @@ export class VanSelectionPage implements OnInit {
     LMR: ['5217', '7500', '3139']
   };
 
-  constructor(private router: Router) { }
+  constructor(
+    private router: Router,
+    private auth: Auth
+  ) { }
 
   ngOnInit() {}
 
+  async logout() {
+  await this.auth.signOut();
+  this.router.navigate(['/login']);
+}
   selectVan(vanType: string, vanNumber: string) {
     this.router.navigate([
       '/photo-capture',

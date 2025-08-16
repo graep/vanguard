@@ -1,0 +1,95 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Van Report</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <ion-grid>
+
+    <!-- Headings for photos -->
+    <ion-row>
+      <ion-col size="3" class="ion-text-center"><h2>Previous Day</h2></ion-col>
+      <ion-col size="3" class="ion-text-center"><h2>Current Day</h2></ion-col>
+      <ion-col size="6" class="ion-text-center"><h2>Reports</h2></ion-col>
+    </ion-row>
+
+    <!-- Photos + stacked reports -->
+    <ion-row>
+
+      <!-- Previous day photo column -->
+      <ion-col size="3">
+        <div class="img-wrap" *ngFor="let row of comparisonRows">
+          <img class="photo" *ngIf="row.prevUrl" [src]="row.prevUrl" (click)="openImageViewer(row.prevUrl)" />
+          <div class="photo-label">{{ row.side | titlecase }}</div>
+        </div>
+      </ion-col>
+
+      <!-- Current day photo column -->
+      <ion-col size="3">
+        <div class="img-wrap" *ngFor="let row of comparisonRows">
+          <img class="photo" *ngIf="row.currUrl" [src]="row.currUrl" (click)="openImageViewer(row.currUrl)" />
+          <div class="photo-label">{{ row.side | titlecase }}</div>
+        </div>
+      </ion-col>
+
+      <!-- Reports column -->
+      <ion-col size="6">
+        
+        <!-- Current Report -->
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title>Current Report</ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <ng-container *ngIf="currReportItems?.length; else noCurr">
+              <ion-list>
+                <ion-item *ngFor="let r of currReportItems">
+                  <ion-label>
+                    <div class="report-name">{{ r.name }} <span class="muted" *ngIf="r.subcategory">/ {{ r.subcategory }}</span></div>
+                    <div class="report-details">{{ r.details }}</div>
+                    <div class="report-time" *ngIf="r.reportSubmittedAt?.toDate">
+                      {{ r.reportSubmittedAt.toDate() | date:'medium' }}
+                    </div>
+                  </ion-label>
+                </ion-item>
+              </ion-list>
+            </ng-container>
+            <ng-template #noCurr>
+              <ion-text color="medium">No current report.</ion-text>
+            </ng-template>
+          </ion-card-content>
+        </ion-card>
+
+        <!-- Previous Report -->
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title>Previous Report</ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <ng-container *ngIf="prevReportItems?.length; else noPrev">
+              <ion-list>
+                <ion-item *ngFor="let r of prevReportItems">
+                  <ion-label>
+                    <div class="report-name">{{ r.name }} <span class="muted" *ngIf="r.subcategory">/ {{ r.subcategory }}</span></div>
+                    <div class="report-details">{{ r.details }}</div>
+                    <div class="report-time" *ngIf="r.reportSubmittedAt?.toDate">
+                      {{ r.reportSubmittedAt.toDate() | date:'medium' }}
+                    </div>
+                  </ion-label>
+                </ion-item>
+              </ion-list>
+            </ng-container>
+            <ng-template #noPrev>
+              <ion-text color="medium">No previous report.</ion-text>
+            </ng-template>
+          </ion-card-content>
+        </ion-card>
+
+      </ion-col>
+
+    </ion-row>
+  </ion-grid>
+
+  <ion-text color="danger" *ngIf="errorMsg">{{ errorMsg }}</ion-text>
+</ion-content>

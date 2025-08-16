@@ -1,0 +1,21 @@
+.van-options {
+  width: 65vw;
+  padding: 20px;
+  // align-items: center;
+  // justify-content: center;
+  margin: 0 auto;
+}
+ion-accordion {
+  border-radius: 15px;
+  margin-bottom: .5rem;
+  border: 2px rgb(255, 255, 255) solid;
+  box-shadow: 3px 3px 7px rgb(0, 0, 0);
+  background-color: rgb(29, 29, 29);
+  max-width: 325px;
+}
+
+ion-accordion-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}

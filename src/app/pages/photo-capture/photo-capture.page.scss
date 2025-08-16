@@ -1,0 +1,43 @@
+ion-toolbar {
+  position: relative;     /* make a positioning context */
+
+  ion-buttons[slot="start"] {
+    position: absolute;    /* remove it from the flex layout */
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  ion-title {
+    margin: 0 auto;       /* center in the remaining space */
+    text-align: center;   /* just in case */
+  }
+}
+
+ion-row {
+  border: 2px rgb(255, 255, 255) solid;
+  border-radius: 15px;
+  box-shadow: 3px 3px 7px rgb(0, 0, 0);
+  padding:10px 0;
+  margin-bottom: 10px;
+  background-color: rgb(29, 29, 29);
+  width: 90%;
+  max-width: 325px;
+}
+
+ion-col {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+ion-grid {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 15px 0 0 0;
+}
+
+.capture-btn {
+  margin-right: 10px;
+}

@@ -1,68 +1,186 @@
+/* --- Layout & Background --- */
 .wrapper {
-  display:flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  height: 60vh; 
-}
-
-ion-content {
-  position: relative;
-  --background: none; // clear the Ionic background
-
-  &::before {
-    content: "";
-    background: url('/assets/van-background.jpg') no-repeat center center / cover;
-    opacity: 0.2; // adjust this between 0 (invisible) and 1 (full visible)
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 0;
-  }
-}
-
-
-.login-form-container {
-  width: 100%;
-  max-width: 350px;
-}
-
-.login-form {
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  min-height: 75dvh; /* ensure full height on mobile */
+  padding: 16px;
+}
+
+ion-content {
+  position: relative;
+  --background: none; /* clear the Ionic background */
+
+
+  /* soft background image overlay */
+  &::before {
+    content: "";
+    background: url('/assets/van-background.jpg') no-repeat center center / cover;
+    opacity: 0.2; /* 0 = invisible, 1 = full */
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+  }
+}
+
+/* container to keep the form centered & above bg */
+.login-form-container {
+  background-color: #232F3E;
+  position: relative;
+  z-index: 1; /* sit above ion-content::before */
+  width: 100%;
+  max-width: 425px;
+}
+
+/* --- Card/Glass look for the form --- */
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
   padding: 30px;
-  border: 2px solid white; 
-  border-radius: 15px;  
-  box-shadow: 0 5px 12px rgba(255, 255, 255, 0.479);
+  border: 2px solid rgba(255, 255, 255, 0.65);
+  border-radius: 16px;
+  box-shadow: 0 5px 14px rgba(255, 255, 255, 0.45);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.12);
 }
 
-
-ion-button.ion-margin-top {
-  width:50%;
-  align-self: center;
-}
-
+/* Heading */
 .login-label {
-  font-size: 2rem;
-  padding: 0.5rem 0;
+  font-size: 1.75rem;
+  line-height: 1.2;
   text-align: center;
-  margin-bottom: 2rem;
+  margin: 0 0 12px;
 }
 
+/* --- Segment (Driver/Admin) --- */
+.mode-switch {
+  margin-bottom: 8px;
+}
+
+ion-segment.mode-switch {
+  --background: transparent; /* remove pill bg */
+  border-bottom: 2px solid rgba(255, 255, 255, 0.25);
+  width: 100%;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+ion-segment-button {
+  flex: 1; /* make equal width */
+  min-height: 44px;
+  --color: rgba(255, 255, 255, 0.65);
+  --color-checked: var(--ion-color-primary);
+  --indicator-color: transparent; /* remove default indicator bar */
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  position: relative;
+  background: transparent;
+}
+
+ion-segment-button[aria-checked="true"]::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background-color: var(--ion-color-primary);
+  border-radius: 3px 3px 0 0;
+}
+
+/* Hover/press feel */
+ion-segment-button:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+ion-segment-button:active {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+/* --- Inputs --- */
 .item-inner {
   border-radius: 15px;
 }
-.email, .password {
-  margin-bottom: 0.75rem;
-  border-radius: 8px;    
+
+.email,
+.password {
+  margin-bottom: 8px;
+  border-radius: 8px;
   overflow: hidden;
-  --padding-start: 0.75rem;
+
+  /* ion-item vars */
+  --padding-start: 12px;
   --inner-border-radius: 8px;
+  --background: rgba(255, 255, 255, 0.28);
+  --color: var(--ion-text-color);
+  --highlight-color-focused: var(--ion-color-primary);
+  --border-color: transparent;
 }
+
+/* make input text readable over glass */
+ion-item.email ion-label,
+ion-item.password ion-label {
+  color: var(--ion-text-color);
+}
+
+/* --- Button --- */
+ion-button.ion-margin-top {
+  width: 60%;
+  align-self: center;
+  margin-top: 12px;
+}
+
+/* Helper note */
+ion-note.block {
+  display: block;
+  text-align: center;
+}
+
+/* Remember checkbox alignment if you add it later */
 .remember {
   margin-left: 0;
+}
+
+.logo-container {
+  display: flex;
+  justify-content: center; /* Horizontal center */
+  align-items: center;    /* Vertical center if needed */
+  margin-top: 15px;
+  margin-bottom: 15px;
+  img {
+    max-width: 200px;
+    height: auto;
+  }
+}
+
+
+/* --- Dark mode adjustments --- */
+@media (prefers-color-scheme: dark) {
+  .login-form {
+    border-color: rgba(255, 255, 255, 0.35);
+    box-shadow: 0 5px 14px rgba(0, 0, 0, 0.45);
+    background: rgba(0, 0, 0, 0.25);
+  }
+
+  ion-segment.mode-switch {
+    --background: rgba(255, 255, 255, 0.12);
+  }
+
+  .email,
+  .password {
+    --background: rgba(255, 255, 255, 0.10);
+  }
+}
+
+/* --- Small screen tweaks --- */
+@media (max-width: 360px) {
+  .login-form {
+    padding: 18px;
+  }
+  ion-button.ion-margin-top {
+    width: 100%;
+  }
 }

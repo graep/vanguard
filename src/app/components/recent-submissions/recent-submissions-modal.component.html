@@ -1,0 +1,31 @@
+<ion-header>
+    <ion-toolbar>
+      <ion-title>Pending Submissions</ion-title>
+      <ion-buttons slot="end">
+        <ion-button (click)="close()">Close</ion-button>
+      </ion-buttons>
+    </ion-toolbar>
+  </ion-header>
+
+  <ion-content class="ion-padding">
+    <ion-segment [(ngModel)]="onlyUnseen" value="true" (ionChange)="reload()">
+      <ion-segment-button [value]="true">Unseen</ion-segment-button>
+      <ion-segment-button [value]="false">All</ion-segment-button>
+    </ion-segment>
+
+    <ion-list class="ion-margin-top">
+      <ion-item *ngFor="let i of items$ | async" [disabled]="isBusy(i.id)">
+        <ion-label>
+          <div class="text-base">{{ i.vanType }}-{{ i.vanNumber }}</div>
+          <div class="text-sm ion-text-wrap">
+            {{ i.createdAt?.toDate() | date:'short' }}
+            <ng-container *ngIf="i.status === 'pending'"> • <b>Pending</b></ng-container>
+            <ng-container *ngIf="i.seen === false"> • <i>Unseen</i></ng-container>
+          </div>
+        </ion-label>
+        <ion-button fill="clear" (click)="view(i)">View</ion-button>
+        <ion-button color="success" (click)="approve(i)">Approve</ion-button>
+        <ion-button color="danger" (click)="reject(i)">Reject</ion-button>
+      </ion-item>
+    </ion-list>
+  </ion-content>

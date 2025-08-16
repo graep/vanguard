@@ -1,0 +1,62 @@
+<app-admin-navbar></app-admin-navbar>
+
+<ion-content class="ion-padding">
+  <div class="content-container">
+
+    <ion-searchbar color="light" cancelButtonIcon="cancel-button-icon" placeholder="Search by #, VIN or Type"
+      [(ngModel)]="searchTerm" (ionInput)="filterVans()" debounce="1300" showClearButton="always">
+    </ion-searchbar>
+
+    <ion-grid class="count-banner"
+      style="background: #000000; padding:0; width: 50%;display: flex; justify-content: center; align-items: center; border-radius: 5px;">
+      Total:
+      <ion-row class="ion-text-center" style="display: flex; justify-content: center; align-items: center;">
+        <ion-col class="ion-text-center">
+          <ion-chip color="success">
+            <ion-label>Active</ion-label>
+            <ion-badge>{{ activeVansCount }}</ion-badge>
+          </ion-chip>
+        </ion-col>
+        <ion-col class="ion-text-center">
+          <ion-chip color="danger">
+            <ion-label>Grounded</ion-label>
+            <ion-badge>{{ groundedVansCount }}</ion-badge>
+          </ion-chip>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+
+
+    <!-- Van List -->
+    <div class="van-list">
+      <ion-button fill="clear" (click)="openPendingModal()">
+        Pending Reviews
+        <ion-badge color="danger" *ngIf="(pendingCount$ | async) as count">
+          {{ count }}
+        </ion-badge>
+      </ion-button>
+
+      <ion-card *ngFor="let van of filteredVans" class="van-card">
+        <ion-card-content (click)="viewVan(van)" class="van-card-content">
+          <div class="van-row">
+            <!-- 1) put your img first -->
+            <img src="assets\EDV.webp" alt="{{ van.docId }}" class="van-image" />
+
+            <!-- 2) then your description/details -->
+            <div class="van-text">
+              <ion-card-title>{{ van.docId }}</ion-card-title>
+              <p>Type: {{ van.type }}</p>
+              <p>Status: {{ displayStatus(van) }}</p>
+              <p *ngIf="van.notes">📝 {{ van.notes }}</p>
+            </div>
+          </div>
+        </ion-card-content>
+      </ion-card>
+    </div>
+
+    <!-- Date Picker -->
+    <div class="date-picker">
+      <ion-datetime *ngIf="showPicker" id="picker" presentation="date" [(ngModel)]="selectedDate"></ion-datetime>
+    </div>
+  </div>
+</ion-content>
