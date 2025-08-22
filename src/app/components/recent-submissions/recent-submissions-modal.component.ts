@@ -1,5 +1,5 @@
 // recent-submissions-modal.component.ts
-import { Component, Input } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';                  // ✅ for ngModel
 import {
@@ -19,7 +19,7 @@ import { Router } from '@angular/router';
   templateUrl: './recent-submissions-modal.component.html',
   styleUrls: ['./recent-submissions-modal.component.scss']
 })
-export class RecentSubmissionsModalComponent {
+export class RecentSubmissionsModalComponent implements OnInit {
   @Input() pageSize = 12;
 
   // ✅ bound in the template's ion-segment
@@ -50,6 +50,7 @@ export class RecentSubmissionsModalComponent {
   isBusy(id: string) { return this.busy.has(id); }
 
   async view(i: Inspection) {
+    console.log('Inspection from modal:', i);
     try { await this.insp.markSeen(i.id); } catch {}
     await this.modalCtrl.dismiss();
     this.router.navigate(['/van-report', i.id], { queryParams: { review: '1' } });

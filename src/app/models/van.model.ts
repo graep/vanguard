@@ -1,3 +1,4 @@
+export type VanType = 'EDV' | 'CDV' | 'LMR';
 
 export interface Van {
   docId: string;
@@ -8,3 +9,6 @@ export interface Van {
   notes?: string;
   imageUrl?: string;
 }
+
+export const normalizeVanNumber = (v: string) => v.replace(/^0+/, '') || '0';
+export const makeVanId = (t: VanType, n: number) => `${t}-${String(n).padStart(2,'0')}`;

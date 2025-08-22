@@ -1,23 +1,97 @@
-<ion-header>
-  <ion-toolbar color="primary">
-    <!-- Menu icon on left -->
-    <ion-buttons slot="start">
-      <ion-menu-button></ion-menu-button>
-    </ion-buttons>
+<!-- navbar.component.html -->
 
-    <!-- Page title -->
-    <ion-title>
-      Admin Portal
-    </ion-title>
+<!-- Mobile overlay -->
+<div class="mobile-overlay" 
+     [class.show]="isMobileMenuOpen" 
+     (click)="closeMobileMenu()">
+</div>
 
-    <!-- Right-side buttons -->
-    <ion-buttons slot="end">
-      <ion-button fill="clear" (click)="logout()">
-        <ion-icon name="log-out-outline"></ion-icon>
-      </ion-button>
-      <ion-button (click)="onDateClick()">
+<!-- Collapsible Sidebar -->
+<nav class="sidebar" 
+     [class.collapsed]="isCollapsed"
+     [class.mobile-open]="isMobileMenuOpen">
+  
+  <!-- Sidebar Header -->
+  <div class="sidebar-header" (click)="toggleSidebar()">
+    <div class="logo">
+      <ion-icon name="shield-checkmark"></ion-icon>
+    </div>
+    <div class="brand-name" [class.hidden]="isCollapsed">
+      Vanguard
+    </div>
+    
+    <!-- Mobile close button -->
+    <ion-button 
+      class="close-btn mobile-only"
+      fill="clear" 
+      size="small"
+      (click)="$event.stopPropagation(); closeMobileMenu()">
+      <ion-icon name="close"></ion-icon>
+    </ion-button>
+  </div>
+
+<!-- Navigation Menu -->
+<div class="sidebar-menu" (click)="onSidebarAreaClick($event)">
+  <div class="menu-item" 
+       *ngFor="let item of menuItems"
+       [class.active]="item.active"
+       (click)="onMenuItemClick(item, $event)">
+    <div class="menu-icon">
+      <div class="icon-container">
+        <ion-icon [name]="item.icon"></ion-icon>
+        <div class="notification-dot" 
+             *ngIf="item.hasNotification && item.hasNotification()">
+        </div>
+      </div>
+    </div>
+    <div class="menu-text" [class.hidden]="isCollapsed">
+      {{ item.title }}
+    </div>
+    
+    <!-- Tooltip for collapsed state -->
+    <div class="tooltip" *ngIf="isCollapsed">
+      {{ item.title }}
+    </div>
+  </div>
+</div>
+
+  <!-- Bottom section with user actions -->
+  <div class="sidebar-bottom" (click)="onSidebarAreaClick($event)">
+    <div class="date-display" (click)="$event.stopPropagation(); onDateClick()">
+      <ion-icon name="calendar-outline"></ion-icon>
+      <span [class.hidden]="isCollapsed">{{ today | date:'mediumDate' }}</span>
+      <!-- Tooltip for collapsed state -->
+      <div class="tooltip" *ngIf="isCollapsed">
         {{ today | date:'mediumDate' }}
-      </ion-button>
-    </ion-buttons>
-  </ion-toolbar>
-</ion-header>
+      </div>
+    </div>
+    
+    <div class="menu-item logout-item" (click)="$event.stopPropagation(); logout()">
+      <div class="menu-icon">
+        <ion-icon name="log-out-outline"></ion-icon>
+      </div>
+      <div class="menu-text" [class.hidden]="isCollapsed">
+        Logout
+      </div>
+      <div class="tooltip" *ngIf="isCollapsed">
+        Logout
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- Mobile menu button (only visible on mobile) -->
+<ion-button 
+  class="mobile-menu-btn mobile-only"
+  fill="solid" 
+  color="primary"
+  size="default"
+  (click)="toggleMobileMenu()">
+  <ion-icon name="menu"></ion-icon>
+</ion-button>
+
+<!-- Content wrapper to adjust for sidebar -->
+<div class="content-wrapper" 
+     [class.sidebar-collapsed]="isCollapsed">
+  <ng-content></ng-content>
+</div>

@@ -1,6 +1,5 @@
-
 .content-container {
-  width: 60vw;
+  width: 80vw;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -9,51 +8,195 @@
   flex-wrap: wrap;
   margin: 0 auto;
 }
+.van-image {
+  width: 45%;
+}
 
 .van-list {
-  width: 80%;
+  width: 100%;
   padding: 0;
   margin: 0;
 }
 
-/* admin-portal.page.scss */
-.date-picker {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-  z-index: 100;
+.van-card {
+  margin-bottom: 16px;
+  border-radius: 12px;
+  background: linear-gradient(145deg, #2a2a2a, #1e1e1e);
+  border: 1px solid #333;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  overflow: hidden;
 }
 
-/*  Make the whole card-content flow top→bottom  */
+.van-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+  border-color: #444;
+}
+
 .van-card-content {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;               /* space between row and buttons */
-}
-
-/*  This row holds your image + text side by side  */
-.van-row {
+  padding: 16px;
   display: flex;
   align-items: center;
+  gap: 16px;
 }
 
-/*  Thumb on the left, fixed width  */
-.van-image {
-  width: 150px;             /* pick your size */
-  height: auto;
-  margin-right: 16px;
+.van-icon {
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, #4a90e2, #357abd);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: bold;
+  color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
   flex-shrink: 0;
-  border-radius: 4px;      /* optional */
 }
 
-/*  Text takes up the rest of the row  */
-.van-text {
+.van-icon.cdv {
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+}
+
+.van-icon.edv {
+  background: linear-gradient(135deg, #2ecc71, #27ae60);
+}
+
+.van-details {
+  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 4px;
-  flex: 1;
 }
 
-ion-card {
-  border-radius: 15px;
+.van-id {
+  font-size: 18px;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0;
+}
+
+.van-type {
+  font-size: 14px;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.van-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.status-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.status-indicator.active {
+  background-color: #2ecc71;
+  box-shadow: 0 0 6px rgba(46, 204, 113, 0.5);
+}
+
+.status-indicator.grounded {
+  background-color: #e74c3c;
+  box-shadow: 0 0 6px rgba(231, 76, 60, 0.5);
+}
+
+.status-text {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.status-text.active {
+  color: #2ecc71;
+}
+
+.status-text.grounded {
+  color: #e74c3c;
+}
+
+.van-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-left: auto;
+  text-align: right;
+}
+
+.van-vin {
+  font-size: 12px;
+  color: #666;
+  font-family: "Courier New", monospace;
+}
+
+.last-inspection {
+  font-size: 12px;
+  color: #888;
+}
+
+/* Section headers */
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 24px 0 16px 0;
+  padding: 0 8px;
+}
+
+.section-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+}
+
+.section-count {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ccc;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* Empty state */
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: #666;
+}
+
+.empty-state ion-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .van-card-content {
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .van-icon {
+    width: 50px;
+    height: 50px;
+    font-size: 20px;
+  }
+
+  .van-id {
+    font-size: 16px;
+  }
+
+  .van-info {
+    display: none;
+  }
 }

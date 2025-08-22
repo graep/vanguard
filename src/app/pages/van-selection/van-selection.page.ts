@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IonContent, IonHeader, IonTitle, IonToolbar, IonItem, IonList, IonLabel, IonAccordionGroup, IonAccordion, IonButtons, IonButton, IonIcon } from '@ionic/angular/standalone';
 import { RouterModule, Router } from '@angular/router';
@@ -12,7 +12,7 @@ import { AppHeaderComponent } from '@app/components/app-header/app-header.compon
   standalone: true,
   imports: [ IonLabel, IonAccordion, IonAccordionGroup,  IonList, IonItem, IonContent, CommonModule, RouterModule, AppHeaderComponent ]
 })
-export class VanSelectionPage implements OnInit {
+export class VanSelectionPage {
   vans = ['EDV', 'CDV', 'LMR'];
 
    numbersMap: Record<string,string[]> = {
@@ -25,8 +25,6 @@ export class VanSelectionPage implements OnInit {
     private router: Router,
     private auth: Auth
   ) { }
-
-  ngOnInit() {}
 
   async logout() {
   await this.auth.signOut();

@@ -1,6 +1,7 @@
 // src/app/services/auth.service.ts
 import { Injectable } from '@angular/core';
-import { Auth, signInWithEmailAndPassword, signOut, User } from '@angular/fire/auth';
+import { Auth, browserLocalPersistence, signInWithEmailAndPassword, signOut, User } from '@angular/fire/auth';
+import { setPersistence } from 'firebase/auth';
 import { BehaviorSubject } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
@@ -10,6 +11,7 @@ export class AuthService {
 
   constructor(private auth: Auth) {
     // Keep BehaviorSubject in sync with Firebase Auth state
+    setPersistence(this.auth, browserLocalPersistence);
     this.auth.onAuthStateChanged(user => this.currentUser$.next(user));
   }
 

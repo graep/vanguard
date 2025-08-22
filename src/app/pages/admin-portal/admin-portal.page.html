@@ -1,5 +1,4 @@
 <app-admin-navbar></app-admin-navbar>
-
 <ion-content class="ion-padding">
   <div class="content-container">
 
@@ -29,34 +28,71 @@
 
     <!-- Van List -->
     <div class="van-list">
-      <ion-button fill="clear" (click)="openPendingModal()">
-        Pending Reviews
-        <ion-badge color="danger" *ngIf="(pendingCount$ | async) as count">
-          {{ count }}
-        </ion-badge>
-      </ion-button>
+      <!-- EDV Section -->
+      <div class="section-header">
+        <h3 class="section-title">EDV</h3>
+      </div>
 
-      <ion-card *ngFor="let van of filteredVans" class="van-card">
-        <ion-card-content (click)="viewVan(van)" class="van-card-content">
-          <div class="van-row">
-            <!-- 1) put your img first -->
-            <img src="assets\EDV.webp" alt="{{ van.docId }}" class="van-image" />
-
-            <!-- 2) then your description/details -->
-            <div class="van-text">
-              <ion-card-title>{{ van.docId }}</ion-card-title>
-              <p>Type: {{ van.type }}</p>
-              <p>Status: {{ displayStatus(van) }}</p>
-              <p *ngIf="van.notes">📝 {{ van.notes }}</p>
+      <ion-grid>
+        <ion-row>
+          <ion-col size="12" size-md="6" size-lg="4" *ngFor="let van of filteredEdvs" (click)="viewVan(van)">
+            <div class="van-card">
+              <div class="van-card-content">
+                <img [src]="'assets/EDV.jpg'" alt="EDV" class="van-image"/>
+                <div class="van-details">
+                  <h4 class="van-id">{{ van.number || 'Unknown' }}</h4>
+                  <div class="van-type">Electric Delivery Van</div>
+                  <div class="van-status">
+                    <span class="status-indicator" [class.active]="!van.isGrounded" [class.grounded]="van.isGrounded"></span>
+                    <span class="status-text" [class.active]="!van.isGrounded" [class.grounded]="van.isGrounded">
+                      {{ van.isGrounded ? 'Grounded' : 'Active' }}
+                    </span>
+                  </div>
+                </div>
+                <div class="van-info" *ngIf="van.vin">
+                  <div class="van-vin">{{ van.vin | slice:0:8 }}...</div>
+                  <div class="last-inspection">Click to inspect</div>
+                </div>
+              </div>
             </div>
-          </div>
-        </ion-card-content>
-      </ion-card>
-    </div>
+          </ion-col>
+        </ion-row>
+      </ion-grid>
 
-    <!-- Date Picker -->
-    <div class="date-picker">
-      <ion-datetime *ngIf="showPicker" id="picker" presentation="date" [(ngModel)]="selectedDate"></ion-datetime>
+      <!-- CDV Section -->
+      <div class="section-header">
+        <h3 class="section-title">CDV</h3>
+      </div>
+
+      <ion-grid>
+        <ion-row>
+          <ion-col size="12" size-md="6" size-lg="4" *ngFor="let van of filteredCdvs" (click)="viewVan(van)">
+            <div class="van-card">
+              <div class="van-card-content">
+                <img [src]="'assets/CDV.jpg'" alt="CDV" class="van-image"/>
+                <div class="van-details">
+                  <h4 class="van-id">{{ van.number || 'Unknown' }}</h4>
+                  <div class="van-type">Cargo Delivery Van</div>
+                  <div class="van-status">
+                    <span class="status-indicator" [class.active]="!van.isGrounded" [class.grounded]="van.isGrounded"></span>
+                    <span class="status-text" [class.active]="!van.isGrounded" [class.grounded]="van.isGrounded">
+                      {{ van.isGrounded ? 'Grounded' : 'Active' }}
+                    </span>
+                  </div>
+                </div>
+                <div class="van-info" *ngIf="van.vin">
+                  <div class="van-vin">{{ van.vin | slice:0:8 }}...</div>
+                  <div class="last-inspection">Click to inspect</div>
+                </div>
+              </div>
+            </div>
+          </ion-col>
+        </ion-row>
+      </ion-grid>
+      <div class="empty-state" *ngIf="filteredEdvs.length === 0 && filteredCdvs.length === 0">
+        <ion-icon name="car-outline"></ion-icon>
+        <p>No vans found matching your search criteria</p>
+      </div>
     </div>
   </div>
 </ion-content>
