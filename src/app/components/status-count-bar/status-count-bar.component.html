@@ -1,0 +1,57 @@
+<div [class]="getContainerClasses()">
+  <div class="search-section">
+    <div class="search-container">
+      <div class="search-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"></circle>
+          <path d="m21 21-4.35-4.35"></path>
+        </svg>
+      </div>
+      <input type="text" class="search-input" [placeholder]="searchPlaceholder" [(ngModel)]="searchValue"
+        (input)="onSearchChange($event)" (keyup.enter)="onSearchSubmit()" (focus)="onSearchFocus()"
+        (blur)="onSearchBlur()" />
+      <button *ngIf="searchValue" class="clear-button" (click)="clearSearch()" type="button">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+  </div>
+  <!-- Header with total -->
+  <div class="header">
+    <span class="total-label">Total:</span>
+    <span class="total-number">{{ total }}</span>
+  </div>
+
+  <!-- Status items -->
+  <div class="status-container">
+    <div *ngFor="let item of data; trackBy: trackByStatusId" [class]="getStatusItemClasses()"
+      [style.background-color]="item.color + '15'" [style.border-color]="item.color + '30'" (click)="onItemClick(item)">
+      <!-- Hover overlay -->
+      <div class="status-overlay" [style.background-color]="item.color + '10'"></div>
+
+      <!-- Status indicator with pulse -->
+      <div class="status-indicator-container">
+        <div class="status-indicator" [style.background-color]="item.color"
+          [style.box-shadow]="'0 0 8px ' + item.color + '60'"></div>
+        <div class="status-pulse" [style.background-color]="item.color"></div>
+      </div>
+
+      <span class="status-label">{{ item.label }}</span>
+
+      <span class="status-count" [style.background-color]="item.color + '20'" [style.border-color]="item.color + '30'">
+        {{ item.count }}
+      </span>
+    </div>
+  </div>
+
+  <!-- Progress bar -->
+  <div *ngIf="showProgress" class="progress-bar">
+    <div class="progress-track">
+      <div *ngFor="let item of data; let i = index" class="progress-segment"
+        [style.width.%]="getProgressWidth(item.count)" [style.background-color]="item.color"></div>
+    </div>
+    <div class="progress-shimmer"></div>
+  </div>
+</div>

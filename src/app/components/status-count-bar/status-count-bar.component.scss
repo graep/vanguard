@@ -1,0 +1,230 @@
+    .container {
+      background: #1e1e1e;
+      border-radius: 16px;
+      border: 1px solid rgba(148, 163, 184, 0.1);
+      backdrop-filter: blur(10px);
+      transition: all 0.3s ease;
+      box-shadow: 
+        0 20px 25px -5px rgba(0, 0, 0, 0.3),
+        0 10px 10px -5px rgba(0, 0, 0, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+
+    .container:hover {
+      transform: translateY(-2px);
+      box-shadow: 
+        0 25px 35px -5px rgba(0, 0, 0, 0.4),
+        0 15px 15px -5px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    }
+
+    .container.default {
+      padding: 24px 32px;
+    }
+
+    .container.compact {
+      padding: 16px 24px;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .total-label {
+      color: #cbd5e1;
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: 0.025em;
+    }
+
+    .total-number {
+      color: #f8fafc;
+      font-size: 28px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #60a5fa, #3b82f6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .status-container {
+      display: flex;
+      align-items: center;
+    }
+
+    .status-container.default {
+      gap: 20px;
+    }
+
+    .status-container.compact {
+      gap: 12px;
+    }
+
+    .status-item {
+      display: flex;
+      align-items: center;
+      border-radius: 12px;
+      border: 1px solid;
+      transition: all 0.2s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .status-item.default {
+      gap: 12px;
+      padding: 12px 20px;
+    }
+
+    .status-item.compact {
+      gap: 8px;
+      padding: 8px 16px;
+    }
+
+    .status-item.clickable {
+      cursor: pointer;
+    }
+
+    .status-item.clickable:hover {
+      transform: scale(1.02);
+    }
+
+    .status-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+      border-radius: 12px;
+      pointer-events: none;
+    }
+
+    .status-item:hover .status-overlay {
+      opacity: 1;
+    }
+
+    .status-indicator-container {
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .status-indicator {
+      border-radius: 50%;
+      position: relative;
+      z-index: 1;
+    }
+
+    .status-indicator.default {
+      width: 10px;
+      height: 10px;
+    }
+
+    .status-indicator.compact {
+      width: 8px;
+      height: 8px;
+    }
+
+    .status-pulse {
+      position: absolute;
+      top: -2px;
+      left: -2px;
+      right: -2px;
+      bottom: -2px;
+      border-radius: 50%;
+      opacity: 0.6;
+      animation: pulse 2s infinite;
+    }
+
+    .status-label {
+      color: #e2e8f0;
+      font-weight: 500;
+      text-transform: capitalize;
+      letter-spacing: 0.025em;
+      position: relative;
+      z-index: 1;
+    }
+
+    .status-label.default {
+      font-size: 14px;
+    }
+
+    .status-label.compact {
+      font-size: 13px;
+    }
+
+    .status-count {
+      color: #f8fafc;
+      border-radius: 20px;
+      font-weight: 600;
+      min-width: 24px;
+      text-align: center;
+      backdrop-filter: blur(10px);
+      border: 1px solid;
+      position: relative;
+      z-index: 1;
+    }
+
+    .status-count.default {
+      padding: 4px 12px;
+      font-size: 13px;
+    }
+
+    .status-count.compact {
+      padding: 2px 8px;
+      font-size: 12px;
+    }
+
+    .progress-bar {
+      margin-top: 20px;
+      height: 6px;
+      background: rgba(71, 85, 105, 0.3);
+      border-radius: 3px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .progress-track {
+      height: 100%;
+      display: flex;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .progress-segment {
+      height: 100%;
+      transition: all 0.5s ease;
+    }
+
+    .progress-shimmer {
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      animation: shimmer 3s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        transform: scale(1);
+        opacity: 0.6;
+      }
+      50% {
+        transform: scale(1.2);
+        opacity: 0.3;
+      }
+    }
+
+    @keyframes shimmer {
+      0% {
+        left: -100%;
+      }
+      100% {
+        left: 100%;
+      }
+    }

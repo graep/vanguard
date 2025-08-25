@@ -1,3 +1,4 @@
+
 import { Component, inject, Injector, OnInit } from '@angular/core';
 import { Auth } from '@angular/fire/auth';
 import {
@@ -20,37 +21,54 @@ import { RecentSubmissionsModalComponent } from '@app/components/recent-submissi
 import { ModalController } from '@ionic/angular';
 import { Observable } from 'rxjs';
 import { ToastController } from '@ionic/angular';
+import { StatusCountBarComponent, StatusDataSource } from '@app/components/status-count-bar/status-count-bar.component';
 
 @Component({
   selector: 'app-admin-portal',
   standalone: true,
-  imports: [CommonModule, IonicModule, FormsModule, NavbarComponent],
+  imports: [
+    CommonModule, 
+    IonicModule, 
+    FormsModule, 
+    NavbarComponent, 
+    StatusCountBarComponent
+  ],
   templateUrl: './admin-portal.page.html',
   styleUrls: ['./admin-portal.page.scss'],
 })
 export class AdminPortalPage implements OnInit {
-  collapsed = true;
   vans: Van[] = [];
   filteredVans: Van[] = [];
-  searchTerm: string = '';
-  pendingCount$!: Observable<number>;
-  busy = new Set<string>();
-  cdvs: Van[] = [];
-  edvs: Van[] = [];
   filteredCdvs: Van[] = [];
   filteredEdvs: Van[] = [];
 
-  allInspections: Array<{
-    id: string;
-    vanType: string;
-    vanNumber: string;
-    photos: Record<string, string>;
-    createdAt: any;
-    report?: ReportedIssue[];
-    reportSubmittedAt?: any;
-  }> = [];
+  // Data sources for the status bars - much cleaner!
+  overallDataSource: StatusDataSource = {
+    items: [],
+    statusField: 'isGrounded',
+    activeValue: false,
+    searchFields: ['docId', 'vin', 'type', 'number']
+  };
 
-  // Use inject() at class level (outside constructor)
+  cdvDataSource: StatusDataSource = {
+    items: [],
+    statusField: 'isGrounded',
+    activeValue: false,
+    searchFields: ['docId', 'vin', 'number'],
+    filterField: 'type',
+    filterValue: 'CDV'
+  };
+
+  edvDataSource: StatusDataSource = {
+    items: [],
+    statusField: 'isGrounded', 
+    activeValue: false,
+    searchFields: ['docId', 'vin', 'number'],
+    filterField: 'type',
+    filterValue: 'EDV'
+  };
+
+  // Inject services
   private firestore = inject(Firestore);
   private router = inject(Router);
   private modalCtrl = inject(ModalController);
@@ -59,7 +77,6 @@ export class AdminPortalPage implements OnInit {
   private injector = inject(Injector);
   private auth = inject(Auth);
 
-  // Empty constructor or remove it entirely
   constructor() {}
 
   async ngOnInit() {
@@ -70,62 +87,26 @@ export class AdminPortalPage implements OnInit {
 
     collectionData<Van>(vansRef, { idField: 'docId' }).subscribe((data) => {
       this.vans = data;
-
-      // NEW: split by type
-      this.cdvs = data.filter((v) => (v.type || '').toUpperCase() === 'CDV');
-      this.edvs = data.filter((v) => (v.type || '').toUpperCase() === 'EDV');
-
-      // initialize filtered lists
-      this.filteredCdvs = this.cdvs;
-      this.filteredEdvs = this.edvs;
+      
+      // Update data source - the component handles the rest!
+      this.overallDataSource = { ...this.overallDataSource, items: data };
+      
+      // Initialize filtered data
+      this.filteredVans = data;
+      this.filteredCdvs = data.filter((v) => (v.type || '').toUpperCase() === 'CDV');
+      this.filteredEdvs = data.filter((v) => (v.type || '').toUpperCase() === 'EDV');
     });
   }
 
-
-  filterVans(): void {
-    const term = this.searchTerm.trim().toLowerCase();
-
-    // Helper to reuse the same predicate for both lists
-    const matches = (van: Van) =>
-      van.docId?.toLowerCase().includes(term) ||
-      van.vin?.toLowerCase().includes(term) ||
-      van.type?.toLowerCase().includes(term);
-
-    if (!term) {
-      this.filteredCdvs = this.cdvs;
-      this.filteredEdvs = this.edvs;
-      return;
-    }
-
-    this.filteredCdvs = this.cdvs.filter(matches);
-    this.filteredEdvs = this.edvs.filter(matches);
+  // Handle filtered data from overall status bar
+  onOverallFilteredData(filteredData: Van[]): void {
+    this.filteredVans = filteredData;
+    // Update both CDV and EDV lists based on overall filter
+    this.filteredCdvs = filteredData.filter((v) => (v.type || '').toUpperCase() === 'CDV');
+    this.filteredEdvs = filteredData.filter((v) => (v.type || '').toUpperCase() === 'EDV');
   }
 
-  displayStatus(van: any): string {
-    return van.isGrounded ? '🛑 Grounded' : '✅ Active';
-  }
 
-  get activeVansCount(): number {
-    return this.vans.filter((v) => !v.isGrounded).length;
-  }
-
-  get groundedVansCount(): number {
-    return this.vans.filter((v) => v.isGrounded).length;
-  }
-
-  get cdvActiveCount(): number {
-    return this.cdvs.filter((v) => !v.isGrounded).length;
-  }
-  get cdvGroundedCount(): number {
-    return this.cdvs.filter((v) => v.isGrounded).length;
-  }
-
-  get edvActiveCount(): number {
-    return this.edvs.filter((v) => !v.isGrounded).length;
-  }
-  get edvGroundedCount(): number {
-    return this.edvs.filter((v) => v.isGrounded).length;
-  }
 
   async viewVan(van: any) {
     const [type, num] =
@@ -133,7 +114,6 @@ export class AdminPortalPage implements OnInit {
         ? van.docId.split('-')
         : [van.type ?? van.vanType, String(van.number ?? van.vanNumber)];
 
-    // The service will handle normalization now
     const id = await this.insp.getLatestInspectionId(type, num);
 
     if (!id) {
@@ -143,6 +123,7 @@ export class AdminPortalPage implements OnInit {
 
     this.router.navigate(['/van-report', id], { queryParams: { review: '1' } });
   }
+
   async logout() {
     await this.auth.signOut();
     this.router.navigate(['/login']);

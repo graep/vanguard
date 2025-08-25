@@ -2,29 +2,17 @@
 <ion-content class="ion-padding">
   <div class="content-container">
 
-    <ion-searchbar color="light" cancelButtonIcon="cancel-button-icon" placeholder="Search by #, VIN or Type"
-      [(ngModel)]="searchTerm" (ionInput)="filterVans()" debounce="1300" showClearButton="always">
-    </ion-searchbar>
-
-    <ion-grid class="count-banner"
-      style="background: #000000; padding:0; width: 50%;display: flex; justify-content: center; align-items: center; border-radius: 5px;">
-      Total:
-      <ion-row class="ion-text-center" style="display: flex; justify-content: center; align-items: center;">
-        <ion-col class="ion-text-center">
-          <ion-chip color="success">
-            <ion-label>Active</ion-label>
-            <ion-badge>{{ activeVansCount }}</ion-badge>
-          </ion-chip>
-        </ion-col>
-        <ion-col class="ion-text-center">
-          <ion-chip color="danger">
-            <ion-label>Grounded</ion-label>
-            <ion-badge>{{ groundedVansCount }}</ion-badge>
-          </ion-chip>
-        </ion-col>
-      </ion-row>
-    </ion-grid>
-
+    <!-- Main Fleet Status Bar - handles search and filtering automatically -->
+    <div class="status-bar-container">
+      <app-status-count-bar
+        [dataSource]="overallDataSource"
+        [showProgress]="true"
+        [clickable]="true"
+        [searchPlaceholder]="'Search by #, VIN or Type'"
+        (filteredData)="onOverallFilteredData($event)"
+        variant="default">
+      </app-status-count-bar>
+    </div>
 
     <!-- Van List -->
     <div class="van-list">
@@ -89,6 +77,7 @@
           </ion-col>
         </ion-row>
       </ion-grid>
+      
       <div class="empty-state" *ngIf="filteredEdvs.length === 0 && filteredCdvs.length === 0">
         <ion-icon name="car-outline"></ion-icon>
         <p>No vans found matching your search criteria</p>
