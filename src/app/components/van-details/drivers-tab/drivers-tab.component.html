@@ -1,0 +1,30 @@
+<div class="drivers-tab-content">
+  <div class="section-header">
+    <h3>Daily Driver Log</h3>
+    <p class="section-subtitle">Who drove this van each day</p>
+  </div>
+
+  <!-- Driver Records List -->
+  <div class="drivers-list">
+    <ion-card *ngFor="let record of driverRecords" class="driver-card">
+      <ion-card-content>
+        <div class="driver-row">
+          <div class="driver-name" [class.no-driver]="!record.driverName">
+            {{ record.driverName || 'No driver assigned' }}
+          </div>
+          <div class="date-info">
+            <h4>{{ formatDate(record.date) }}</h4>
+            <div class="day-name">{{ getDayName(record.date) }}</div>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Empty State -->
+    <div *ngIf="driverRecords.length === 0" class="empty-state">
+      <ion-icon name="people-outline" class="empty-icon"></ion-icon>
+      <h3>No Driver Records</h3>
+      <p>No drivers have been recorded for this van yet.</p>
+    </div>
+  </div>
+</div>

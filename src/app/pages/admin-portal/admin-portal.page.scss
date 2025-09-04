@@ -1,204 +1,391 @@
-// Remove or comment out the old count-banner styles and add these:
+// Mobile fix - override navbar component styles
+@media (max-width: 768px) {
+  :host ::ng-deep .content-wrapper {
+    position: static !important;
+    margin-left: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+  
+  :host ::ng-deep .sidebar {
+    transform: translateX(-100%) !important;
+  }
+  
+  // Make sure ion-content behaves properly
+  ion-content {
+    position: static !important;
+    height: auto !important;
+  }
+}
 
+// Admin Portal Page Styles
 .content-container {
-  max-width: 875px;
-  margin: 0 auto;
-  padding: 16px;
+  width: min(1000px, calc(100vw - 150px)); // Never exceed available space
+  margin: 0 auto; // Center by default
+  padding: 1rem;
+  
+  // When viewport gets too small, switch to sidebar-aware sizing
+  @media (max-width: 1150px) {
+    width: calc(100vw - 150px); // Full width minus sidebar minus margins
+    max-width: 1000px; // Still respect max width if there's room
+  }
+  
+  // Further shrink for smaller screens
+  @media (max-width: 900px) {
+    width: calc(100vw - 150px); // Tighter margins
+  }
+  
+  // Mobile responsive - full width with proper padding
+  @media (max-width: 768px) {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 1rem;
+    box-sizing: border-box;
+  }
+  
+  @media (max-width: 576px) {
+    padding: 0.75rem;
+  }
 }
 
 .status-bar-container {
-  margin-bottom: 32px;
-  width: 100%;
+  margin-bottom: 2rem;
   
-  // Make status bar match van-list width
-  app-status-count-bar {
-    display: block;
-    width: 100%;
-    margin-bottom: 16px;
-  }
-}
-
-.section-header {
-  margin: 32px 0 20px 0;
-  
-  .section-title-container {
+  .status-bar-header {
     display: flex;
-    flex-direction: column;
-    gap: 16px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
     
-    @media (min-width: 768px) {
-      flex-direction: row;
-      align-items: center;
-      justify-content: space-between;
+    .filter-controls {
+      flex-shrink: 0;
+      
+      ion-button {
+        --padding-start: 12px;
+        --padding-end: 12px;
+        height: 40px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        
+        ion-icon {
+          margin-right: 6px;
+        }
+      }
     }
   }
   
-  .section-title {
-    font-size: 28px;
-    font-weight: 700;
-    color: #1a202c;
-    margin: 0;
-    background: linear-gradient(135deg, #4a5568, #2d3748);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-  
-  .section-status-bar {
-    flex-shrink: 0;
-    min-width: 300px;
-    
-    app-status-count-bar {
-      display: block;
+  @media (max-width: 768px) {
+    .status-bar-header {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0.75rem;
+      
+      .filter-controls {
+        align-self: center;
+      }
     }
   }
 }
 
 .van-list {
-  .empty-state {
-    text-align: center;
-    padding: 60px 20px;
-    color: #64748b;
+  width: 100%;
+}
+
+.section-header {
+  margin: 2rem 0 1rem 0;
+  
+  .section-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--ion-color-dark);
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 2.5px;
+  }
+}
+
+// Van Card Styles
+.van-card {
+  border-radius: 12px;
+  padding: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border: 2px solid transparent;
+  overflow: hidden;
+  
+  &:hover {
+    transform: scale(1.03);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  }
+  
+  // Active status - green pulsing border
+  &.active {
+    position: relative;
+    overflow: hidden;
     
-    ion-icon {
-      font-size: 64px;
-      margin-bottom: 16px;
-      opacity: 0.5;
+    &::before {
+      content: '';
+      position: absolute;
+      top: -2px;
+      left: -2px;
+      right: -2px;
+      bottom: -2px;
+      border: 1px solid var(--ion-color-success);
+      border-radius: 14px;
+      opacity: 0;
+      animation: pulse-ring 3s ease-in-out infinite;
+      pointer-events: none;
+    }
+  }
+  
+  // Grounded status - greyed out
+  &.grounded {
+    opacity: 0.9;
+    filter: grayscale(.1);
+    
+    .van-card-content {
+      color: #888888;
     }
     
-    p {
-      font-size: 18px;
-      margin: 0;
+    .van-image {
+      filter: grayscale(0.8);
+      opacity: 0.7;
+    }
+    
+    .van-id {
+      color: #666666;
+    }
+    
+    .van-vin {
+      color: #aaaaaa;
     }
   }
 }
 
-.van-card {
-  background: #1e1e1e;
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  transition: all 0.3s ease;
-  cursor: pointer;
-  overflow: hidden;
-  margin-bottom: 16px;
-  border: 1px solid rgba(226, 232, 240, 0.8);
-  
-  &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
-    border-color: rgba(59, 130, 246, 0.3);
+@keyframes subtle-pulse {
+  0%, 100% {
+    border-color: var(--ion-color-success);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  50% {
+    border-color: rgba(40, 186, 98, 0.8);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(40, 186, 98, 0.3);
+  }
+}
+
+@keyframes pulse-ring {
+  30% {
+    opacity: 0.8;
+    transform: scale(.97);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1);
   }
 }
 
 .van-card-content {
-  padding: 20px;
+  background: #1e1e1e;
+  padding: 1rem;
   display: flex;
-  align-items: center;
-  gap: 16px;
+  flex-direction: column;
+  height: 100%;
 }
 
 .van-image {
-  width: 60px;
-  height: 60px;
-  border-radius: 12px;
+  width: 100%;
+  height: 140px;
   object-fit: cover;
-  flex-shrink: 0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  // margin-bottom: 1rem;
 }
 
 .van-details {
-  flex: 1;
-  min-width: 0;
+  flex-grow: 1;
+  text-align: center;
+}
+
+.van-id {
+  font-size: 1.5rem;
+  font-weight: 700;
+  // margin: 0.5rem 0;
+  color: var(--ion-color-dark);
+}
+
+.van-vin {
+  font-size: 0.875rem;
+  color: var(--ion-color-medium);
+  // margin: 0.25rem 0 0.75rem 0;
+  word-break: break-all;
+}
+
+.van-type {
+  font-size: 0.875rem;
+  color: var(--ion-color-medium);
+  margin: 0.25rem 0;
+}
+
+.van-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin: 0.75rem 0;
   
-  .van-id {
-    font-size: 20px;
-    font-weight: 700;
-    margin: 0 0 4px 0;
-    color: #ffffff;
+  // Hide the status indicator dot since we're using card styling
+  .status-indicator {
+    display: none;
+  }
+}
+
+.status-text {
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  
+  &.active {
+    color: var(--ion-color-success);
   }
   
-  .van-type {
-    font-size: 14px;
-    color: #64748b;
-    margin-bottom: 8px;
-    font-weight: 500;
-  }
-  
-  .van-status {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    
-    .status-indicator {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      
-      &.active {
-        background-color: #22c55e;
-        box-shadow: 0 0 8px rgba(34, 197, 94, 0.4);
-      }
-      
-      &.grounded {
-        background-color: #ef4444;
-        box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
-      }
-    }
-    
-    .status-text {
-      font-size: 13px;
-      font-weight: 600;
-      
-      &.active {
-        color: #22c55e;
-      }
-      
-      &.grounded {
-        color: #ef4444;
-      }
-    }
+  &.grounded {
+    color: var(--ion-color-danger);
   }
 }
 
 .van-info {
-  text-align: right;
-  flex-shrink: 0;
+  margin-top: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--ion-color-light-shade);
+}
+
+.last-inspection {
+  font-size: 0.75rem;
+  color: var(--ion-color-medium);
+  font-style: italic;
+}
+
+// Empty State
+.empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--ion-color-medium);
   
-  .van-vin {
-    font-size: 12px;
-    color: #64748b;
-    font-family: 'Courier New', monospace;
-    margin-bottom: 4px;
+  ion-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
   }
   
-  .last-inspection {
-    font-size: 11px;
-    color: #3b82f6;
-    font-weight: 500;
+  h3 {
+    font-size: 1.5rem;
+    margin: 1rem 0 0.5rem 0;
+  }
+  
+  p {
+    font-size: 1rem;
+    margin: 0;
   }
 }
 
-// Responsive adjustments
+// Loading State
+.loading-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--ion-color-medium);
+  
+  ion-spinner {
+    margin-bottom: 1rem;
+    --size: 48px;
+  }
+  
+  p {
+    margin: 0;
+    font-size: 1rem;
+  }
+}
+
+// Responsive Design
 @media (max-width: 768px) {
+  .content-container {
+    padding: 0.75rem;
+  }
+  
   .section-header {
-    .section-title-container {
-      .section-status-bar {
-        min-width: unset;
-      }
+    margin: 1.5rem 0 1rem 0;
+    
+    .section-title {
+      font-size: 1.25rem;
+    }
+  }
+  
+  .van-card {
+    margin-bottom: 1rem;
+    
+    &:hover {
+      transform: none; // Remove hover effects on mobile
     }
   }
   
   .van-card-content {
-    padding: 16px;
-    gap: 12px;
+    padding: 1rem;
   }
   
   .van-image {
-    width: 50px;
-    height: 50px;
+    height: 120px;
   }
   
-  .van-details .van-id {
-    font-size: 18px;
+  .van-id {
+    font-size: 1.1rem;
+  }
+  
+  .van-vin {
+    font-size: 0.8rem;
+  }
+  
+  .status-text {
+    font-size: 0.8rem;
+  }
+}
+
+// Small mobile adjustments
+@media (max-width: 576px) {
+  .content-container {
+    padding: 0.5rem;
+  }
+  
+  .van-card-content {
+    padding: 0.75rem;
+  }
+  
+  .van-image {
+    height: 100px;
+  }
+  
+  .van-id {
+    font-size: 1rem;
+  }
+  
+  .van-vin {
+    font-size: 0.75rem;
+  }
+}
+
+// Dark mode adjustments
+@media (prefers-color-scheme: dark) {
+  .van-card {
+    background: var(--ion-color-step-50);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+  
+  .van-image {
+    border-color: var(--ion-color-step-200);
+  }
+  
+  .van-info {
+    border-top-color: var(--ion-color-step-200);
   }
 }

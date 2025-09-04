@@ -2,7 +2,9 @@
   <ion-toolbar>
     <!-- START slot -->
     <ion-buttons slot="start">
-      <ion-back-button defaultHref="/van-selection" text="" icon="chevron-back"></ion-back-button>
+      <ion-button fill="clear" (click)="goBack()">
+        <ion-icon name="chevron-back" slot="icon-only"></ion-icon>
+      </ion-button>
     </ion-buttons>
     <!-- Title -->
     <ion-title>{{ title }}</ion-title>

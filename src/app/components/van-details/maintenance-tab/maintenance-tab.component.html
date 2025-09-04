@@ -1,0 +1,70 @@
+<div class="maintenance-tab-content">
+  <div class="section-header">
+    <h3>Maintenance History</h3>
+    <p class="section-subtitle">Service records and upcoming maintenance</p>
+  </div>
+
+  <!-- Compact Status Boxes -->
+  <div class="compact-stats-row">
+    <div class="compact-stat-card success">
+      <div class="compact-stat-number">{{ getCompletedCount() }}</div>
+      <div class="compact-stat-label">Completed</div>
+    </div>
+    <div class="compact-stat-card warning">
+      <div class="compact-stat-number">{{ getScheduledCount() }}</div>
+      <div class="compact-stat-label">Scheduled</div>
+    </div>
+    <div class="compact-stat-card danger">
+      <div class="compact-stat-number">{{ getOverdueCount() }}</div>
+      <div class="compact-stat-label">Overdue</div>
+    </div>
+  </div>
+
+  <!-- Maintenance Records -->
+  <div class="maintenance-list">
+    <ion-card *ngFor="let record of maintenanceRecords" class="maintenance-card" [class]="'status-' + record.status">
+      <ion-card-content>
+        <div class="maintenance-header">
+          <ion-icon [name]="getMaintenanceIcon(record.type)" 
+                   [class]="'maintenance-icon ' + record.status"></ion-icon>
+          <div class="maintenance-meta">
+            <h4>{{ record.description }}</h4>
+            <div class="maintenance-details">
+              <span class="maintenance-date">{{ formatDate(record.date) }}</span>
+              <span *ngIf="record.mileage" class="maintenance-mileage">
+                • {{ record.mileage | number }} miles
+              </span>
+              <span *ngIf="record.cost" class="maintenance-cost">
+                • ${{ record.cost | number:'1.2-2' }}
+              </span>
+            </div>
+          </div>
+          <ion-chip [color]="getStatusColor(record.status)" class="status-chip">
+            <ion-label>{{ getStatusLabel(record.status) }}</ion-label>
+          </ion-chip>
+        </div>
+        
+        <div class="performed-by">
+          <ion-icon name="person" class="person-icon"></ion-icon>
+          Performed by: {{ record.performedBy }}
+        </div>
+        
+        <div *ngIf="record.notes" class="maintenance-notes">
+          <ion-icon name="document-text" class="notes-icon"></ion-icon>
+          {{ record.notes }}
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Empty State -->
+    <div *ngIf="maintenanceRecords.length === 0" class="empty-state">
+      <ion-icon name="build-outline" class="empty-icon"></ion-icon>
+      <h3>No Maintenance Records</h3>
+      <p>No maintenance history found for this van.</p>
+      <ion-button fill="outline" color="primary" class="add-maintenance-btn">
+        <ion-icon name="add" slot="start"></ion-icon>
+        Add Maintenance Record
+      </ion-button>
+    </div>
+  </div>
+</div>

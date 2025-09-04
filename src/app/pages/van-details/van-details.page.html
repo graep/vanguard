@@ -1,0 +1,234 @@
+<app-header 
+  class="ion-text-center" 
+  [title]="van ? van.type + ' ' + van.number : 'Loading...'"
+></app-header>
+
+<ion-content class="ion-padding">
+  <!-- Loading -->
+  <div *ngIf="loading" class="loading-container">
+    <ion-spinner name="crescent"></ion-spinner>
+    <p>Loading van details...</p>
+  </div>
+
+  <!-- Error -->
+  <ion-card *ngIf="errorMsg && !loading" color="danger">
+    <ion-card-content>
+      <ion-icon name="alert-circle" slot="start"></ion-icon>
+      {{ errorMsg }}
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Main -->
+  <div *ngIf="van && !loading" class="van-details-container">
+    <ion-card class="van-header-card">
+      <ion-card-content>
+        <div class="van-header">
+          
+          <!-- LEFT: info, notes, actions -->
+          <div class="van-basic-info">
+            <h1 class="van-title">{{ van.type.toUpperCase() }} {{ van.number }}</h1>
+            <h2 class="van-subtitle">{{ getVanTypeLabel() }}</h2>
+
+            <ion-chip [color]="getStatusColor()" class="status-chip">
+              <ion-icon [name]="getStatusIcon()"></ion-icon>
+              <ion-label>{{ getStatusText() }}</ion-label>
+            </ion-chip>
+
+            <!-- Details (vertical list) -->
+            <div class="van-details-list">
+              <div class="detail-item">
+                <ion-icon name="car" class="info-icon"></ion-icon>
+                <div class="info-content">
+                  <h3>Van ID</h3>
+                  <p>{{ van.docId }}</p>
+                </div>
+              </div>
+
+              <div class="detail-item">
+                <ion-icon name="information-circle" class="info-icon"></ion-icon>
+                <div class="info-content">
+                  <h3>VIN</h3>
+                  <p>{{ van.VIN || 'Not available' }}</p>
+                </div>
+              </div>
+
+              <div class="detail-item">
+                <ion-icon name="build" class="info-icon"></ion-icon>
+                <div class="info-content">
+                  <h3>Type</h3>
+                  <p>{{ van.type }} - {{ getVanTypeLabel() }}</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Notes -->
+            <div class="notes-section">
+              <!-- show notes -->
+              <div *ngIf="van.notes && !editingNotes" class="detail-item">
+                <ion-icon name="document-text" class="info-icon"></ion-icon>
+                <div class="info-content">
+                  <h3>Notes</h3>
+                  <p>{{ van.notes }}</p>
+                </div>
+              </div>
+
+              <!-- edit notes -->
+              <div *ngIf="editingNotes" class="notes-editor">
+                <ion-icon name="document-text" class="info-icon"></ion-icon>
+                <div class="editor-content">
+                  <h3 class="editor-label">Notes</h3>
+                  <ion-textarea
+                    [(ngModel)]="notesText"
+                    placeholder="Enter van notes..."
+                    rows="4"
+                    fill="outline"
+                    class="notes-textarea">
+                  </ion-textarea>
+                </div>
+              </div>
+
+              <!-- add/edit controls -->
+              <div class="add-notes-container">
+                <ion-button
+                  *ngIf="!editingNotes"
+                  fill="clear"
+                  color="medium"
+                  (click)="startEditingNotes()"
+                  class="add-notes-button">
+                  <ion-icon name="add" slot="start"></ion-icon>
+                  {{ van.notes ? 'Edit Notes' : 'Add Notes' }}
+                </ion-button>
+
+                <div *ngIf="editingNotes" class="editor-actions">
+                  <ion-button
+                    fill="solid"
+                    color="primary"
+                    (click)="saveNotes()"
+                    [disabled]="!hasNotesChanged()"
+                    class="save-button">
+                    <ion-icon name="checkmark" slot="start"></ion-icon>
+                    Save Notes
+                  </ion-button>
+
+                  <ion-button
+                    fill="clear"
+                    color="medium"
+                    (click)="cancelEditingNotes()"
+                    class="cancel-button">
+                    <ion-icon name="close" slot="start"></ion-icon>
+                    Cancel
+                  </ion-button>
+                </div>
+              </div>
+
+              <!-- ACTIONS: side-by-side, small -->
+              <div class="action-buttons">
+                <ion-button
+                  fill="solid"
+                  color="primary"
+                  (click)="startInspection()"
+                  class="action-button">
+                  <ion-icon name="camera" slot="start"></ion-icon>
+                  New Inspection
+                </ion-button>
+
+                <ion-button
+                  fill="outline"
+                  color="secondary"
+                  (click)="viewLatestInspection()"
+                  [disabled]="!latestInspectionId"
+                  class="action-button">
+                  <ion-icon name="document-text" slot="start"></ion-icon>
+                  Latest Report
+                  <span *ngIf="!latestInspectionId" class="button-note">
+                    (No reports)
+                  </span>
+                </ion-button>
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT: image + toggle -->
+          <div class="van-actions-section">
+            <div class="van-image-section">
+              <img
+                [src]="getVanImage()"
+                [alt]="van.type"
+                class="van-image" />
+
+              <ion-button
+                [fill]="van.isGrounded ? 'solid' : 'outline'"
+                [color]="van.isGrounded ? 'success' : 'danger'"
+                (click)="toggleGroundedStatus()"
+                class="toggle-button">
+                <ion-icon
+                  [name]="van.isGrounded ? 'checkmark-circle' : 'warning'"
+                  
+                  slot="start">
+                </ion-icon>
+                {{ van.isGrounded ? 'Activate Van' : 'Ground Van' }}
+              </ion-button>
+
+            </div>
+          </div>
+
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- NEW: Tabbed History Section -->
+    <ion-card class="history-card">
+      <ion-card-header>
+        <ion-card-title>Van History</ion-card-title>
+      </ion-card-header>
+      
+      <!-- Tab Navigation -->
+      <div class="tab-navigation">
+        <ion-button 
+          *ngFor="let tab of tabs" 
+          [fill]="activeTab === tab.id ? 'solid' : 'clear'"
+          [color]="activeTab === tab.id ? 'primary' : 'medium'"
+          (click)="selectTab(tab.id)"
+          class="tab-button">
+          <ion-icon [name]="tab.icon" slot="start"></ion-icon>
+          {{ tab.label }}
+        </ion-button>
+      </div>
+
+      <!-- Tab Content -->
+      <ion-card-content class="tab-content">
+        
+        <!-- Notes Tab -->
+        <div *ngIf="activeTab === 'notes'" class="tab-panel">
+          <app-notes-tab
+            [vanId]="van.docId" 
+            [currentNotes]="van.notes">
+          </app-notes-tab>
+        </div>
+
+        <!-- Issues Tab -->
+        <div *ngIf="activeTab === 'issues'" class="tab-panel">
+          <app-issues-tab
+            [vanId]="van.docId">
+          </app-issues-tab>
+        </div>
+
+        <!-- Maintenance Tab -->
+        <div *ngIf="activeTab === 'maintenance'" class="tab-panel">
+          <app-maintenance-tab
+            [vanId]="van.docId">
+          </app-maintenance-tab>
+        </div>
+
+        <!-- Drivers Tab -->
+        <div *ngIf="activeTab === 'drivers'" class="tab-panel">
+          <app-drivers-tab
+            [vanId]="van.docId">
+          </app-drivers-tab>
+        </div>
+
+      </ion-card-content>
+    </ion-card>
+
+  </div>
+</ion-content>

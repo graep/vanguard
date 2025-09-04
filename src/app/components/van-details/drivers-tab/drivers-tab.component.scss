@@ -1,0 +1,105 @@
+.drivers-tab-content {
+  .section-header {
+    margin-bottom: 20px;
+    
+    h3 {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--ion-color-dark);
+      margin: 0 0 8px 0;
+    }
+    
+    .section-subtitle {
+      font-size: 0.9rem;
+      color: var(--ion-color-medium);
+      margin: 0;
+    }
+  }
+
+  .drivers-list {
+    .driver-card {
+      margin-bottom: 12px;
+    }
+
+    .driver-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+    }
+
+    .driver-name {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--ion-color-primary);
+      padding: 8px 16px;
+      background: rgba(var(--ion-color-primary-rgb), 0.1);
+      border-radius: 20px;
+      white-space: nowrap;
+      
+      &.no-driver {
+        color: var(--ion-color-medium);
+        background: var(--ion-color-light);
+        font-style: italic;
+        font-weight: 400;
+      }
+    }
+
+    .date-info {
+      text-align: right;
+      flex-shrink: 0;
+      
+      h4 {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--ion-color-dark);
+        margin: 0 0 4px 0;
+      }
+
+      .day-name {
+        font-size: 0.85rem;
+        color: var(--ion-color-medium);
+        margin: 0;
+      }
+    }
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--ion-color-medium);
+
+    .empty-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+
+    h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 0 0 8px 0;
+    }
+
+    p {
+      font-size: 0.9rem;
+      margin: 0;
+    }
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .driver-row {
+    gap: 12px;
+    
+    .driver-name {
+      font-size: 0.9rem;
+      padding: 6px 12px;
+    }
+    
+    .date-info h4 {
+      font-size: 0.9rem;
+    }
+  }
+}

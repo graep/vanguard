@@ -4,7 +4,7 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  min-height: 75dvh; /* ensure full height on mobile */
+  min-height: 90dvh; /* ensure full height on mobile */
   padding: 16px;
 }
 
@@ -17,7 +17,7 @@ ion-content {
   &::before {
     content: "";
     background: url('/assets/van-background.jpg') no-repeat center center / cover;
-    opacity: 0.2; /* 0 = invisible, 1 = full */
+    opacity: 0.25; /* 0 = invisible, 1 = full */
     position: absolute;
     inset: 0;
     z-index: 0;
@@ -27,7 +27,7 @@ ion-content {
 /* container to keep the form centered & above bg */
 .login-form-container {
   background-color: #232F3E;
-  position: relative;
+  border-radius: 16px;
   z-index: 1; /* sit above ion-content::before */
   width: 100%;
   max-width: 425px;
@@ -183,4 +183,40 @@ ion-note.block {
   ion-button.ion-margin-top {
     width: 100%;
   }
+}
+
+/* --- Input Field Animations Only --- */
+
+.email,
+.password {
+  position: relative;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --border-width: 2px;
+}
+
+/* Enhanced focus effects */
+.email:focus-within,
+.password:focus-within {
+  transform: translateY(-2px) scale(1.02);
+  --background: rgba(255, 255, 255, 0.35);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* Input glow effect */
+.email::after,
+.password::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: var(--ion-color-primary);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateX(-50%);
+}
+
+.email:focus-within::after,
+.password:focus-within::after {
+  width: 100%;
 }

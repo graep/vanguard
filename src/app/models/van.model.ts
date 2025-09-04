@@ -2,10 +2,11 @@ export type VanType = 'EDV' | 'CDV' | 'LMR';
 
 export interface Van {
   docId: string;
-  vin: string;
+  VIN: string;
   type: string;
   number: number;
   isGrounded: boolean;
+  
   notes?: string;
   imageUrl?: string;
 }

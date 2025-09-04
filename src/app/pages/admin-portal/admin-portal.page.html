@@ -24,22 +24,12 @@
       <ion-grid>
         <ion-row>
           <ion-col size="12" size-md="6" size-lg="4" *ngFor="let van of filteredEdvs" (click)="viewVan(van)">
-            <div class="van-card">
+            <div class="van-card" [class.active]="!van.isGrounded" [class.grounded]="van.isGrounded">
               <div class="van-card-content">
                 <img [src]="'assets/EDV.jpg'" alt="EDV" class="van-image"/>
                 <div class="van-details">
                   <h4 class="van-id">{{ van.number || 'Unknown' }}</h4>
-                  <div class="van-type">Electric Delivery Van</div>
-                  <div class="van-status">
-                    <span class="status-indicator" [class.active]="!van.isGrounded" [class.grounded]="van.isGrounded"></span>
-                    <span class="status-text" [class.active]="!van.isGrounded" [class.grounded]="van.isGrounded">
-                      {{ van.isGrounded ? 'Grounded' : 'Active' }}
-                    </span>
-                  </div>
-                </div>
-                <div class="van-info" *ngIf="van.vin">
-                  <div class="van-vin">{{ van.vin | slice:0:8 }}...</div>
-                  <div class="last-inspection">Click to inspect</div>
+                  <div class="van-vin">{{ van.VIN || 'No VIN Available' }}</div>
                 </div>
               </div>
             </div>
@@ -55,22 +45,12 @@
       <ion-grid>
         <ion-row>
           <ion-col size="12" size-md="6" size-lg="4" *ngFor="let van of filteredCdvs" (click)="viewVan(van)">
-            <div class="van-card">
+            <div class="van-card" [class.active]="!van.isGrounded" [class.grounded]="van.isGrounded">
               <div class="van-card-content">
                 <img [src]="'assets/CDV.jpg'" alt="CDV" class="van-image"/>
                 <div class="van-details">
                   <h4 class="van-id">{{ van.number || 'Unknown' }}</h4>
-                  <div class="van-type">Cargo Delivery Van</div>
-                  <div class="van-status">
-                    <span class="status-indicator" [class.active]="!van.isGrounded" [class.grounded]="van.isGrounded"></span>
-                    <span class="status-text" [class.active]="!van.isGrounded" [class.grounded]="van.isGrounded">
-                      {{ van.isGrounded ? 'Grounded' : 'Active' }}
-                    </span>
-                  </div>
-                </div>
-                <div class="van-info" *ngIf="van.vin">
-                  <div class="van-vin">{{ van.vin | slice:0:8 }}...</div>
-                  <div class="last-inspection">Click to inspect</div>
+                  <div class="van-type">{{ van.VIN || 'No VIN Available' }}</div>
                 </div>
               </div>
             </div>

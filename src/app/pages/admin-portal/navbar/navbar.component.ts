@@ -23,10 +23,10 @@ export class NavbarComponent implements OnInit {
 
 
   menuItems = [
-    { title: 'Dashboard', icon: 'home-outline', route: '/admin/dashboard', active: true },
+    { title: 'Dashboard', icon: 'home-outline', route: '/admin', active: true },
     { title: 'Users', icon: 'people-outline', route: '/admin/users', active: false },
     {
-      title: 'Pending Reviews', 
+      title: 'Pending Submissions', 
       icon: 'document-outline', 
       action: () => this.openPendingModal(), 
       active: false,

@@ -1,31 +1,80 @@
+<!-- recent-submissions-modal.component.html -->
 <ion-header>
-    <ion-toolbar>
-      <ion-title>Pending Submissions</ion-title>
-      <ion-buttons slot="end">
-        <ion-button (click)="close()">Close</ion-button>
-      </ion-buttons>
-    </ion-toolbar>
-  </ion-header>
+  <ion-toolbar>
+    <ion-title>Pending Submissions</ion-title>
+    <ion-buttons slot="end">
+      <ion-button fill="clear" (click)="close()">
+        <ion-icon name="close"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
 
-  <ion-content class="ion-padding">
-    <ion-segment [(ngModel)]="onlyUnseen" value="true" (ionChange)="reload()">
-      <ion-segment-button [value]="true">Unseen</ion-segment-button>
-      <ion-segment-button [value]="false">All</ion-segment-button>
+<ion-content>
+  <div class="content-wrapper">
+    
+    <!-- Segment Tabs -->
+    <ion-segment [(ngModel)]="onlyUnseen" (ionChange)="reload()" class="filter-segment">
+      <ion-segment-button [value]="true">
+        <ion-label>UNSEEN</ion-label>
+      </ion-segment-button>
+      <ion-segment-button [value]="false">
+        <ion-label>ALL</ion-label>
+      </ion-segment-button>
     </ion-segment>
 
-    <ion-list class="ion-margin-top">
-      <ion-item *ngFor="let i of items$ | async" [disabled]="isBusy(i.id)">
-        <ion-label>
-          <div class="text-base">{{ i.vanType }}-{{ i.vanNumber }}</div>
-          <div class="text-sm ion-text-wrap">
-            {{ i.createdAt?.toDate() | date:'short' }}
-            <ng-container *ngIf="i.status === 'pending'"> • <b>Pending</b></ng-container>
-            <ng-container *ngIf="i.seen === false"> • <i>Unseen</i></ng-container>
-          </div>
-        </ion-label>
-        <ion-button fill="clear" (click)="view(i)">View</ion-button>
-        <ion-button color="success" (click)="approve(i)">Approve</ion-button>
-        <ion-button color="danger" (click)="reject(i)">Reject</ion-button>
-      </ion-item>
-    </ion-list>
-  </ion-content>
+    <!-- Submissions List -->
+    <div class="submissions-list">
+      <div 
+        *ngFor="let item of items$ | async; trackBy: trackById" 
+        class="submission-item"
+        [class.busy]="isBusy(item.id)"
+      >
+        <!-- Vehicle Info -->
+        <div class="vehicle-info">
+          <div class="vehicle-label">{{ item.vanType }} {{ item.vanNumber }}</div>
+          <div class="submission-time">{{ item.createdAt?.toDate() | date:'M/d/yy, h:mm a' }}</div>
+        </div>
+
+        <!-- Actions -->
+        <div class="action-buttons">
+          <ion-button 
+            size="small" 
+            fill="outline"
+            (click)="view(item)"
+            [disabled]="isBusy(item.id)"
+          >
+            View
+          </ion-button>
+          
+          <ion-button 
+            size="small" 
+            color="success"
+            (click)="approve(item)"
+            [disabled]="isBusy(item.id)"
+          >
+            Approve
+          </ion-button>
+          
+          <ion-button 
+            size="small" 
+            color="danger"
+            (click)="reject(item)"
+            [disabled]="isBusy(item.id)"
+          >
+            Reject
+          </ion-button>
+        </div>
+
+        <!-- Loading indicator -->
+        <ion-spinner *ngIf="isBusy(item.id)" name="crescent" class="loading-spinner"></ion-spinner>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="(items$ | async)?.length === 0" class="empty-state">
+      <p>{{ onlyUnseen ? 'No unseen submissions' : 'No submissions found' }}</p>
+    </div>
+    
+  </div>
+</ion-content>

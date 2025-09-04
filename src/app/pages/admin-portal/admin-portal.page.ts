@@ -106,24 +106,12 @@ export class AdminPortalPage implements OnInit {
     this.filteredEdvs = filteredData.filter((v) => (v.type || '').toUpperCase() === 'EDV');
   }
 
-
-
-  async viewVan(van: any) {
-    const [type, num] =
-      typeof van.docId === 'string' && van.docId.includes('-')
-        ? van.docId.split('-')
-        : [van.type ?? van.vanType, String(van.number ?? van.vanNumber)];
-
-    const id = await this.insp.getLatestInspectionId(type, num);
-
-    if (!id) {
-      /* show toast if needed */
-      return;
-    }
-
-    this.router.navigate(['/van-report', id], { queryParams: { review: '1' } });
+  viewVan(van: Van) {
+    // Navigate to the dynamic van detail page using the van's docId
+    this.router.navigate(['/van', van.docId]);
   }
 
+  
   async logout() {
     await this.auth.signOut();
     this.router.navigate(['/login']);

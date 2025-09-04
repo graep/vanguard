@@ -373,6 +373,9 @@
 }
 
 // Responsive breakpoints
+// Add this to your existing navbar.component.scss - REPLACE the existing mobile breakpoint section
+
+// Responsive breakpoints
 @media (max-width: 768px) {
   .desktop-only {
     display: none !important;
@@ -388,6 +391,7 @@
   
   .sidebar {
     transform: translateX(-100%);
+    transition: transform 0.3s ease; // Add smooth transition
     
     &.mobile-open {
       transform: translateX(0);
@@ -397,8 +401,20 @@
   .content-wrapper {
     margin-left: 0 !important;
     width: 100% !important;
-    position: static;
-    height: auto;
+    position: static !important; // Key fix - don't use fixed positioning on mobile
+    height: auto !important;
+    min-height: 100vh;
+    overflow: visible !important; // Allow natural scrolling
+    
+    // Remove any transforms or transitions that might interfere
+    transform: none !important;
+    transition: none !important;
+  }
+  
+  // Ensure the content inside behaves properly
+  .content-wrapper ion-content {
+    position: static !important;
+    height: auto !important;
     min-height: 100vh;
   }
 }
@@ -410,5 +426,11 @@
   
   .desktop-only {
     display: block !important;
+  }
+  
+  // Ensure desktop behavior is restored
+  .content-wrapper {
+    position: fixed;
+    overflow: auto;
   }
 }

@@ -1,7 +1,7 @@
 // recent-submissions-modal.component.ts
 import { Component, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';                  // ✅ for ngModel
+import { FormsModule } from '@angular/forms';
 import {
   IonicModule,
   AlertController,
@@ -15,16 +15,14 @@ import { Router } from '@angular/router';
 @Component({
   selector: 'app-recent-submissions-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, IonicModule],           // ✅ include FormsModule
+  imports: [CommonModule, FormsModule, IonicModule],
   templateUrl: './recent-submissions-modal.component.html',
   styleUrls: ['./recent-submissions-modal.component.scss']
 })
 export class RecentSubmissionsModalComponent implements OnInit {
   @Input() pageSize = 12;
 
-  // ✅ bound in the template's ion-segment
   onlyUnseen = true;
-
   items$!: Observable<Inspection[]>;
   busy = new Set<string>();
 
@@ -37,57 +35,114 @@ export class RecentSubmissionsModalComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    this.reload();                                            // ✅ initial load
+    this.reload();
   }
 
-  // ✅ called by (ionChange) on the segment
   reload() {
     this.items$ = this.insp.pendingSubmissions$(this.onlyUnseen, this.pageSize);
   }
 
-  close() { this.modalCtrl.dismiss(); }
-
-  isBusy(id: string) { return this.busy.has(id); }
-
-  async view(i: Inspection) {
-    console.log('Inspection from modal:', i);
-    try { await this.insp.markSeen(i.id); } catch {}
-    await this.modalCtrl.dismiss();
-    this.router.navigate(['/van-report', i.id], { queryParams: { review: '1' } });
+  close() { 
+    this.modalCtrl.dismiss(); 
   }
 
-  async approve(i: Inspection) {
-    if (this.busy.has(i.id)) return;
-    this.busy.add(i.id);
+  isBusy(id: string) { 
+    return this.busy.has(id); 
+  }
+
+  trackById(index: number, item: Inspection) {
+    return item.id;
+  }
+
+  async view(item: Inspection) {
+    console.log('Viewing inspection:', item);
+    
+    try { 
+      await this.insp.markSeen(item.id); 
+    } catch (error) {
+      console.log('Could not mark as seen:', error);
+    }
+    
+    await this.modalCtrl.dismiss();
+    this.router.navigate(['/van-report', item.id], { 
+      queryParams: { review: '1' } 
+    });
+  }
+
+  async approve(item: Inspection) {
+    if (this.busy.has(item.id)) return;
+    
+    this.busy.add(item.id);
+    
     try {
-      await this.insp.approveInspection(i.id);
-      (await this.toast.create({ message: 'Approved', duration: 1400 })).present();
-    } catch (e: any) {
-      (await this.toast.create({ message: e?.message ?? 'Approve failed', color: 'danger', duration: 1800 })).present();
+      await this.insp.approveInspection(item.id);
+      const toast = await this.toast.create({ 
+        message: 'Approved', 
+        duration: 2000,
+        color: 'success'
+      });
+      await toast.present();
+    } catch (error: any) {
+      const toast = await this.toast.create({ 
+        message: error?.message || 'Approve failed', 
+        color: 'danger', 
+        duration: 2000
+      });
+      await toast.present();
     } finally {
-      this.busy.delete(i.id);
+      this.busy.delete(item.id);
     }
   }
 
-  async reject(i: Inspection) {
-    const a = await this.alert.create({
-      header: 'Reject submission?',
-      inputs: [{ name: 'reason', type: 'text', placeholder: 'Reason (optional)' }],
+  async reject(item: Inspection) {
+    if (this.busy.has(item.id)) return;
+
+    const alert = await this.alert.create({
+      header: 'Reject Submission',
+      message: `Reject ${item.vanType} ${item.vanNumber}?`,
+      inputs: [
+        { 
+          name: 'reason', 
+          type: 'textarea', 
+          placeholder: 'Reason (optional)',
+          attributes: { maxlength: 200 }
+        }
+      ],
       buttons: [
         { text: 'Cancel', role: 'cancel' },
         {
-          text: 'Reject', role: 'confirm', handler: async (data: any) => {
-            this.busy.add(i.id);
-            try {
-              await this.insp.rejectInspection(i.id, data?.reason);
-              (await this.toast.create({ message: 'Rejected', duration: 1400 })).present();
-            } finally {
-              this.busy.delete(i.id);
-            }
+          text: 'Reject', 
+          role: 'confirm',
+          handler: async (data: any) => {
+            await this.performReject(item, data?.reason);
           }
         }
       ]
     });
-    await a.present();
+    
+    await alert.present();
+  }
+
+  private async performReject(item: Inspection, reason: string) {
+    this.busy.add(item.id);
+    
+    try {
+      await this.insp.rejectInspection(item.id, reason);
+      const toast = await this.toast.create({ 
+        message: 'Rejected', 
+        duration: 2000,
+        color: 'warning'
+      });
+      await toast.present();
+    } catch (error: any) {
+      const toast = await this.toast.create({ 
+        message: error?.message || 'Reject failed', 
+        color: 'danger', 
+        duration: 2000
+      });
+      await toast.present();
+    } finally {
+      this.busy.delete(item.id);
+    }
   }
 }

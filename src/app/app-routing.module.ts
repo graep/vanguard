@@ -1,3 +1,4 @@
+// src/app/app-routing.module.ts
 import { NgModule } from '@angular/core';
 import { PreloadAllModules, RouterModule, Routes } from '@angular/router';
 import { authGuard } from './guards/auth.guard';
@@ -30,7 +31,15 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
 
-  // ✅ Support direct links from the modal (top-level route)
+  // Dynamic van detail page - accessible via /van/:id
+  {
+    path: 'van/:id',
+    loadComponent: () =>
+      import('./pages/van-details/van-details.page').then(m => m.VanDetailPage),
+    canActivate: [authGuard],
+  },
+
+  // Support direct links from the modal (top-level route)
   {
     path: 'van-report/:id',
     loadComponent: () =>
@@ -57,8 +66,8 @@ export const routes: Routes = [
     ],
   },
 
-  // (optional) catch-all
-  // { path: '**', redirectTo: 'login' },
+  // ✅ Catch-all route for unknown paths
+  { path: '**', redirectTo: 'login' },
 ];
 
 @NgModule({

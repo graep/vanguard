@@ -1,0 +1,173 @@
+.maintenance-tab-content {
+  .section-header {
+    margin-bottom: 20px;
+    
+    h3 {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--ion-color-dark);
+      margin: 0 0 8px 0;
+    }
+    
+    .section-subtitle {
+      font-size: 0.9rem;
+      color: var(--ion-color-medium);
+      margin: 0;
+    }
+  }
+
+  .compact-stats-row {
+        display: flex;
+        justify-content: space-evenly;
+      }
+
+  .maintenance-card {
+    margin-bottom: 12px;
+    border-left: 4px solid transparent;
+
+    &.status-completed {
+      border-left-color: var(--ion-color-success);
+    }
+
+    &.status-scheduled {
+      border-left-color: var(--ion-color-warning);
+    }
+
+    &.status-overdue {
+      border-left-color: var(--ion-color-danger);
+    }
+  }
+
+  .maintenance-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 12px;
+
+    .maintenance-icon {
+      font-size: 20px;
+      margin-top: 2px;
+      flex-shrink: 0;
+      
+      &.completed {
+        color: var(--ion-color-success);
+      }
+      
+      &.scheduled {
+        color: var(--ion-color-warning);
+      }
+      
+      &.overdue {
+        color: var(--ion-color-danger);
+      }
+    }
+
+    .maintenance-meta {
+      flex: 1;
+
+      h4 {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--ion-color-dark);
+        margin: 0 0 6px 0;
+      }
+
+      .maintenance-details {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+
+        .maintenance-date,
+        .maintenance-mileage,
+        .maintenance-cost {
+          font-size: 0.85rem;
+          color: var(--ion-color-medium);
+        }
+      }
+    }
+
+    .status-chip {
+      align-self: flex-start;
+      height: 28px;
+      font-size: 0.8rem;
+    }
+  }
+
+  .performed-by {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+    color: var(--ion-color-medium-tint);
+    margin-bottom: 8px;
+
+    .person-icon {
+      font-size: 14px;
+      color: var(--ion-color-medium);
+    }
+  }
+
+  .maintenance-notes {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    background: var(--ion-color-light);
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 0.9rem;
+    color: var(--ion-color-dark-tint);
+    line-height: 1.4;
+
+    .notes-icon {
+      font-size: 16px;
+      color: var(--ion-color-medium);
+      margin-top: 2px;
+      flex-shrink: 0;
+    }
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--ion-color-medium);
+
+    .empty-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+
+    h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 0 0 8px 0;
+    }
+
+    p {
+      font-size: 0.9rem;
+      margin: 0 0 20px 0;
+    }
+
+    .add-maintenance-btn {
+      --border-radius: 20px;
+    }
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .maintenance-header {
+    .maintenance-meta .maintenance-details {
+      flex-direction: column;
+      gap: 4px;
+    }
+  }
+
+  .performed-by {
+    margin-left: 32px;
+  }
+
+  .maintenance-notes {
+    margin-left: 32px;
+  }
+}
