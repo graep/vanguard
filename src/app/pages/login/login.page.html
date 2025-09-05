@@ -28,10 +28,16 @@
           <ion-input type="password" formControlName="password" autocomplete="current-password"></ion-input>
         </ion-item>
 
-        <ion-button expand="block" type="submit" class="ion-margin-top" [disabled]="form.invalid">
-          Go
-        </ion-button>
+        <!-- Buttons -->
+        <div class="button-section">
+          <ion-button expand="block" type="submit" class="login-button" [disabled]="form.invalid">
+            Login
+          </ion-button>
 
+          <ion-button *ngIf="isDriverMode" fill="clear" size="small" class="signup-link" (click)="goToSignup()">
+            Create account
+          </ion-button>
+        </div>
       </form>
     </div>
   </div>

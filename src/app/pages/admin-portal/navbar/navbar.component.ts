@@ -1,41 +1,51 @@
-// navbar.component.ts
-import { Component, OnInit } from '@angular/core';
-import { IonicModule } from "@ionic/angular";
+// src/app/pages/admin-portal/navbar/navbar.component.ts
+import {
+  Component,
+  OnInit,
+  OnDestroy
+} from '@angular/core';
+import { IonicModule, ModalController } from '@ionic/angular';
 import { CommonModule } from '@angular/common';
 import { Auth } from '@angular/fire/auth';
-import { Router } from '@angular/router';
-import { ModalController } from '@ionic/angular'
+import { Router, RouterLink, RouterLinkActive } from '@angular/router';
+
+import { Subscription } from 'rxjs';
+
 import { RecentSubmissionsModalComponent } from '@app/components/recent-submissions/recent-submissions-modal.component';
 import { InspectionService } from '@app/services/inspection.service';
 
 @Component({
   selector: 'app-admin-navbar',
   standalone: true,
-  imports: [IonicModule, CommonModule],
+  imports: [IonicModule, CommonModule, RouterLink, RouterLinkActive],
   templateUrl: './navbar.component.html',
   styleUrls: ['./navbar.component.scss'],
 })
-export class NavbarComponent implements OnInit {
+export class NavbarComponent implements OnInit, OnDestroy {
+  // UI state
   today = new Date();
-  isCollapsed = true;
+  isCollapsed = true; // Changed back to true - default collapsed
   isMobileMenuOpen = false;
+
+  // notifications
   hasNewSubmissions = true;
 
+  private subs: Subscription[] = [];
 
+  // Menu config (no manual 'active' flags; routing decides)
   menuItems = [
-    { title: 'Dashboard', icon: 'home-outline', route: '/admin', active: true },
-    { title: 'Users', icon: 'people-outline', route: '/admin/users', active: false },
+    { title: 'Dashboard', icon: 'home-outline', route: '/admin' },
+    { title: 'Users', icon: 'people-outline', route: '/admin/users' },
     {
-      title: 'Pending Submissions', 
-      icon: 'document-outline', 
-      action: () => this.openPendingModal(), 
-      active: false,
+      title: 'Pending Submissions',
+      icon: 'document-outline',
+      action: () => this.openPendingModal(),
       hasNotification: () => this.hasNewSubmissions
     },
-    { title: 'Analytics', icon: 'analytics-outline', route: '/admin/analytics', active: false },
-    { title: 'Projects', icon: 'folder-outline', route: '/admin/projects', active: false },
-    { title: 'Messages', icon: 'chatbubbles-outline', route: '/admin/messages', active: false },
-    { title: 'Settings', icon: 'settings-outline', route: '/admin/settings', active: false }
+    { title: 'Analytics', icon: 'analytics-outline', route: '/admin/analytics' },
+    { title: 'Projects', icon: 'folder-outline', route: '/admin/projects' },
+    { title: 'Messages', icon: 'chatbubbles-outline', route: '/admin/messages' },
+    { title: 'Settings', icon: 'settings-outline', route: '/admin/settings' }
   ];
 
   constructor(
@@ -45,29 +55,30 @@ export class NavbarComponent implements OnInit {
     private inspectionService: InspectionService
   ) {}
 
+  // ---------- Lifecycle ----------
   ngOnInit() {
     this.checkForNewSubmissions();
   }
 
-  async checkForNewSubmissions() {
-  try {
-    this.inspectionService.pendingSubmissions$(true, 10).subscribe({
-      next: (newSubmissions) => {
-        this.hasNewSubmissions = newSubmissions.length > 0;
-        console.log('New submissions count:', newSubmissions.length);
-      },
-      error: (error) => {
-        console.error('Error checking submissions:', error);
-        this.hasNewSubmissions = false;
-      }
-    });
-  } catch (error) {
-    console.error('Error checking submissions:', error);
-    this.hasNewSubmissions = false;
+  ngOnDestroy() {
+    console.log('NavbarComponent ngOnDestroy called');
+    this.subs.forEach(s => s.unsubscribe());
   }
-}
 
-   async openPendingModal() {
+  // ---------- Data / notifications ----------
+  async checkForNewSubmissions() {
+    try {
+      const sub = this.inspectionService.pendingSubmissions$(true, 10).subscribe({
+        next: (list) => { this.hasNewSubmissions = list.length > 0; },
+        error: () => { this.hasNewSubmissions = false; }
+      });
+      this.subs.push(sub);
+    } catch {
+      this.hasNewSubmissions = false;
+    }
+  }
+
+  async openPendingModal() {
     const modal = await this.modalCtrl.create({
       component: RecentSubmissionsModalComponent,
     });
@@ -78,59 +89,50 @@ export class NavbarComponent implements OnInit {
   setNewSubmissions(hasNew: boolean) {
     this.hasNewSubmissions = hasNew;
   }
-  
+
+  // ---------- Sidebar interactions ----------
   toggleSidebar() {
     this.isCollapsed = !this.isCollapsed;
-    console.log('Sidebar collapsed:', this.isCollapsed); // Debug log
   }
 
-  toggleMobileMenu() {
-    this.isMobileMenuOpen = !this.isMobileMenuOpen;
-  }
-
-  closeMobileMenu() {
-    this.isMobileMenuOpen = false;
-  }
-
-onMenuItemClick(item: any, event: Event) {
-  // If sidebar is collapsed, expand it and don't navigate
-  if (this.isCollapsed) {
-    event.stopPropagation();
-    this.toggleSidebar();
-    return;
+  toggleMobileMenu() { 
+    this.isMobileMenuOpen = !this.isMobileMenuOpen; 
   }
   
-  // If expanded, handle action or navigation
-  // Remove active from all items
-  this.menuItems.forEach(menuItem => menuItem.active = false);
-  // Set clicked item as active
-  item.active = true;
-  
-  // Check if item has an action (like opening a modal)
-  if (item.action) {
-    item.action(); // Execute the action (opens the modal)
-  } else if (item.route) {
-    // Navigate to route if no action
-    this.router.navigate([item.route]);
+  closeMobileMenu() { 
+    this.isMobileMenuOpen = false; 
   }
-  
-  // Close mobile menu if open
-  this.closeMobileMenu();
-}
 
   onSidebarAreaClick(event: Event) {
-    // Only toggle if clicking on empty space (not on specific items)
     if (event.target === event.currentTarget) {
       this.toggleSidebar();
     }
   }
 
-  onDateClick() {
-    console.log('Date clicked:', this.today);
+  onDateClick() { 
+    /* noop or open date picker */ 
   }
 
   async logout() {
     await this.auth.signOut();
     this.router.navigate(['/login']);
+  }
+
+  // ---------- Menu item clicks ----------
+  /** Used by the template. Router handles navigation for items with a route.
+   *  For action-only items (like the modal), run the action and keep the current route active. */
+  handleItemClick(item: any, _index: number, ev: MouseEvent) {
+    // Don't collapse on navigation - let user control sidebar state
+    if (!item.route && item.action) {
+      ev.stopPropagation();
+      item.action();
+    }
+
+    this.closeMobileMenu();
+  }
+
+  /** Back-compat if your template still calls onMenuItemClick */
+  onMenuItemClick(item: any, ev: Event) {
+    this.handleItemClick(item, -1, ev as MouseEvent);
   }
 }

@@ -1,0 +1,128 @@
+<app-header 
+  class="ion-text-center" 
+  title="Create Account" 
+  [showLogout]="false">
+</app-header>
+
+<ion-content [fullscreen]="true">
+  <div class="wrapper">
+    <div class="signup-form-container">
+      <form [formGroup]="signupForm" (ngSubmit)="signup()" class="signup-form">
+        
+        <div class="logo-container">
+          <img src="assets/Vanguard-Logo.png" alt="Vanguard Logo" />
+        </div>
+
+        <div class="form-header">
+          <h2>Create Driver Account</h2>
+        </div>
+
+        <!-- Full Name -->
+        <ion-item class="form-field">
+          <ion-label position="stacked">Full Name *</ion-label>
+          <ion-input 
+            type="text" 
+            formControlName="displayName"
+            placeholder="Enter your full name">
+          </ion-input>
+        </ion-item>
+        <ion-note 
+          *ngIf="signupForm.get('displayName')?.invalid && signupForm.get('displayName')?.touched"
+          color="danger">
+          Full name is required
+        </ion-note>
+
+        <!-- Email -->
+        <ion-item class="form-field">
+          <ion-label position="stacked">Email *</ion-label>
+          <ion-input 
+            type="email" 
+            formControlName="email"
+            placeholder="your.email@company.com">
+          </ion-input>
+        </ion-item>
+        <ion-note 
+          *ngIf="signupForm.get('email')?.invalid && signupForm.get('email')?.touched"
+          color="danger">
+          Valid email address is required
+        </ion-note>
+
+        <!-- Password -->
+        <ion-item class="form-field">
+          <ion-label position="stacked">Password *</ion-label>
+          <ion-input 
+            type="password" 
+            formControlName="password"
+            placeholder="At least 6 characters">
+          </ion-input>
+        </ion-item>
+        <ion-note 
+          *ngIf="signupForm.get('password')?.invalid && signupForm.get('password')?.touched"
+          color="danger">
+          Password must be at least 6 characters
+        </ion-note>
+
+        <!-- Confirm Password -->
+        <ion-item class="form-field">
+          <ion-label position="stacked">Confirm Password *</ion-label>
+          <ion-input 
+            type="password" 
+            formControlName="confirmPassword"
+            placeholder="Re-enter your password">
+          </ion-input>
+        </ion-item>
+        <ion-note 
+          *ngIf="passwordMismatch && signupForm.get('confirmPassword')?.touched"
+          color="danger">
+          Passwords do not match
+        </ion-note>
+
+        <!-- Optional Fields -->
+        <div class="section-divider">
+          <h3>Optional Information</h3>
+        </div>
+
+        <ion-item class="form-field optional">
+          <ion-label position="stacked">Phone Number</ion-label>
+          <ion-input 
+            type="tel" 
+            formControlName="phoneNumber"
+            placeholder="(555) 123-4567">
+          </ion-input>
+        </ion-item>
+
+        <ion-item class="form-field optional">
+          <ion-label position="stacked">Employee ID</ion-label>
+          <ion-input 
+            type="text" 
+            formControlName="employeeId"
+            placeholder="Your employee ID">
+          </ion-input>
+        </ion-item>
+
+        <!-- Submit Button -->
+        <ion-button 
+          expand="block" 
+          type="submit" 
+          [disabled]="!canSubmit"
+          class="signup-button">
+          <ion-icon name="person-add" slot="start"></ion-icon>
+          Create Account
+        </ion-button>
+
+        <!-- Back to Login -->
+        <div class="form-footer">
+          <p>Already have an account?</p>
+          <ion-button 
+            fill="clear" 
+            (click)="goToLogin()" 
+            class="login-link">
+            <ion-icon name="log-in" slot="start"></ion-icon>
+            Sign In
+          </ion-button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</ion-content>

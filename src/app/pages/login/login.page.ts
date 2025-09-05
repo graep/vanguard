@@ -1,3 +1,4 @@
+// src/app/pages/login/login.page.ts
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { FormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
@@ -5,17 +6,14 @@ import { AuthService } from '../../services/auth.service';
 import { Router } from '@angular/router';
 import { ToastController } from '@ionic/angular';
 import {
-  IonNote,
-  IonButton,
+  IonContent,
   IonItem,
   IonLabel,
-  IonContent,
-  IonHeader,
-  IonToolbar,
-  IonTitle,
   IonInput,
+  IonButton,
   IonSegment,
-  IonSegmentButton
+  IonSegmentButton,
+  IonIcon
 } from "@ionic/angular/standalone";
 
 type LoginMode = 'driver' | 'admin';
@@ -26,8 +24,16 @@ type LoginMode = 'driver' | 'admin';
   templateUrl: './login.page.html',
   styleUrls:['./login.page.scss'],
   imports: [
-    IonContent, IonLabel, IonItem, IonButton,
-    IonInput, IonSegment, IonSegmentButton, ReactiveFormsModule, CommonModule
+    IonContent, 
+    IonLabel, 
+    IonItem, 
+    IonButton,
+    IonInput, 
+    IonSegment, 
+    IonSegmentButton,
+    IonIcon,
+    ReactiveFormsModule, 
+    CommonModule
   ],
 })
 export class LoginPage {
@@ -37,10 +43,10 @@ export class LoginPage {
     password: ['', Validators.required],
   });
 
-  // adjust these routes to match your app
+  // Routes based on user role
   private routeByMode: Record<LoginMode, string> = {
     driver: '/van-selection',
-    admin: '/admin-portal', // or '/admin'
+    admin: '/admin-portal',
   };
 
   constructor(
@@ -59,14 +65,42 @@ export class LoginPage {
 
     try {
       await this.auth.login(email, password);
-      this.router.navigateByUrl(this.routeByMode[mode], { replaceUrl: true });
+      
+      // Wait for user profile to load, then route based on actual role
+      setTimeout(() => {
+        // Check if your auth service has currentUserProfile$
+        if (this.auth.currentUserProfile$) {
+          const userProfile = this.auth.currentUserProfile$.value;
+          if (userProfile) {
+            // Route based on actual user role, not selected mode
+            const route = userProfile.role === 'admin' ? '/admin-portal' : '/van-selection';
+            this.router.navigateByUrl(route, { replaceUrl: true });
+          } else {
+            // Fallback to selected mode if profile not loaded
+            this.router.navigateByUrl(this.routeByMode[mode], { replaceUrl: true });
+          }
+        } else {
+          // If no profile system, just use selected mode
+          this.router.navigateByUrl(this.routeByMode[mode], { replaceUrl: true });
+        }
+      }, 500);
+      
     } catch (e: any) {
       this.showToast('Invalid email or password.', 'danger');
     }
   }
 
+  // Navigate to signup page
+  goToSignup() {
+    this.router.navigate(['/signup']);
+  }
+
   get mode(): LoginMode {
     return this.form.controls.mode.value as LoginMode;
+  }
+
+  get isDriverMode(): boolean {
+    return this.mode === 'driver';
   }
 
   private async showToast(message: string, color: 'danger' | 'warning' | 'success' = 'danger') {

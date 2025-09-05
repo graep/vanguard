@@ -30,30 +30,36 @@
     </ion-button>
   </div>
 
-<!-- Navigation Menu -->
-<div class="sidebar-menu" (click)="onSidebarAreaClick($event)">
-  <div class="menu-item" 
-       *ngFor="let item of menuItems"
-       [class.active]="item.active"
-       (click)="onMenuItemClick(item, $event)">
-    <div class="menu-icon">
-      <div class="icon-container">
-        <ion-icon [name]="item.icon"></ion-icon>
-        <div class="notification-dot" 
-             *ngIf="item.hasNotification && item.hasNotification()">
+  <!-- Navigation Menu -->
+  <div class="sidebar-menu" (click)="onSidebarAreaClick($event)">
+    <div 
+      class="menu-item"
+      *ngFor="let item of menuItems; let i = index"
+      [routerLink]="item.route || null"
+      routerLinkActive="active"
+      [routerLinkActiveOptions]="{ exact: item.route === '/admin' }"
+      [class.clickable]="!!item.route || !!item.action"
+      (click)="handleItemClick(item, i, $event)">
+      
+      <div class="menu-icon">
+        <div class="icon-container">
+          <ion-icon [name]="item.icon"></ion-icon>
+          <div class="notification-dot" 
+               *ngIf="item.hasNotification && item.hasNotification()">
+          </div>
         </div>
       </div>
-    </div>
-    <div class="menu-text" [class.hidden]="isCollapsed">
-      {{ item.title }}
-    </div>
-    
-    <!-- Tooltip for collapsed state -->
-    <div class="tooltip" *ngIf="isCollapsed">
-      {{ item.title }}
+      
+      <div class="menu-text" [class.hidden]="isCollapsed">
+        {{ item.title }}
+      </div>
+      
+      <!-- Tooltip for collapsed state -->
+      <div class="tooltip" *ngIf="isCollapsed">
+        {{ item.title }}
+      </div>
     </div>
   </div>
-</div>
 
   <!-- Bottom section with user actions -->
   <div class="sidebar-bottom" (click)="onSidebarAreaClick($event)">

@@ -85,16 +85,41 @@
 }
 
 .sidebar-menu {
+  position: relative;        /* anchor for active indicator */
   flex: 1;
   padding: 20px 0;
   overflow-y: auto;
-  
-  // Hide scrollbars
-  &::-webkit-scrollbar {
-    display: none;
-  }
+
+  /* Hide scrollbars */
+  &::-webkit-scrollbar { display: none; }
   scrollbar-width: none; /* Firefox */
-  
+
+  /* Animated pill indicator (behind items) */
+  .active-indicator {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    top: 0;                 /* we animate with translateY */
+    border-radius: 12px;
+    background: linear-gradient(
+      90deg,
+      var(--ion-color-secondary) 0%,
+      rgba(var(--ion-color-secondary-rgb, 56,128,255), 0.25) 100%
+    );
+    box-shadow: 0 10px 24px rgba(0,0,0,.25);
+    transform: translateY(0);
+    height: 0;              /* set via inline style from TS */
+    opacity: 0;
+    transition:
+      transform 260ms cubic-bezier(.2,.8,.2,1),
+      height 180ms cubic-bezier(.2,.8,.2,1),
+      opacity 180ms ease;
+    z-index: 0;             /* behind items */
+    pointer-events: none;
+  }
+
+  .active-indicator.show { opacity: .95; }
+
   .menu-item {
     display: flex;
     align-items: center;
@@ -103,51 +128,42 @@
     cursor: pointer;
     transition: var(--transition);
     position: relative;
+    z-index: 1;             /* above the indicator */
     border-left: 3px solid transparent;
-    
+    background: transparent; /* let the pill provide the bg */
+
     &:hover {
       background: rgba(255, 255, 255, 0.1);
       color: var(--sidebar-text);
       border-left-color: var(--ion-color-secondary);
     }
-    
+
+    /* Active look now relies on the pill; keep text/icon emphasis */
     &.active {
-      background: rgba(255, 255, 255, 0.15);
+      background: transparent;                 /* was rgba(...0.15) */
       color: var(--sidebar-text);
-      border-left-color: var(--ion-color-secondary);
-      
-      .menu-icon ion-icon {
-        color: var(--ion-color-secondary);
-      }
+      border-left-color: transparent;          /* avoid double accent with pill */
+      .menu-icon ion-icon { color: var(--ion-color-secondary); }
     }
-    
+
     .menu-icon {
-      width: 24px;
-      height: 24px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      width: 24px; height: 24px;
+      display: flex; align-items: center; justify-content: center;
       flex-shrink: 0;
-      
-      ion-icon {
-        font-size: 20px;
-        transition: color 0.3s ease;
-      }
+      ion-icon { font-size: 20px; transition: color 0.3s ease; }
     }
-    
+
     .menu-text {
       margin-left: 15px;
       transition: opacity 0.2s ease;
       white-space: nowrap;
       font-weight: 500;
-      
-      &.hidden {
-        opacity: 0;
-        pointer-events: none;
-      }
+
+      &.hidden { opacity: 0; pointer-events: none; }
     }
   }
 }
+
 
 .sidebar-bottom {
   padding: 20px 0;

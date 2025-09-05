@@ -1,0 +1,112 @@
+<app-admin-navbar></app-admin-navbar>
+
+<ion-header>
+  <ion-toolbar>
+    <ion-title class="ion-text-center">Users</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <div class="content-container">
+  <!-- Stats -->
+  <div class="stats-grid">
+    <ion-card class="stat-card">
+      <ion-card-content>
+        <div class="stat-value">{{ (counts$ | async)?.total ?? 0 }}</div>
+        <div class="stat-label">Total Users</div>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card class="stat-card">
+      <ion-card-content>
+        <div class="stat-value">{{ (counts$ | async)?.active ?? 0 }}</div>
+        <div class="stat-label">Active Users</div>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card class="stat-card">
+      <ion-card-content>
+        <div class="stat-value">{{ (counts$ | async)?.drivers ?? 0 }}</div>
+        <div class="stat-label">Drivers</div>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card class="stat-card">
+      <ion-card-content>
+        <div class="stat-value">{{ (counts$ | async)?.admins ?? 0 }}</div>
+        <div class="stat-label">Admins</div>
+      </ion-card-content>
+    </ion-card>
+  </div>
+
+  <!-- Filter Segment (display only) -->
+  <div class="header-actions">
+    <ion-segment [(ngModel)]="activeFilter" (ionChange)="applyFilter()">
+      <ion-segment-button value="all"><ion-label>All Users</ion-label></ion-segment-button>
+      <ion-segment-button value="active"><ion-label>Active Only</ion-label></ion-segment-button>
+      <ion-segment-button value="drivers"><ion-label>Drivers</ion-label></ion-segment-button>
+      <ion-segment-button value="admins"><ion-label>Admins</ion-label></ion-segment-button>
+    </ion-segment>
+  </div>
+
+  <!-- Users List -->
+  <div class="users-container">
+    <ion-card *ngFor="let user of filteredUsers$ | async; trackBy: trackByUserId"
+              class="user-card"
+              [class.inactive]="!user.isActive">
+      <ion-card-header>
+        <div class="user-header">
+          <div class="user-info">
+            <ion-card-title>{{ user.displayName || 'Unnamed User' }}</ion-card-title>
+            <ion-card-subtitle>{{ user.email }}</ion-card-subtitle>
+          </div>
+
+          <div class="user-badges">
+            <ion-chip [color]="getRoleColor(user.role)">
+              <ion-icon [name]="getRoleIcon(user.role)" slot="start"></ion-icon>
+              <ion-label>{{ user.role | titlecase }}</ion-label>
+            </ion-chip>
+
+            <ion-chip [color]="user.isActive ? 'success' : 'medium'">
+              <ion-icon [name]="user.isActive ? 'checkmark-circle' : 'remove-circle'" slot="start"></ion-icon>
+              <ion-label>{{ user.isActive ? 'Active' : 'Inactive' }}</ion-label>
+            </ion-chip>
+          </div>
+        </div>
+      </ion-card-header>
+
+      <ion-card-content>
+        <div class="user-details">
+          <div class="detail-row" *ngIf="user.department">
+            <ion-icon name="business" class="detail-icon"></ion-icon>
+            <span>{{ user.department }}</span>
+          </div>
+
+          <div class="detail-row" *ngIf="user.employeeId">
+            <ion-icon name="id-card" class="detail-icon"></ion-icon>
+            <span>ID: {{ user.employeeId }}</span>
+          </div>
+
+          <div class="detail-row" *ngIf="user.phoneNumber">
+            <ion-icon name="call" class="detail-icon"></ion-icon>
+            <span>{{ user.phoneNumber }}</span>
+          </div>
+
+          <div class="detail-row">
+            <ion-icon name="calendar" class="detail-icon"></ion-icon>
+            <span>Created: {{ formatDate(user.createdAt) }}</span>
+          </div>
+        </div>
+        <!-- display-only: no buttons -->
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Empty State -->
+    <div *ngIf="(filteredUsers$ | async)?.length === 0" class="empty-state">
+      <ion-icon name="people-outline" class="empty-icon"></ion-icon>
+      <h3>No Users Found</h3>
+      <p>{{ getEmptyStateMessage() }}</p>
+    </div>
+  </div>
+  </div>
+</ion-content>

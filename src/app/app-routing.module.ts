@@ -10,24 +10,35 @@ export const routes: Routes = [
   {
     path: 'login',
     loadComponent: () =>
-      import('./pages/login/login.page').then(m => m.LoginPage),
+      import('./pages/login/login.page').then((m) => m.LoginPage),
+  },
+  {
+    path: 'signup',
+    loadComponent: () =>
+      import('./pages/signup/signup.page').then((m) => m.SignupPage),
   },
   {
     path: 'van-selection',
     loadComponent: () =>
-      import('./pages/van-selection/van-selection.page').then(m => m.VanSelectionPage),
+      import('./pages/van-selection/van-selection.page').then(
+        (m) => m.VanSelectionPage
+      ),
     canActivate: [authGuard],
   },
   {
     path: 'photo-capture/:vanType/:vanNumber',
     loadComponent: () =>
-      import('./pages/photo-capture/photo-capture.page').then(m => m.PhotoCapturePage),
+      import('./pages/photo-capture/photo-capture.page').then(
+        (m) => m.PhotoCapturePage
+      ),
     canActivate: [authGuard],
   },
   {
     path: 'user-review',
     loadComponent: () =>
-      import('./pages/user-review/user-review.page').then(m => m.UserReviewPage),
+      import('./pages/user-review/user-review.page').then(
+        (m) => m.UserReviewPage
+      ),
     canActivate: [authGuard],
   },
 
@@ -35,7 +46,9 @@ export const routes: Routes = [
   {
     path: 'van/:id',
     loadComponent: () =>
-      import('./pages/van-details/van-details.page').then(m => m.VanDetailPage),
+      import('./pages/van-details/van-details.page').then(
+        (m) => m.VanDetailPage
+      ),
     canActivate: [authGuard],
   },
 
@@ -43,7 +56,9 @@ export const routes: Routes = [
   {
     path: 'van-report/:id',
     loadComponent: () =>
-      import('./pages/admin-portal/van-report/van-report.component').then(m => m.VanReportComponent),
+      import('./pages/admin-portal/van-report/van-report.component').then(
+        (m) => m.VanReportComponent
+      ),
     canActivate: [authGuard],
   },
 
@@ -53,14 +68,25 @@ export const routes: Routes = [
       {
         path: '',
         loadComponent: () =>
-          import('./pages/admin-portal/admin-portal.page').then(m => m.AdminPortalPage),
+          import('./pages/admin-portal/admin-portal.page').then(
+            (m) => m.AdminPortalPage
+          ),
         canActivate: [authGuard],
       },
-      // ✅ Support admin clicks (nested route) – same component, no redirect
+      {
+        path: 'users',
+        loadComponent: () =>
+          import('./pages/admin-portal/users/users.page').then(
+            (m) => m.UsersPage
+          ),
+        canActivate: [authGuard],
+      },
       {
         path: 'van-report/:id',
         loadComponent: () =>
-          import('./pages/admin-portal/van-report/van-report.component').then(m => m.VanReportComponent),
+          import('./pages/admin-portal/van-report/van-report.component').then(
+            (m) => m.VanReportComponent
+          ),
         canActivate: [authGuard],
       },
     ],
@@ -71,7 +97,9 @@ export const routes: Routes = [
 ];
 
 @NgModule({
-  imports: [RouterModule.forRoot(routes, { preloadingStrategy: PreloadAllModules })],
+  imports: [
+    RouterModule.forRoot(routes, { preloadingStrategy: PreloadAllModules }),
+  ],
   exports: [RouterModule],
 })
 export class AppRoutingModule {}

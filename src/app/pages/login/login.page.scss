@@ -1,39 +1,37 @@
-/* --- Layout & Background --- */
+/* src/app/pages/login/login.page.scss */
+
+/* Layout & Background */
 .wrapper {
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  min-height: 90dvh; /* ensure full height on mobile */
+  min-height: 90dvh;
   padding: 16px;
 }
 
 ion-content {
   position: relative;
-  --background: none; /* clear the Ionic background */
+  --background: none;
 
-
-  /* soft background image overlay */
   &::before {
     content: "";
     background: url('/assets/van-background.jpg') no-repeat center center / cover;
-    opacity: 0.25; /* 0 = invisible, 1 = full */
+    opacity: 0.25;
     position: absolute;
     inset: 0;
     z-index: 0;
   }
 }
 
-/* container to keep the form centered & above bg */
 .login-form-container {
   background-color: #232F3E;
   border-radius: 16px;
-  z-index: 1; /* sit above ion-content::before */
+  z-index: 1;
   width: 100%;
   max-width: 425px;
 }
 
-/* --- Card/Glass look for the form --- */
 .login-form {
   display: flex;
   flex-direction: column;
@@ -43,25 +41,28 @@ ion-content {
   border-radius: 16px;
   box-shadow: 0 5px 14px rgba(255, 255, 255, 0.45);
   backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
   background: rgba(255, 255, 255, 0.12);
 }
 
-/* Heading */
-.login-label {
-  font-size: 1.75rem;
-  line-height: 1.2;
-  text-align: center;
-  margin: 0 0 12px;
+.logo-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 15px 0;
+  
+  img {
+    max-width: 200px;
+    height: auto;
+  }
 }
 
-/* --- Segment (Driver/Admin) --- */
+/* Mode Switch Segment */
 .mode-switch {
   margin-bottom: 8px;
 }
 
 ion-segment.mode-switch {
-  --background: transparent; /* remove pill bg */
+  --background: transparent;
   border-bottom: 2px solid rgba(255, 255, 255, 0.25);
   width: 100%;
   border-radius: 0;
@@ -69,11 +70,11 @@ ion-segment.mode-switch {
 }
 
 ion-segment-button {
-  flex: 1; /* make equal width */
+  flex: 1;
   min-height: 44px;
   --color: rgba(255, 255, 255, 0.65);
   --color-checked: var(--ion-color-primary);
-  --indicator-color: transparent; /* remove default indicator bar */
+  --indicator-color: transparent;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -92,72 +93,139 @@ ion-segment-button[aria-checked="true"]::after {
   border-radius: 3px 3px 0 0;
 }
 
-/* Hover/press feel */
 ion-segment-button:hover {
   background-color: rgba(255, 255, 255, 0.08);
 }
 
-ion-segment-button:active {
-  background-color: rgba(255, 255, 255, 0.15);
-}
-/* --- Inputs --- */
-.item-inner {
-  border-radius: 15px;
-}
-
+/* Input Fields */
 .email,
 .password {
   margin-bottom: 8px;
   border-radius: 8px;
   overflow: hidden;
-
-  /* ion-item vars */
   --padding-start: 12px;
   --inner-border-radius: 8px;
   --background: rgba(255, 255, 255, 0.28);
   --color: var(--ion-text-color);
-  --highlight-color-focused: var(--ion-color-primary);
-  --border-color: transparent;
+  position: relative;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --border-width: 2px;
 }
 
-/* make input text readable over glass */
-ion-item.email ion-label,
-ion-item.password ion-label {
-  color: var(--ion-text-color);
+.email:focus-within,
+.password:focus-within {
+  transform: translateY(-2px) scale(1.02);
+  --background: rgba(255, 255, 255, 0.35);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
 
-/* --- Button --- */
-ion-button.ion-margin-top {
-  width: 60%;
-  align-self: center;
-  margin-top: 12px;
+.email::after,
+.password::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: var(--ion-color-primary);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateX(-50%);
 }
 
-/* Helper note */
-ion-note.block {
-  display: block;
-  text-align: center;
+.email:focus-within::after,
+.password:focus-within::after {
+  width: 100%;
 }
 
-/* Remember checkbox alignment if you add it later */
-.remember {
-  margin-left: 0;
+/* Button Styling */
+.login-button {
+
+  --border-radius: 12px;
+  --padding-top: 16px;
+  --padding-bottom: 16px;
+  font-weight: 600;
+  margin-top: 16px;
 }
 
-.logo-container {
+.signup-button {
+  position:relative;
+  width: 50%;
+  --border-radius: 12px;
+  --padding-top: 14px;
+  --padding-bottom: 14px;
+  --color: var(--ion-color-primary);
+  --border-color: var(--ion-color-primary);
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.signup-button:hover {
+  --background: rgba(var(--ion-color-primary-rgb), 0.1);
+  transform: translateY(-1px);
+}
+
+/* Sign Up Section */
+.button-section {
   display: flex;
-  justify-content: center; /* Horizontal center */
-  align-items: center;    /* Vertical center if needed */
-  margin-top: 15px;
-  margin-bottom: 15px;
-  img {
-    max-width: 200px;
-    height: auto;
+  align-items: center;
+  flex-direction: column;
+  text-align: center;
+  width: 100%;
+}
+.login-button{
+  width:60%;
+}
+
+.signup-link {
+  align-self: center; 
+  margin-top: 10px;
+}
+
+.signup-text {
+  display: inline-flex;
+}
+
+.divider {
+  position: relative;
+  text-align: center;
+  margin: 20px 0 16px;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.3);
+  }
+  
+  span {
+    background: rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.8);
+    padding: 0 16px;
+    font-size: 0.9rem;
+    position: relative;
+    z-index: 1;
   }
 }
 
+/* Help Text */
+.help-text {
+  text-align: center;
+  
+  p {
+    margin: 8px 0;
+    color: rgba(255, 255, 255, 0.7);
+    
+    small {
+      font-size: 0.8rem;
+      line-height: 1.4;
+    }
+  }
+}
 
-/* --- Dark mode adjustments --- */
+/* Dark mode adjustments */
 @media (prefers-color-scheme: dark) {
   .login-form {
     border-color: rgba(255, 255, 255, 0.35);
@@ -175,48 +243,30 @@ ion-note.block {
   }
 }
 
-/* --- Small screen tweaks --- */
+/* Small screen adjustments */
+@media (max-width: 480px) {
+  .login-form {
+    padding: 20px;
+    gap: 10px;
+  }
+  
+  .logo-container img {
+    max-width: 160px;
+  }
+  
+  .login-button,
+  .signup-button {
+    --padding-top: 12px;
+    --padding-bottom: 12px;
+  }
+}
+
 @media (max-width: 360px) {
   .login-form {
     padding: 18px;
   }
-  ion-button.ion-margin-top {
-    width: 100%;
+  
+  .logo-container img {
+    max-width: 140px;
   }
-}
-
-/* --- Input Field Animations Only --- */
-
-.email,
-.password {
-  position: relative;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  --border-width: 2px;
-}
-
-/* Enhanced focus effects */
-.email:focus-within,
-.password:focus-within {
-  transform: translateY(-2px) scale(1.02);
-  --background: rgba(255, 255, 255, 0.35);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-}
-
-/* Input glow effect */
-.email::after,
-.password::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  width: 0;
-  height: 2px;
-  background: var(--ion-color-primary);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  transform: translateX(-50%);
-}
-
-.email:focus-within::after,
-.password:focus-within::after {
-  width: 100%;
 }

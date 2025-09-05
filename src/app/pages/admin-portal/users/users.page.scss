@@ -1,0 +1,86 @@
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+@media (min-width: 700px) {
+  .stats-grid { grid-template-columns: repeat(4, 1fr); }
+}
+
+.stat-card { border-radius: 12px; }
+.stat-value { font-size: 2rem; font-weight: 700; }
+.stat-label {
+  color: var(--ion-color-medium);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  font-size: .8rem;
+}
+
+.header-actions { margin: 12px 0 20px; }
+
+.user-card { margin-bottom: 16px; border-radius: 12px; }
+.user-card.inactive { opacity: .8; border-left: 4px solid var(--ion-color-medium); }
+
+.user-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.user-info { flex: 1; }
+
+.user-badges { display: flex; flex-direction: column; gap: 4px; }
+
+.user-details { margin-bottom: 6px; }
+
+.detail-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  color: var(--ion-color-medium);
+}
+
+.detail-icon { font-size: 16px; min-width: 16px; }
+
+.empty-state { text-align: center; padding: 40px 20px; color: var(--ion-color-medium); }
+.empty-icon { font-size: 4rem; margin-bottom: 16px; opacity: .5; }
+
+.content-container {
+  width: min(1000px, calc(100vw - 150px)); // Never exceed available space
+  margin: 0 auto; // Center by default
+  padding: 1rem;
+  
+  // When viewport gets too small, switch to sidebar-aware sizing
+  @media (max-width: 1150px) {
+    width: calc(100vw - 150px); // Full width minus sidebar minus margins
+    max-width: 1000px; // Still respect max width if there's room
+  }
+  
+  // Further shrink for smaller screens
+  @media (max-width: 900px) {
+    width: calc(100vw - 150px); // Tighter margins
+  }
+  
+  // Mobile responsive - full width with proper padding
+  @media (max-width: 768px) {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 1rem;
+    box-sizing: border-box;
+  }
+  
+  @media (max-width: 576px) {
+    padding: 0.75rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .user-header { flex-direction: column; gap: 12px; }
+  .user-badges { flex-direction: row; }
+}
+
