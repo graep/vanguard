@@ -13,8 +13,8 @@ import {
   IonButton,
   IonSegment,
   IonSegmentButton,
-  IonIcon
-} from "@ionic/angular/standalone";
+  IonIcon,
+} from '@ionic/angular/standalone';
 
 type LoginMode = 'driver' | 'admin';
 
@@ -22,18 +22,17 @@ type LoginMode = 'driver' | 'admin';
   standalone: true,
   selector: 'app-login',
   templateUrl: './login.page.html',
-  styleUrls:['./login.page.scss'],
+  styleUrls: ['./login.page.scss'],
   imports: [
-    IonContent, 
-    IonLabel, 
-    IonItem, 
+    IonContent,
+    IonLabel,
+    IonItem,
     IonButton,
-    IonInput, 
-    IonSegment, 
+    IonInput,
+    IonSegment,
     IonSegmentButton,
-    IonIcon,
-    ReactiveFormsModule, 
-    CommonModule
+    ReactiveFormsModule,
+    CommonModule,
   ],
 })
 export class LoginPage {
@@ -46,7 +45,7 @@ export class LoginPage {
   // Routes based on user role
   private routeByMode: Record<LoginMode, string> = {
     driver: '/van-selection',
-    admin: '/admin-portal',
+    admin: '/admin',
   };
 
   constructor(
@@ -60,12 +59,14 @@ export class LoginPage {
     if (this.form.invalid) return;
 
     const { email, password, mode } = this.form.value as {
-      email: string; password: string; mode: LoginMode;
+      email: string;
+      password: string;
+      mode: LoginMode;
     };
 
     try {
       await this.auth.login(email, password);
-      
+
       // Wait for user profile to load, then route based on actual role
       setTimeout(() => {
         // Check if your auth service has currentUserProfile$
@@ -73,18 +74,23 @@ export class LoginPage {
           const userProfile = this.auth.currentUserProfile$.value;
           if (userProfile) {
             // Route based on actual user role, not selected mode
-            const route = userProfile.role === 'admin' ? '/admin-portal' : '/van-selection';
+            const route = this.auth.hasRole('admin')
+              ? '/admin'
+              : '/van-selection';
             this.router.navigateByUrl(route, { replaceUrl: true });
           } else {
             // Fallback to selected mode if profile not loaded
-            this.router.navigateByUrl(this.routeByMode[mode], { replaceUrl: true });
+            this.router.navigateByUrl(this.routeByMode[mode], {
+              replaceUrl: true,
+            });
           }
         } else {
           // If no profile system, just use selected mode
-          this.router.navigateByUrl(this.routeByMode[mode], { replaceUrl: true });
+          this.router.navigateByUrl(this.routeByMode[mode], {
+            replaceUrl: true,
+          });
         }
       }, 500);
-      
     } catch (e: any) {
       this.showToast('Invalid email or password.', 'danger');
     }
@@ -103,7 +109,10 @@ export class LoginPage {
     return this.mode === 'driver';
   }
 
-  private async showToast(message: string, color: 'danger' | 'warning' | 'success' = 'danger') {
+  private async showToast(
+    message: string,
+    color: 'danger' | 'warning' | 'success' = 'danger'
+  ) {
     const toast = await this.toastCtrl.create({
       message,
       duration: 2000,

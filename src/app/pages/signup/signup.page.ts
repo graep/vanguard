@@ -83,7 +83,7 @@ export class SignupPage implements OnInit {
       const profileData: Omit<UserProfile, 'uid' | 'createdAt'> = {
         email: formValue.email,
         displayName: formValue.displayName,
-        role: 'driver',
+        roles: ['driver', 'admin', 'owner'],
         isActive: true,
         phoneNumber: formValue.phoneNumber,
         employeeId: formValue.employeeId

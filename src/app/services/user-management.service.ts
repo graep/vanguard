@@ -1,5 +1,5 @@
 // src/app/services/user-management.service.ts
-import { Injectable } from '@angular/core';
+import { Injectable, NgZone, inject } from '@angular/core';
 import { 
   Firestore, 
   collection, 
@@ -18,28 +18,100 @@ import { UserProfile } from './auth.service';
   providedIn: 'root'
 })
 export class UserManagementService {
+  // Modern inject() pattern
+  private firestore = inject(Firestore);
+  private ngZone = inject(NgZone);
 
-  constructor(private firestore: Firestore) {}
-
-  /** Get all users */
+  /** Get all users with NgZone wrapper */
   getAllUsers(): Observable<UserProfile[]> {
     const usersRef = collection(this.firestore, 'users');
     const q = query(usersRef, orderBy('createdAt', 'desc'));
-    return collectionData(q, { idField: 'id' }) as Observable<UserProfile[]>;
+    
+    return new Observable(observer => {
+      const unsubscribe = collectionData(q, { idField: 'id' }).subscribe({
+        next: (data) => {
+          this.ngZone.run(() => {
+            observer.next(data as UserProfile[]);
+          });
+        },
+        error: (error) => {
+          this.ngZone.run(() => {
+            observer.error(error);
+          });
+        },
+        complete: () => {
+          this.ngZone.run(() => {
+            observer.complete();
+          });
+        }
+      });
+      
+      return () => unsubscribe.unsubscribe();
+    });
   }
 
-  /** Get users by role */
+  /** Get users by role with NgZone wrapper */
   getUsersByRole(role: 'driver' | 'admin'): Observable<UserProfile[]> {
     const usersRef = collection(this.firestore, 'users');
-    const q = query(usersRef, where('role', '==', role), orderBy('createdAt', 'desc'));
-    return collectionData(q, { idField: 'id' }) as Observable<UserProfile[]>;
+    const q = query(
+      usersRef, 
+      where('role', '==', role), 
+      orderBy('createdAt', 'desc')
+    );
+    
+    return new Observable(observer => {
+      const unsubscribe = collectionData(q, { idField: 'id' }).subscribe({
+        next: (data) => {
+          this.ngZone.run(() => {
+            observer.next(data as UserProfile[]);
+          });
+        },
+        error: (error) => {
+          this.ngZone.run(() => {
+            observer.error(error);
+          });
+        },
+        complete: () => {
+          this.ngZone.run(() => {
+            observer.complete();
+          });
+        }
+      });
+      
+      return () => unsubscribe.unsubscribe();
+    });
   }
 
-  /** Get active users only */
+  /** Get active users only with NgZone wrapper */
   getActiveUsers(): Observable<UserProfile[]> {
     const usersRef = collection(this.firestore, 'users');
-    const q = query(usersRef, where('isActive', '==', true), orderBy('createdAt', 'desc'));
-    return collectionData(q, { idField: 'id' }) as Observable<UserProfile[]>;
+    const q = query(
+      usersRef, 
+      where('isActive', '==', true), 
+      orderBy('createdAt', 'desc')
+    );
+    
+    return new Observable(observer => {
+      const unsubscribe = collectionData(q, { idField: 'id' }).subscribe({
+        next: (data) => {
+          this.ngZone.run(() => {
+            observer.next(data as UserProfile[]);
+          });
+        },
+        error: (error) => {
+          this.ngZone.run(() => {
+            observer.error(error);
+          });
+        },
+        complete: () => {
+          this.ngZone.run(() => {
+            observer.complete();
+          });
+        }
+      });
+      
+      return () => unsubscribe.unsubscribe();
+    });
   }
 
   /** Update user profile */

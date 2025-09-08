@@ -1,4 +1,4 @@
-// src/app/pages/admin-portal/van-report/van-report.component.ts
+// src/app/pages/dashboard/van-report/van-report.component.ts
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IonicModule, AlertController, ToastController, ModalController } from '@ionic/angular';

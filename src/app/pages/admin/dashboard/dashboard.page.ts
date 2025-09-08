@@ -1,5 +1,5 @@
-
-import { Component, inject, Injector, OnInit } from '@angular/core';
+// src/app/pages/admin/dashboard/dashboard.page.ts
+import { Component, NgZone, OnInit, inject } from '@angular/core';
 import { Auth } from '@angular/fire/auth';
 import {
   Firestore,
@@ -10,39 +10,30 @@ import {
 import { IonicModule } from '@ionic/angular';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Van } from 'src/app/models/van.model';
-import { NavbarComponent } from './navbar/navbar.component';
-import {
-  InspectionService,
-  ReportedIssue,
-} from 'src/app/services/inspection.service';
-import { Router } from '@angular/router';
-import { RecentSubmissionsModalComponent } from '@app/components/recent-submissions/recent-submissions-modal.component';
-import { ModalController } from '@ionic/angular';
-import { Observable } from 'rxjs';
-import { ToastController } from '@ionic/angular';
 import { StatusCountBarComponent, StatusDataSource } from '@app/components/status-count-bar/status-count-bar.component';
 
 @Component({
-  selector: 'app-admin-portal',
+  selector: 'app-dashboard',
   standalone: true,
   imports: [
     CommonModule, 
     IonicModule, 
     FormsModule, 
-    NavbarComponent, 
     StatusCountBarComponent
   ],
-  templateUrl: './admin-portal.page.html',
-  styleUrls: ['./admin-portal.page.scss'],
+  templateUrl: './dashboard.page.html',
+  styleUrls: ['./dashboard.page.scss'],
 })
-export class AdminPortalPage implements OnInit {
+export class DashboardPage implements OnInit {
+  // Van data
   vans: Van[] = [];
   filteredVans: Van[] = [];
   filteredCdvs: Van[] = [];
   filteredEdvs: Van[] = [];
 
-  // Data sources for the status bars - much cleaner!
+  // Data sources for the status bars
   overallDataSource: StatusDataSource = {
     items: [],
     statusField: 'isGrounded',
@@ -68,34 +59,51 @@ export class AdminPortalPage implements OnInit {
     filterValue: 'EDV'
   };
 
-  // Inject services
+  // Inject only what we need
+  private route = inject(ActivatedRoute);
   private firestore = inject(Firestore);
   private router = inject(Router);
-  private modalCtrl = inject(ModalController);
-  private insp = inject(InspectionService);
-  private toast = inject(ToastController);
-  private injector = inject(Injector);
   private auth = inject(Auth);
+  private ngZone = inject(NgZone);
 
-  constructor() {}
+  ngOnInit() {
+    this.loadVans();
+  }
 
-  async ngOnInit() {
+  private loadVans(): void {
     const vansRef = collection(
       this.firestore,
       'vans'
     ) as CollectionReference<Van>;
 
-    collectionData<Van>(vansRef, { idField: 'docId' }).subscribe((data) => {
-      this.vans = data;
-      
-      // Update data source - the component handles the rest!
-      this.overallDataSource = { ...this.overallDataSource, items: data };
-      
-      // Initialize filtered data
-      this.filteredVans = data;
-      this.filteredCdvs = data.filter((v) => (v.type || '').toUpperCase() === 'CDV');
-      this.filteredEdvs = data.filter((v) => (v.type || '').toUpperCase() === 'EDV');
+    // Wrap Firebase subscription in NgZone to fix warnings
+    collectionData<Van>(vansRef, { idField: 'docId' }).subscribe({
+      next: (data) => {
+        this.ngZone.run(() => {
+          this.vans = data;
+          
+          // Update data source
+          this.overallDataSource = { ...this.overallDataSource, items: data };
+          
+          // Initialize filtered data
+          this.updateFilteredLists(data);
+        });
+      },
+      error: (error) => {
+        this.ngZone.run(() => {
+          console.error('Error loading vans:', error);
+          // Reset to empty state on error
+          this.vans = [];
+          this.updateFilteredLists([]);
+        });
+      }
     });
+  }
+
+  private updateFilteredLists(data: Van[]): void {
+    this.filteredVans = data;
+    this.filteredCdvs = data.filter((v) => (v.type || '').toUpperCase() === 'CDV');
+    this.filteredEdvs = data.filter((v) => (v.type || '').toUpperCase() === 'EDV');
   }
 
   // Handle filtered data from overall status bar
@@ -106,13 +114,12 @@ export class AdminPortalPage implements OnInit {
     this.filteredEdvs = filteredData.filter((v) => (v.type || '').toUpperCase() === 'EDV');
   }
 
-  viewVan(van: Van) {
+  viewVan(van: Van): void {
     // Navigate to the dynamic van detail page using the van's docId
-    this.router.navigate(['/van', van.docId]);
+    this.router.navigate(['van', van.docId], { relativeTo: this.route });
   }
 
-  
-  async logout() {
+  async logout(): Promise<void> {
     await this.auth.signOut();
     this.router.navigate(['/login']);
   }

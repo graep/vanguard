@@ -5,22 +5,22 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { IonicModule, AlertController, ToastController } from '@ionic/angular';
 import { Firestore, doc, getDoc } from '@angular/fire/firestore';
-import { Van } from '../../models/van.model';
-import { InspectionService } from '../../services/inspection.service';
-import { IssuesTabComponent } from "@app/components/van-details/issues-tab/issues-tab.component";
-import { MaintenanceTabComponent } from "@app/components/van-details/maintenance-tab/maintenance-tab.component";
-import { NotesTabComponent } from "@app/components/van-details/notes-tab/notes-tab.component";
-import { DriversTabComponent } from "@app/components/van-details/drivers-tab/drivers-tab.component";
+import { Van } from '../../../models/van.model';
+import { InspectionService } from '../../../services/inspection.service';
+import { IssuesTabComponent } from "./issues-tab/issues-tab.component";
+import { MaintenanceTabComponent } from "./maintenance-tab/maintenance-tab.component";
+import { NotesTabComponent } from "./notes-tab/notes-tab.component";
+import { DriversTabComponent } from "./drivers-tab/drivers-tab.component";
 import { AppHeaderComponent } from '@app/components/app-header/app-header.component';
 
 @Component({
-  selector: 'app-van-detail',
+  selector: 'app-van-details',
   standalone: true,
   imports: [CommonModule, FormsModule, IonicModule, RouterModule, IssuesTabComponent, MaintenanceTabComponent, NotesTabComponent, DriversTabComponent, AppHeaderComponent],
   templateUrl: './van-details.page.html',
   styleUrls: ['./van-details.page.scss']
 })
-export class VanDetailPage implements OnInit {
+export class VanDetailsPage implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private firestore = inject(Firestore);

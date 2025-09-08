@@ -5,96 +5,80 @@ import { authGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
-  { path: 'admin-portal', redirectTo: 'admin', pathMatch: 'full' },
 
+  // Legacy alias (only if you had old links to /admin-layout)
+  { path: 'admin', redirectTo: 'admin', pathMatch: 'full' },
+
+  // Authless pages
   {
     path: 'login',
     loadComponent: () =>
-      import('./pages/login/login.page').then((m) => m.LoginPage),
+      import('./pages/login/login.page').then(m => m.LoginPage),
   },
   {
     path: 'signup',
     loadComponent: () =>
-      import('./pages/signup/signup.page').then((m) => m.SignupPage),
+      import('./pages/signup/signup.page').then(m => m.SignupPage),
   },
+
+  // Driver flow (guarded)
   {
     path: 'van-selection',
     loadComponent: () =>
-      import('./pages/van-selection/van-selection.page').then(
-        (m) => m.VanSelectionPage
-      ),
+      import('./pages/van-selection/van-selection.page').then(m => m.VanSelectionPage),
     canActivate: [authGuard],
   },
   {
     path: 'photo-capture/:vanType/:vanNumber',
     loadComponent: () =>
-      import('./pages/photo-capture/photo-capture.page').then(
-        (m) => m.PhotoCapturePage
-      ),
+      import('./pages/photo-capture/photo-capture.page').then(m => m.PhotoCapturePage),
     canActivate: [authGuard],
   },
   {
     path: 'user-review',
     loadComponent: () =>
-      import('./pages/user-review/user-review.page').then(
-        (m) => m.UserReviewPage
-      ),
+      import('./pages/user-review/user-review.page').then(m => m.UserReviewPage),
     canActivate: [authGuard],
   },
 
-  // Dynamic van detail page - accessible via /van/:id
-  {
-    path: 'van/:id',
-    loadComponent: () =>
-      import('./pages/van-details/van-details.page').then(
-        (m) => m.VanDetailPage
-      ),
-    canActivate: [authGuard],
-  },
-
-  // Support direct links from the modal (top-level route)
-  {
-    path: 'van-report/:id',
-    loadComponent: () =>
-      import('./pages/admin-portal/van-report/van-report.component').then(
-        (m) => m.VanReportComponent
-      ),
-    canActivate: [authGuard],
-  },
-
+  // ADMIN SHELL (single source of truth for admin routes)
   {
     path: 'admin',
+    loadComponent: () =>
+      import('./pages/admin/admin-layout/admin-layout.component').then(m => m.AdminLayoutComponent),
+    canActivate: [authGuard],
     children: [
       {
         path: '',
         loadComponent: () =>
-          import('./pages/admin-portal/admin-portal.page').then(
-            (m) => m.AdminPortalPage
-          ),
-        canActivate: [authGuard],
+          import('./pages/admin/dashboard/dashboard.page').then(m => m.DashboardPage),
       },
       {
         path: 'users',
         loadComponent: () =>
-          import('./pages/admin-portal/users/users.page').then(
-            (m) => m.UsersPage
-          ),
-        canActivate: [authGuard],
+          import('./pages/admin/users/users.page').then(m => m.UsersPage),
       },
       {
         path: 'van-report/:id',
         loadComponent: () =>
-          import('./pages/admin-portal/van-report/van-report.component').then(
-            (m) => m.VanReportComponent
-          ),
-        canActivate: [authGuard],
+          import('./pages/admin/van-report/van-report.component').then(m => m.VanReportComponent),
       },
+      {
+        path: 'van/:id',
+        loadComponent: () =>
+          import('./pages/admin/van-details/van-details.page').then(m => m.VanDetailsPage),
+      }
     ],
   },
 
-  // ✅ Catch-all route for unknown paths
+  // Optional: keep a single alias for old deep links to /van-report/:id
+  // This simply forwards to the canonical admin route.
+  { path: 'van-report/:id', redirectTo: 'admin/van-report/:id', pathMatch: 'full' },
+
+  // Catch-all
   { path: '**', redirectTo: 'login' },
 ];
+
 
 @NgModule({
   imports: [

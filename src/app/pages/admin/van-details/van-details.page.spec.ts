@@ -1,16 +1,16 @@
 // src/app/pages/van-detail/van-detail.page.spec.ts
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { VanDetailPage } from './van-details.page';
+import { VanDetailsPage } from './van-details.page';
 
 describe('VanDetailPage', () => {
-  let component: VanDetailPage;
-  let fixture: ComponentFixture<VanDetailPage>;
+  let component: VanDetailsPage;
+  let fixture: ComponentFixture<VanDetailsPage>;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [VanDetailPage]
+      imports: [VanDetailsPage]
     });
-    fixture = TestBed.createComponent(VanDetailPage);
+    fixture = TestBed.createComponent(VanDetailsPage);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

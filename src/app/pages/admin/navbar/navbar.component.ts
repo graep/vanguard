@@ -1,4 +1,4 @@
-// src/app/pages/admin-portal/navbar/navbar.component.ts
+// src/app/pages/dashboard/navbar/navbar.component.ts
 import {
   Component,
   OnInit,

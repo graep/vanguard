@@ -1,5 +1,5 @@
 // src/app/services/inspection.service.ts
-import { EnvironmentInjector, Injectable, inject, runInInjectionContext } from '@angular/core';
+import { Injectable, NgZone, inject } from '@angular/core';
 import { Storage, ref, uploadBytes, getDownloadURL } from '@angular/fire/storage';
 import {
   Firestore,
@@ -17,7 +17,8 @@ import {
   getDocs,
   collectionData,
 } from '@angular/fire/firestore';
-import { Observable, combineLatest, map, from, filter, switchMap } from 'rxjs';
+import { Observable, combineLatest, from } from 'rxjs';
+import { map, filter, switchMap } from 'rxjs/operators';
 import { Timestamp } from 'firebase/firestore';
 import { Auth, authState } from '@angular/fire/auth';
 import { getIdTokenResult } from 'firebase/auth';
@@ -40,6 +41,7 @@ export interface Inspection {
   reviewedAt?: any;
   rejectReason?: string | null;
   seen?: boolean;
+  createdBy?: string | null;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -47,7 +49,7 @@ export class InspectionService {
   private storage = inject(Storage);
   private firestore = inject(Firestore);
   private auth = inject(Auth);
-  private env = inject(EnvironmentInjector);
+  private ngZone = inject(NgZone);
 
   private get col(): CollectionReference {
     return collection(this.firestore, 'inspections') as CollectionReference;
@@ -58,7 +60,12 @@ export class InspectionService {
   }
 
   /** Upload a single photo and return its URL */
-  async uploadPhoto(vanType: string, vanNumber: string, side: string, dataUrl: string): Promise<string> {
+  async uploadPhoto(
+    vanType: string, 
+    vanNumber: string, 
+    side: string, 
+    dataUrl: string
+  ): Promise<string> {
     const fileName = `${side}_${Date.now()}.jpg`;
     const path = `inspections/${vanType}/${vanNumber}/${fileName}`;
     const storageRef = ref(this.storage, path);
@@ -66,24 +73,27 @@ export class InspectionService {
     const blob = await (await fetch(dataUrl)).blob();
     const contentType = blob.type?.startsWith('image/') ? blob.type : 'image/jpeg';
 
-    const ownerUid = this.auth.currentUser?.uid ?? '';
+    const ownerUid = this.auth.currentUser?.uid;
     if (!ownerUid) throw new Error('Not authenticated');
     if (blob.size >= 8 * 1024 * 1024) throw new Error('Image is larger than 8 MB.');
 
-    const snap = await runInInjectionContext(this.env, () =>
-      uploadBytes(storageRef, blob, {
-        contentType,
-        customMetadata: { ownerUid },
-      })
-    );
+    const snap = await uploadBytes(storageRef, blob, {
+      contentType,
+      customMetadata: { ownerUid },
+    });
 
-    return runInInjectionContext(this.env, () => getDownloadURL(snap.ref));
+    return getDownloadURL(snap.ref);
   }
 
   /** Create inspection document with photos */
-  async saveInspection(vanType: string, vanNumber: string, photoUrls: Record<string, string>): Promise<string> {
+  async saveInspection(
+    vanType: string, 
+    vanNumber: string, 
+    photoUrls: Record<string, string>
+  ): Promise<string> {
     const normalizedVanNumber = this.normalizeVanNumber(vanNumber);
     const createdBy = this.auth.currentUser?.uid ?? null;
+    
     const docRef = await addDoc(this.col, {
       vanType,
       vanNumber: normalizedVanNumber,
@@ -93,6 +103,7 @@ export class InspectionService {
       seen: false,
       createdBy,
     });
+    
     return docRef.id;
   }
 
@@ -105,34 +116,35 @@ export class InspectionService {
   }
 
   /** Admin actions */
-  approveInspection(id: string) {
-    return updateDoc(doc(this.firestore, 'inspections', id), {
+  async approveInspection(id: string): Promise<void> {
+    await updateDoc(doc(this.firestore, 'inspections', id), {
       status: 'approved',
       reviewedAt: serverTimestamp(),
       rejectReason: null,
     });
   }
 
-  rejectInspection(id: string, reason?: string) {
-    return updateDoc(doc(this.firestore, 'inspections', id), {
+  async rejectInspection(id: string, reason?: string): Promise<void> {
+    await updateDoc(doc(this.firestore, 'inspections', id), {
       status: 'rejected',
       reviewedAt: serverTimestamp(),
       rejectReason: reason ?? null,
     });
   }
 
-  markSeen(id: string) {
-    return updateDoc(doc(this.firestore, 'inspections', id), { seen: true });
+  async markSeen(id: string): Promise<void> {
+    await updateDoc(doc(this.firestore, 'inspections', id), { seen: true });
   }
 
-  /** Lookups */
+  /** Get inspection by ID */
   async getInspectionById(id: string): Promise<Inspection | null> {
-    return runInInjectionContext(this.env, async () => {
-      const snap = await getDoc(doc(this.firestore, 'inspections', id));
-      return snap.exists() ? ({ id: snap.id, ...snap.data() } as Inspection) : null;
-    });
+    const snap = await getDoc(doc(this.firestore, 'inspections', id));
+    return snap.exists() 
+      ? ({ id: snap.id, ...snap.data() } as Inspection) 
+      : null;
   }
 
+  /** Get latest inspection ID for a van */
   async getLatestInspectionId(vanType: string, vanNumber: string): Promise<string | null> {
     const normalizedVanNumber = this.normalizeVanNumber(vanNumber);
     const snaps = await getDocs(
@@ -147,7 +159,12 @@ export class InspectionService {
     return snaps.empty ? null : snaps.docs[0].id;
   }
 
-  async getLatestInspectionsByVan(vanType: string, vanNumber: string, n = 2): Promise<Inspection[]> {
+  /** Get latest inspections for a specific van */
+  async getLatestInspectionsByVan(
+    vanType: string, 
+    vanNumber: string, 
+    n = 2
+  ): Promise<Inspection[]> {
     const normalizedVanNumber = this.normalizeVanNumber(vanNumber);
     const snaps = await getDocs(
       query(
@@ -165,20 +182,57 @@ export class InspectionService {
     }));
   }
 
-  /** Streams */
+  /** Stream pending submissions with NgZone */
   pendingSubmissions$(onlyUnseen = true, pageSize = 25): Observable<Inspection[]> {
-    const base = query(this.col, where('status', '==', 'pending'), orderBy('createdAt', 'desc'), limit(pageSize));
-    const q = onlyUnseen ? query(base, where('seen', '==', false)) : base;
-    return collectionData(q, { idField: 'id' }) as Observable<Inspection[]>;
+    const base = query(
+      this.col, 
+      where('status', '==', 'pending'), 
+      orderBy('createdAt', 'desc'), 
+      limit(pageSize)
+    );
+    
+    const q = onlyUnseen 
+      ? query(base, where('seen', '==', false)) 
+      : base;
+    
+    // Wrap in NgZone to fix the warning
+    return new Observable(observer => {
+      const unsubscribe = collectionData(q, { idField: 'id' }).subscribe({
+        next: (data) => {
+          this.ngZone.run(() => {
+            observer.next(data as Inspection[]);
+          });
+        },
+        error: (error) => {
+          this.ngZone.run(() => {
+            observer.error(error);
+          });
+        },
+        complete: () => {
+          this.ngZone.run(() => {
+            observer.complete();
+          });
+        }
+      });
+      
+      return () => unsubscribe.unsubscribe();
+    });
   }
 
+  /** Stream today's or unviewed yesterday's inspections */
   streamTodayOrUnviewedYesterday(pageSize = 20): Observable<Inspection[]> {
     const now = new Date();
     const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const startYesterday = new Date(startToday);
     startYesterday.setDate(startYesterday.getDate() - 1);
 
-    const qToday = query(this.col, where('createdAt', '>=', Timestamp.fromDate(startToday)), orderBy('createdAt', 'desc'), limit(pageSize));
+    const qToday = query(
+      this.col, 
+      where('createdAt', '>=', Timestamp.fromDate(startToday)), 
+      orderBy('createdAt', 'desc'), 
+      limit(pageSize)
+    );
+    
     const qYestUnseen = query(
       this.col,
       where('createdAt', '>=', Timestamp.fromDate(startYesterday)),
@@ -188,29 +242,80 @@ export class InspectionService {
       limit(pageSize)
     );
 
-    const today$ = collectionData(qToday, { idField: 'id' }) as Observable<Inspection[]>;
-    const yest$ = collectionData(qYestUnseen, { idField: 'id' }) as Observable<Inspection[]>;
+    // Wrap both observables in NgZone
+    const today$ = new Observable<Inspection[]>(observer => {
+      const unsubscribe = collectionData(qToday, { idField: 'id' }).subscribe({
+        next: (data) => {
+          this.ngZone.run(() => observer.next(data as Inspection[]));
+        },
+        error: (error) => {
+          this.ngZone.run(() => observer.error(error));
+        }
+      });
+      return () => unsubscribe.unsubscribe();
+    });
+
+    const yest$ = new Observable<Inspection[]>(observer => {
+      const unsubscribe = collectionData(qYestUnseen, { idField: 'id' }).subscribe({
+        next: (data) => {
+          this.ngZone.run(() => observer.next(data as Inspection[]));
+        },
+        error: (error) => {
+          this.ngZone.run(() => observer.error(error));
+        }
+      });
+      return () => unsubscribe.unsubscribe();
+    });
 
     return combineLatest([today$, yest$]).pipe(
-      map(([a, b]) => {
-        const m = new Map<string, Inspection>();
-        [...a, ...b].forEach(x => m.set(x.id, x));
-        return Array.from(m.values()).sort((x, y) => (y.createdAt?.toMillis?.() ?? 0) - (x.createdAt?.toMillis?.() ?? 0));
+      map(([todayItems, yesterdayItems]) => {
+        const uniqueItems = new Map<string, Inspection>();
+        [...todayItems, ...yesterdayItems].forEach(item => {
+          uniqueItems.set(item.id, item);
+        });
+        return Array.from(uniqueItems.values()).sort((a, b) => {
+          const aTime = a.createdAt?.toMillis?.() ?? 0;
+          const bTime = b.createdAt?.toMillis?.() ?? 0;
+          return bTime - aTime;
+        });
       })
     );
   }
 
+  /** Stream recent submissions based on user role */
   recentSubmissions$(max = 10): Observable<Inspection[]> {
     return authState(this.auth).pipe(
-      filter((u): u is NonNullable<typeof u> => !!u),
+      filter((user): user is NonNullable<typeof user> => !!user),
       switchMap(user =>
         from(getIdTokenResult(user)).pipe(
-          map(res => !!res.claims['admin']),
+          map(tokenResult => !!tokenResult.claims['admin']),
           switchMap(isAdmin => {
             const q = isAdmin
               ? query(this.col, orderBy('createdAt', 'desc'), limit(max))
               : query(this.col, where('createdBy', '==', user.uid), orderBy('createdAt', 'desc'), limit(max));
-            return collectionData(q, { idField: 'id' }) as Observable<Inspection[]>;
+            
+            // Wrap in NgZone
+            return new Observable<Inspection[]>(observer => {
+              const unsubscribe = collectionData(q, { idField: 'id' }).subscribe({
+                next: (data) => {
+                  this.ngZone.run(() => {
+                    observer.next(data as Inspection[]);
+                  });
+                },
+                error: (error) => {
+                  this.ngZone.run(() => {
+                    observer.error(error);
+                  });
+                },
+                complete: () => {
+                  this.ngZone.run(() => {
+                    observer.complete();
+                  });
+                }
+              });
+              
+              return () => unsubscribe.unsubscribe();
+            });
           })
         )
       )

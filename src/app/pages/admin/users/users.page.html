@@ -1,0 +1,109 @@
+<ion-content class="ion-padding">
+
+  <!-- Stats -->
+  <ion-grid *ngIf="counts$ | async as c">
+    <ion-row>
+      <ion-col size="6" size-md="3">
+        <ion-card class="stat-card">
+          <ion-card-content>
+            <div class="stat-value">{{ c.total }}</div>
+            <div class="stat-label">Total Users</div>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+
+      <ion-col size="6" size-md="3">
+        <ion-card class="stat-card">
+          <ion-card-content>
+            <div class="stat-value">{{ c.active }}</div>
+            <div class="stat-label">Active</div>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+
+      <ion-col size="6" size-md="3">
+        <ion-card class="stat-card">
+          <ion-card-content>
+            <div class="stat-value">{{ c.drivers }}</div>
+            <div class="stat-label">Drivers</div>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+
+      <ion-col size="6" size-md="3">
+        <ion-card class="stat-card">
+          <ion-card-content>
+            <div class="stat-value">{{ c.admins }}</div>
+            <div class="stat-label">Admins</div>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+
+      <ion-col size="6" size-md="3">
+        <ion-card class="stat-card">
+          <ion-card-content>
+            <div class="stat-value">{{ c.owners }}</div>
+            <div class="stat-label">Owners</div>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+
+  <!-- Filter segment -->
+  <div class="header-actions">
+    <ion-segment [(ngModel)]="activeFilter" (ionChange)="onSegmentChange($event)">
+      <ion-segment-button value="all"><ion-label>All Users</ion-label></ion-segment-button>
+      <ion-segment-button value="active"><ion-label>Active Only</ion-label></ion-segment-button>
+      <ion-segment-button value="drivers"><ion-label>Drivers</ion-label></ion-segment-button>
+      <ion-segment-button value="admins"><ion-label>Admins</ion-label></ion-segment-button>
+      <ion-segment-button value="owners"><ion-label>Owners</ion-label></ion-segment-button>
+    </ion-segment>
+  </div>
+
+  <!-- Users list -->
+  <ng-container *ngIf="filteredUsers$ | async as users; else loading">
+    <ng-container *ngIf="users.length; else empty">
+      <ion-list class="users-container">
+        <ion-item *ngFor="let user of users; trackBy: trackByUserId" class="user-card">
+          <ion-avatar slot="start">
+            <ion-icon name="person-circle"></ion-icon>
+          </ion-avatar>
+
+          <ion-label>
+            <h2>{{ user.displayName || 'Unnamed User' }}</h2>
+            <p>
+              <ion-icon name="mail"></ion-icon>
+              {{ user.email }}
+              &nbsp;•&nbsp; Created: {{ formatDate(user.createdAt) }}
+              &nbsp;•&nbsp; <span [class.inactive]="!user.isActive">{{ user.isActive ? 'Active' : 'Inactive' }}</span>
+            </p>
+
+            <div class="roles">
+              <ion-chip *ngFor="let r of (user.roles ?? []); trackBy: trackByRole"
+                        [color]="getRoleColor(r)" outline="true" size="small">
+                <ion-icon [name]="getRoleIcon(r)"></ion-icon>
+                <ion-label>{{ r | titlecase }}</ion-label>
+              </ion-chip>
+              <ion-label *ngIf="!(user.roles?.length)">No Roles</ion-label>
+            </div>
+          </ion-label>
+        </ion-item>
+      </ion-list>
+    </ng-container>
+  </ng-container>
+
+  <ng-template #loading>
+    <ion-item lines="none">
+      <ion-spinner slot="start"></ion-spinner>
+      <ion-label>Loading users…</ion-label>
+    </ion-item>
+  </ng-template>
+
+  <ng-template #empty>
+    <ion-item lines="none">
+      <ion-label>{{ getEmptyStateMessage() }}</ion-label>
+    </ion-item>
+  </ng-template>
+
+</ion-content>
