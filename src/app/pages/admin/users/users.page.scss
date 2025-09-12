@@ -1,16 +1,32 @@
-.stats-grid {
+// Replace your existing .stats-grid CSS with this:
+
+.stats-container {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, 1fr); // 3 equal columns
   gap: 12px;
   margin-bottom: 16px;
+  
+  // Responsive breakpoints
+  @media (max-width: 768px) {
+    grid-template-columns: repeat(2, 1fr); // 2 columns on mobile
+  }
+  
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr; // Single column on very small screens
+  }
 }
 
-@media (min-width: 700px) {
-  .stats-grid { grid-template-columns: repeat(4, 1fr); }
+// Keep your existing stat card styles
+.stat-card { 
+  border-radius: 12px; 
+  margin: 0; // Remove any default margins
 }
 
-.stat-card { border-radius: 12px; }
-.stat-value { font-size: 2rem; font-weight: 700; }
+.stat-value { 
+  font-size: 2rem; 
+  font-weight: 700; 
+}
+
 .stat-label {
   color: var(--ion-color-medium);
   text-transform: uppercase;
@@ -18,6 +34,7 @@
   font-size: .8rem;
 }
 
+// Rest of your existing CSS stays the same
 .header-actions { margin: 12px 0 20px; }
 
 .user-card { margin-bottom: 16px; border-radius: 12px; }
@@ -50,22 +67,19 @@
 .empty-icon { font-size: 4rem; margin-bottom: 16px; opacity: .5; }
 
 .content-container {
-  width: min(1000px, calc(100vw - 150px)); // Never exceed available space
-  margin: 0 auto; // Center by default
+  width: min(1000px, calc(100vw - 150px));
+  margin: 0 auto;
   padding: 1rem;
   
-  // When viewport gets too small, switch to sidebar-aware sizing
   @media (max-width: 1150px) {
-    width: calc(100vw - 150px); // Full width minus sidebar minus margins
-    max-width: 1000px; // Still respect max width if there's room
+    width: calc(100vw - 150px);
+    max-width: 1000px;
   }
   
-  // Further shrink for smaller screens
   @media (max-width: 900px) {
-    width: calc(100vw - 150px); // Tighter margins
+    width: calc(100vw - 150px);
   }
   
-  // Mobile responsive - full width with proper padding
   @media (max-width: 768px) {
     width: 100% !important;
     max-width: 100% !important;
@@ -83,4 +97,3 @@
   .user-header { flex-direction: column; gap: 12px; }
   .user-badges { flex-direction: row; }
 }
-

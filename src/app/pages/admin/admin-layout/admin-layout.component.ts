@@ -9,10 +9,17 @@ import { NavbarComponent } from '../navbar/navbar.component';
   standalone: true,
   imports: [IonicModule, RouterOutlet, NavbarComponent],
   template: `
-    <app-admin-navbar>
-      <router-outlet></router-outlet>
-    </app-admin-navbar>
+    <app-admin-navbar></app-admin-navbar>
+    <router-outlet></router-outlet>
+    
   `,
-  styles: []
+  styles: [`
+    :host {
+      display: block;
+      width: 100%;
+      height: 100vh;
+      overflow: hidden;
+    }
+  `]
 })
 export class AdminLayoutComponent {}

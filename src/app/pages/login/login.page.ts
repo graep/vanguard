@@ -56,45 +56,48 @@ export class LoginPage {
   ) {}
 
   async submit() {
-    if (this.form.invalid) return;
+  if (this.form.invalid) return;
 
-    const { email, password, mode } = this.form.value as {
-      email: string;
-      password: string;
-      mode: LoginMode;
-    };
+  const { email, password, mode } = this.form.value as {
+    email: string;
+    password: string;
+    mode: LoginMode;
+  };
 
-    try {
-      await this.auth.login(email, password);
+  try {
+    await this.auth.login(email, password);
 
-      // Wait for user profile to load, then route based on actual role
-      setTimeout(() => {
-        // Check if your auth service has currentUserProfile$
-        if (this.auth.currentUserProfile$) {
-          const userProfile = this.auth.currentUserProfile$.value;
-          if (userProfile) {
-            // Route based on actual user role, not selected mode
-            const route = this.auth.hasRole('admin')
-              ? '/admin'
-              : '/van-selection';
-            this.router.navigateByUrl(route, { replaceUrl: true });
+    setTimeout(() => {
+      if (this.auth.currentUserProfile$) {
+        const userProfile = this.auth.currentUserProfile$.value;
+        if (userProfile) {
+          // Check if user has permission for the selected mode
+          if (mode === 'admin') {
+            // User wants admin access - verify they have the right role
+            const canAccessAdmin = this.auth.hasRole('admin') || this.auth.hasRole('owner');
+            if (canAccessAdmin) {
+              this.router.navigateByUrl('/admin', { replaceUrl: true });
+            } else {
+              this.showToast('You do not have admin privileges', 'danger');
+              this.router.navigateByUrl('/van-selection', { replaceUrl: true });
+            }
           } else {
-            // Fallback to selected mode if profile not loaded
-            this.router.navigateByUrl(this.routeByMode[mode], {
-              replaceUrl: true,
-            });
+            // User selected driver mode - anyone can act as a driver
+            this.router.navigateByUrl('/van-selection', { replaceUrl: true });
           }
         } else {
-          // If no profile system, just use selected mode
-          this.router.navigateByUrl(this.routeByMode[mode], {
-            replaceUrl: true,
-          });
+          // Fallback to selected mode if profile not loaded
+          this.router.navigateByUrl(this.routeByMode[mode], { replaceUrl: true });
         }
-      }, 500);
-    } catch (e: any) {
-      this.showToast('Invalid email or password.', 'danger');
-    }
+      } else {
+        // If no profile system, just use selected mode
+        this.router.navigateByUrl(this.routeByMode[mode], { replaceUrl: true });
+      }
+    }, 500);
+  } catch (e: any) {
+    this.showToast('Invalid email or password.', 'danger');
   }
+}
 
   // Navigate to signup page
   goToSignup() {

@@ -1,3 +1,34 @@
+.content-container {
+  width: min(1000px, calc(100vw - 100px)); // Never exceed available space
+  margin: 0 auto; // Center by default
+  padding: 1rem;
+  
+  // When viewport gets too small, switch to sidebar-aware sizing
+  @media (max-width: 1150px) {
+    width: calc(100vw - 150px); // Full width minus sidebar minus margins
+    max-width: 1000px; // Still respect max width if there's room
+  }
+  
+  // Further shrink for smaller screens
+  @media (max-width: 900px) {
+    width: calc(100vw - 150px); // Tighter margins
+  }
+  
+  // Mobile responsive - full width with proper padding
+  @media (max-width: 768px) {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 1rem;
+    box-sizing: border-box;
+  }
+  
+  @media (max-width: 576px) {
+    padding: 0.75rem;
+  }
+}
+
+
 /* ========== Loading State ========== */
 .loading-container {
   display: flex;

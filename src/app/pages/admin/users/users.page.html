@@ -1,63 +1,40 @@
+<!-- Replace your existing ion-grid section with this: -->
+
 <ion-content class="ion-padding">
+  <div class="content-container">
+  
+  <!-- Stats - Fixed for 5 columns -->
+  <div class="stats-container" *ngIf="counts$ | async as c">
+    <ion-card class="stat-card">
+      <ion-card-content>
+        <div class="stat-value">{{ c.total }}</div>
+        <div class="stat-label">Total Users</div>
+      </ion-card-content>
+    </ion-card>
 
-  <!-- Stats -->
-  <ion-grid *ngIf="counts$ | async as c">
-    <ion-row>
-      <ion-col size="6" size-md="3">
-        <ion-card class="stat-card">
-          <ion-card-content>
-            <div class="stat-value">{{ c.total }}</div>
-            <div class="stat-label">Total Users</div>
-          </ion-card-content>
-        </ion-card>
-      </ion-col>
+    <ion-card class="stat-card">
+      <ion-card-content>
+        <div class="stat-value">{{ c.drivers }}</div>
+        <div class="stat-label">Drivers</div>
+      </ion-card-content>
+    </ion-card>
 
-      <ion-col size="6" size-md="3">
-        <ion-card class="stat-card">
-          <ion-card-content>
-            <div class="stat-value">{{ c.active }}</div>
-            <div class="stat-label">Active</div>
-          </ion-card-content>
-        </ion-card>
-      </ion-col>
+    <ion-card class="stat-card">
+      <ion-card-content>
+        <div class="stat-value">{{ c.admins }}</div>
+        <div class="stat-label">Admins</div>
+      </ion-card-content>
+    </ion-card>
 
-      <ion-col size="6" size-md="3">
-        <ion-card class="stat-card">
-          <ion-card-content>
-            <div class="stat-value">{{ c.drivers }}</div>
-            <div class="stat-label">Drivers</div>
-          </ion-card-content>
-        </ion-card>
-      </ion-col>
+  </div>
 
-      <ion-col size="6" size-md="3">
-        <ion-card class="stat-card">
-          <ion-card-content>
-            <div class="stat-value">{{ c.admins }}</div>
-            <div class="stat-label">Admins</div>
-          </ion-card-content>
-        </ion-card>
-      </ion-col>
-
-      <ion-col size="6" size-md="3">
-        <ion-card class="stat-card">
-          <ion-card-content>
-            <div class="stat-value">{{ c.owners }}</div>
-            <div class="stat-label">Owners</div>
-          </ion-card-content>
-        </ion-card>
-      </ion-col>
-    </ion-row>
-  </ion-grid>
-
+  <!-- Rest of your content stays the same -->
   <!-- Filter segment -->
   <div class="header-actions">
     <ion-segment [(ngModel)]="activeFilter" (ionChange)="onSegmentChange($event)">
       <ion-segment-button value="all"><ion-label>All Users</ion-label></ion-segment-button>
-      <ion-segment-button value="active"><ion-label>Active Only</ion-label></ion-segment-button>
       <ion-segment-button value="drivers"><ion-label>Drivers</ion-label></ion-segment-button>
       <ion-segment-button value="admins"><ion-label>Admins</ion-label></ion-segment-button>
-      <ion-segment-button value="owners"><ion-label>Owners</ion-label></ion-segment-button>
     </ion-segment>
   </div>
 
@@ -106,4 +83,5 @@
     </ion-item>
   </ng-template>
 
+  </div>
 </ion-content>
