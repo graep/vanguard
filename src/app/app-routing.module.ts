@@ -2,6 +2,7 @@
 import { NgModule } from '@angular/core';
 import { PreloadAllModules, RouterModule, Routes } from '@angular/router';
 import { authGuard } from './guards/auth.guard';
+import { adminGuard } from './guards/admin.guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -46,7 +47,7 @@ export const routes: Routes = [
     path: 'admin',
     loadComponent: () =>
       import('./pages/admin/admin-layout/admin-layout.component').then(m => m.AdminLayoutComponent),
-    canActivate: [authGuard],
+    canActivate: [authGuard, adminGuard], // ✅ Both authentication AND authorization check
     children: [
       {
         path: '',
@@ -73,7 +74,12 @@ export const routes: Routes = [
 
   // Optional: keep a single alias for old deep links to /van-report/:id
   // This simply forwards to the canonical admin route.
-  { path: 'van-report/:id', redirectTo: 'admin/van-report/:id', pathMatch: 'full' },
+  { 
+    path: 'van-report/:id', 
+    redirectTo: 'admin/van-report/:id', 
+    pathMatch: 'full',
+    canActivate: [authGuard, adminGuard] // ✅ Protect the alias route too
+  },
 
   // Catch-all
   { path: '**', redirectTo: 'login' },
