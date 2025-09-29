@@ -1,6 +1,7 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { IonicModule } from '@ionic/angular';
+import { IonicModule, ModalController, ToastController } from '@ionic/angular';
+import { AddIssueModalComponent } from './add-issue-modal.component';
 
 interface IssueRecord {
   id: string;
@@ -24,8 +25,21 @@ interface IssueRecord {
   template: `
     <div class="issues-tab-content">
       <div class="section-header">
-        <h3>Issues & Reports</h3>
-        <p class="section-subtitle">Reported issues and their resolution status</p>
+        <div class="header-content">
+          <div class="header-text">
+            <h3>Issues & Reports</h3>
+            <p class="section-subtitle">Reported issues and their resolution status</p>
+          </div>
+          <ion-button 
+            fill="solid" 
+            color="primary" 
+            size="small"
+            (click)="openAddIssueModal()"
+            class="add-issue-button">
+            <ion-icon name="add" slot="start"></ion-icon>
+            Add Issue
+          </ion-button>
+        </div>
       </div>
 
       <!-- Compact Status Boxes -->
@@ -113,6 +127,17 @@ interface IssueRecord {
       .section-header {
         margin-bottom: 20px;
         
+        .header-content {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          gap: 16px;
+        }
+        
+        .header-text {
+          flex: 1;
+        }
+        
         h3 {
           font-size: 1.2rem;
           font-weight: 600;
@@ -124,6 +149,12 @@ interface IssueRecord {
           font-size: 0.9rem;
           color: var(--ion-color-medium);
           margin: 0;
+        }
+        
+        .add-issue-button {
+          --height: 36px;
+          font-size: 0.85rem;
+          white-space: nowrap;
         }
       }
 
@@ -349,6 +380,9 @@ interface IssueRecord {
 export class IssuesTabComponent implements OnInit {
   @Input() vanId!: string;
 
+  private modalCtrl = inject(ModalController);
+  private toastCtrl = inject(ToastController);
+
   issueRecords: IssueRecord[] = [];
 
   ngOnInit() {
@@ -468,5 +502,28 @@ export class IssuesTabComponent implements OnInit {
       month: 'short',
       day: 'numeric'
     });
+  }
+
+  async openAddIssueModal() {
+    const modal = await this.modalCtrl.create({
+      component: AddIssueModalComponent,
+      cssClass: 'add-issue-modal'
+    });
+
+    await modal.present();
+
+    const { data, role } = await modal.onWillDismiss();
+    
+    if (role === 'saved' && data) {
+      // Add the new issue to the list
+      this.issueRecords.unshift(data);
+      
+      const toast = await this.toastCtrl.create({
+        message: 'Issue added successfully',
+        duration: 2000,
+        color: 'success'
+      });
+      await toast.present();
+    }
   }
 }
