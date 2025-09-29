@@ -20,6 +20,7 @@ import {
 import { InspectionService, ReportedIssue } from 'src/app/services/inspection.service';
 import { AuthService }                     from 'src/app/services/auth.service';
 import { AppHeaderComponent } from '@app/components/app-header/app-header.component';
+import { NavService } from '@app/services/nav.service';
 
 interface IssueCategory {
   name: string;
@@ -27,6 +28,7 @@ interface IssueCategory {
   details: string;
   subcategories?: string[];
   selectedSubcategory?: string;
+  severity?: 'high' | 'medium' | 'low';
 }
 
 @Component({
@@ -62,6 +64,7 @@ export class UserReviewPage implements OnInit {
       name: 'Powertrain',
       hasIssue: false,
       details: '',
+      severity: 'high',
       subcategories: [
         'Engine',
         'Transmission',
@@ -74,6 +77,7 @@ export class UserReviewPage implements OnInit {
       name: 'Chassis & Running Gear',
       hasIssue: false,
       details: '',
+      severity: 'high',
       subcategories: [
         'Suspension',
         'Brakes',
@@ -87,6 +91,7 @@ export class UserReviewPage implements OnInit {
       name: 'Electrical & Electronics',
       hasIssue: false,
       details: '',
+      severity: 'high',
       subcategories: [
         'Battery / Charging',
         'Wiring Harness',
@@ -100,6 +105,7 @@ export class UserReviewPage implements OnInit {
       name: 'HVAC & Comfort',
       hasIssue: false,
       details: '',
+      severity: 'medium',
       subcategories: [
         'Air Conditioning',
         'Heating',
@@ -113,6 +119,7 @@ export class UserReviewPage implements OnInit {
       name: 'Body & Interior',
       hasIssue: false,
       details: '',
+      severity: 'low',
       subcategories: [
         'Doors & Hinges',
         'Windows & Glass',
@@ -126,6 +133,7 @@ export class UserReviewPage implements OnInit {
       name: 'Safety & Security',
       hasIssue: false,
       details: '',
+      severity: 'high',
       subcategories: [
         'Seat Belts & Airbags',
         'Alarm / Immobilizer',
@@ -139,6 +147,7 @@ export class UserReviewPage implements OnInit {
       name: 'Fluids & Maintenance',
       hasIssue: false,
       details: '',
+      severity: 'medium',
       subcategories: [
         'Engine Oil & Filter',
         'Coolant / Radiator',
@@ -156,7 +165,8 @@ export class UserReviewPage implements OnInit {
     private auth: AuthService,
     private route: ActivatedRoute,
     private router: Router,
-    private toastCtrl: ToastController
+    private toastCtrl: ToastController,
+    private navService: NavService
   ) {}
 
   ngOnInit() {
@@ -192,7 +202,8 @@ export class UserReviewPage implements OnInit {
           .map(c => ({
             name:        c.name,
             subcategory: c.selectedSubcategory,
-            details:     c.details
+            details:     c.details,
+            severity:    c.severity || 'medium'
           }));
 
     try {
@@ -213,6 +224,7 @@ export class UserReviewPage implements OnInit {
       setTimeout(async () => {
         console.log('🔒 Logging out & navigating to /login');
         await this.auth.logout();
+        this.navService.enhancedLogout(); // Clear both app and browser history
         await this.router.navigateByUrl('/login', { replaceUrl: true });
       }, 2000);
 

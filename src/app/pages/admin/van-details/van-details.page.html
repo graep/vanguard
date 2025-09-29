@@ -1,9 +1,8 @@
-
-
-<app-header 
-  class="ion-text-center" 
-  [title]="van ? van.type + ' ' + van.number : 'Loading...'"
-></app-header>
+<ion-header>
+  <ion-toolbar>
+    <ion-title class="ion-text-center">{{ van ? van.type + ' ' + van.number : 'Loading...' }}</ion-title>
+  </ion-toolbar>
+</ion-header>
 
 <ion-content class="ion-padding">
   <div class="content-container">
@@ -25,7 +24,7 @@
     <ion-card class="van-header-card">
       <ion-card-content>
         <div class="van-header">
-          
+            
           <!-- LEFT: info, notes, actions -->
           <div class="van-basic-info">
             <h1 class="van-title">{{ van.type.toUpperCase() }} {{ van.number }}</h1>
@@ -65,23 +64,14 @@
 
             <!-- Notes -->
             <div class="notes-section">
-              <!-- show notes -->
-              <div *ngIf="van.notes && !editingNotes" class="detail-item">
-                <ion-icon name="document-text" class="info-icon"></ion-icon>
-                <div class="info-content">
-                  <h3>Notes</h3>
-                  <p>{{ van.notes }}</p>
-                </div>
-              </div>
-
               <!-- edit notes -->
               <div *ngIf="editingNotes" class="notes-editor">
                 <ion-icon name="document-text" class="info-icon"></ion-icon>
                 <div class="editor-content">
-                  <h3 class="editor-label">Notes</h3>
+                  <h3 class="editor-label">Add Note</h3>
                   <ion-textarea
                     [(ngModel)]="notesText"
-                    placeholder="Enter van notes..."
+                    placeholder="Enter a new note..."
                     rows="4"
                     fill="outline"
                     class="notes-textarea">
@@ -98,7 +88,7 @@
                   (click)="startEditingNotes()"
                   class="add-notes-button">
                   <ion-icon name="add" slot="start"></ion-icon>
-                  {{ van.notes ? 'Edit Notes' : 'Add Notes' }}
+                  Add Note
                 </ion-button>
 
                 <div *ngIf="editingNotes" class="editor-actions">
@@ -106,10 +96,10 @@
                     fill="solid"
                     color="primary"
                     (click)="saveNotes()"
-                    [disabled]="!hasNotesChanged()"
+                    [disabled]="!notesText.trim()"
                     class="save-button">
                     <ion-icon name="checkmark" slot="start"></ion-icon>
-                    Save Notes
+                    Save Note
                   </ion-button>
 
                   <ion-button
@@ -141,7 +131,7 @@
                   [disabled]="!latestInspectionId"
                   class="action-button">
                   <ion-icon name="document-text" slot="start"></ion-icon>
-                  Latest Report
+                  Reports
                   <span *ngIf="!latestInspectionId" class="button-note">
                     (No reports)
                   </span>
@@ -211,7 +201,9 @@
         <!-- Issues Tab -->
         <div *ngIf="activeTab === 'issues'" class="tab-panel">
           <app-issues-tab
-            [vanId]="van.docId">
+            #issuesTab
+            [vanId]="van.docId"
+            (issueAdded)="onIssueAdded($event)">
           </app-issues-tab>
         </div>
 

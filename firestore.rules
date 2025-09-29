@@ -1,0 +1,48 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function isAdmin() { return signedIn() && request.auth.token.admin == true; }
+    function isOwner(uid) { return signedIn() && request.auth.uid == uid; }
+
+    // ✅ Users: user can read/create/update ONLY their own doc; admins can manage all
+    match /users/{uid} {
+      allow read, create, update: if isOwner(uid) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Vans: readable by any signed-in user; only admins can write
+    match /vans/{vanId} {
+      allow read: if signedIn();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Inspections: drivers create/read their own; admins can manage all
+    match /inspections/{insId} {
+      // driver creates with createdBy = auth.uid
+      allow create: if signedIn()
+                 && request.resource.data.createdBy == request.auth.uid;
+
+      // driver reads only their own; admins read all
+      allow read: if isOwner(resource.data.createdBy) || isAdmin();
+
+      // driver can update their pending draft; admins full control
+      allow update: if (
+        isOwner(resource.data.createdBy)
+        && resource.data.status == 'pending'
+        && request.resource.data.createdBy == resource.data.createdBy
+        && request.resource.data.status == 'pending'
+        && request.resource.data.diff(resource.data).changedKeys()
+             .hasOnly(['photos','issues','status'])
+      ) || isAdmin();
+
+      allow delete: if isAdmin();
+    }
+
+    // (implicit default deny for everything else)
+  }
+}
+
+
+

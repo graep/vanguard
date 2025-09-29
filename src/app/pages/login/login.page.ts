@@ -67,33 +67,32 @@ export class LoginPage {
   try {
     await this.auth.login(email, password);
 
-    setTimeout(() => {
-      if (this.auth.currentUserProfile$) {
-        const userProfile = this.auth.currentUserProfile$.value;
-        if (userProfile) {
-          // Check if user has permission for the selected mode
-          if (mode === 'admin') {
-            // User wants admin access - verify they have the right role
-            const canAccessAdmin = this.auth.hasRole('admin') || this.auth.hasRole('owner');
-            if (canAccessAdmin) {
-              this.router.navigateByUrl('/admin', { replaceUrl: true });
-            } else {
-              this.showToast('You do not have admin privileges', 'danger');
-              this.router.navigateByUrl('/van-selection', { replaceUrl: true });
-            }
+    // Wait for user profile to load before navigation to prevent race conditions
+    const checkProfileAndNavigate = () => {
+      const userProfile = this.auth.currentUserProfile$.value;
+      if (userProfile) {
+        // Check if user has permission for the selected mode
+        if (mode === 'admin') {
+          // User wants admin access - verify they have the right role
+          const canAccessAdmin = this.auth.hasRole('admin') || this.auth.hasRole('owner');
+          if (canAccessAdmin) {
+            this.router.navigateByUrl('/admin', { replaceUrl: true });
           } else {
-            // User selected driver mode - anyone can act as a driver
+            this.showToast('You do not have admin privileges', 'danger');
             this.router.navigateByUrl('/van-selection', { replaceUrl: true });
           }
         } else {
-          // Fallback to selected mode if profile not loaded
-          this.router.navigateByUrl(this.routeByMode[mode], { replaceUrl: true });
+          // User selected driver mode - anyone can act as a driver
+          this.router.navigateByUrl('/van-selection', { replaceUrl: true });
         }
       } else {
-        // If no profile system, just use selected mode
-        this.router.navigateByUrl(this.routeByMode[mode], { replaceUrl: true });
+        // Profile not loaded yet, wait a bit more
+        setTimeout(checkProfileAndNavigate, 100);
       }
-    }, 500);
+    };
+
+    // Start checking after a short delay to allow profile to load
+    setTimeout(checkProfileAndNavigate, 100);
   } catch (e: any) {
     this.showToast('Invalid email or password.', 'danger');
   }

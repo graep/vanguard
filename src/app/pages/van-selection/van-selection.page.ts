@@ -4,6 +4,7 @@ import { IonContent, IonHeader, IonTitle, IonToolbar, IonItem, IonList, IonLabel
 import { RouterModule, Router } from '@angular/router';
 import { Auth } from '@angular/fire/auth';
 import { AppHeaderComponent } from '@app/components/app-header/app-header.component';
+import { NavService } from '@app/services/nav.service';
 
 @Component({
   selector: 'app-van-selection',
@@ -23,13 +24,15 @@ export class VanSelectionPage {
 
   constructor(
     private router: Router,
-    private auth: Auth
+    private auth: Auth,
+    private navService: NavService
   ) { }
 
   async logout() {
-  await this.auth.signOut();
-  this.router.navigate(['/login']);
-}
+    await this.auth.signOut();
+    this.navService.enhancedLogout(); // Clear both app and browser history
+    this.router.navigate(['/login'], { replaceUrl: true });
+  }
   selectVan(vanType: string, vanNumber: string) {
     this.router.navigate([
       '/photo-capture',

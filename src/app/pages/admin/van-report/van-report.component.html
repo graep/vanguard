@@ -1,81 +1,44 @@
 <ion-header>
   <ion-toolbar>
-    <ion-title>Van Report</ion-title>
+    <ion-title class="ion-text-center">Van Report</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content class="ion-padding">
-  <ion-grid>
-
-    <!-- Headings for photos -->
-    <ion-row>
-      <ion-col size="3" class="ion-text-center"><h2>Previous Day</h2></ion-col>
-      <ion-col size="3" class="ion-text-center"><h2>Current Day</h2></ion-col>
-      <ion-col size="6" class="ion-text-center"><h2>Reports</h2></ion-col>
-    </ion-row>
-
-    <!-- Photos + stacked reports -->
-    <ion-row>
-
-      <!-- Previous day photo column -->
-      <ion-col size="3">
-        <div class="img-wrap" *ngFor="let row of comparisonRows">
-          <img class="photo" *ngIf="row.prevUrl" [src]="row.prevUrl" (click)="openImageViewer(row.prevUrl)" />
-          <div class="photo-label">{{ row.side | titlecase }}</div>
-        </div>
-      </ion-col>
-
-      <!-- Current day photo column -->
-      <ion-col size="3">
-        <div class="img-wrap" *ngFor="let row of comparisonRows">
-          <img class="photo" *ngIf="row.currUrl" [src]="row.currUrl" (click)="openImageViewer(row.currUrl)" />
-          <div class="photo-label">{{ row.side | titlecase }}</div>
-        </div>
-      </ion-col>
-
-      <!-- Reports column -->
-      <ion-col size="6">
-        
-        <!-- Current Report -->
-        <ion-card>
-          <ion-card-header>
-            <ion-card-title>Current Report</ion-card-title>
-          </ion-card-header>
-          <ion-card-content>
-            <ng-container *ngIf="currReportItems?.length; else noCurr">
-              <ion-list>
-                <ion-item *ngFor="let r of currReportItems">
-                  <ion-label>
-                    <div class="report-name">{{ r.name }} <span class="muted" *ngIf="r.subcategory">/ {{ r.subcategory }}</span></div>
-                    <div class="report-details">{{ r.details }}</div>
-                    <div class="report-time" *ngIf="r.reportSubmittedAt?.toDate">
-                      {{ r.reportSubmittedAt.toDate() | date:'medium' }}
-                    </div>
-                  </ion-label>
-                </ion-item>
-              </ion-list>
-            </ng-container>
-            <ng-template #noCurr>
-              <ion-text color="medium">No current report.</ion-text>
-            </ng-template>
-          </ion-card-content>
-        </ion-card>
-
-        <!-- Previous Report -->
-        <ion-card>
+  <div class="content-container">
+    
+    <!-- Reports Section - Moved to top -->
+    <div class="reports-section">
+      <h2 class="section-title">Reports</h2>
+      
+      <div class="reports-grid">
+        <!-- Previous Report - Left -->
+        <ion-card class="report-card">
           <ion-card-header>
             <ion-card-title>Previous Report</ion-card-title>
+            <div class="report-meta" *ngIf="previousInspection">
+              <div class="submitter-info">
+                <ion-icon name="person-outline"></ion-icon>
+                <span>{{ previousSubmitterName }}</span>
+              </div>
+              <div class="submission-date" *ngIf="previousInspection.createdAt?.toDate">
+                <ion-icon name="calendar-outline"></ion-icon>
+                <span>{{ previousInspection.createdAt.toDate() | date:'medium' }}</span>
+              </div>
+            </div>
           </ion-card-header>
           <ion-card-content>
             <ng-container *ngIf="prevReportItems?.length; else noPrev">
               <ion-list>
                 <ion-item *ngFor="let r of prevReportItems">
                   <ion-label>
-                    <div class="report-name">{{ r.name }} <span class="muted" *ngIf="r.subcategory">/ {{ r.subcategory }}</span></div>
-                    <div class="report-details">{{ r.details }}</div>
-                    <div class="report-time" *ngIf="r.reportSubmittedAt?.toDate">
-                      {{ r.reportSubmittedAt.toDate() | date:'medium' }}
+                    <div class="report-header">
+                      <div class="report-name">{{ r.name }} <span class="muted" *ngIf="r.subcategory">/ {{ r.subcategory }}</span></div>
+                      <div class="severity-badge" [class]="'severity-' + (r.severity || 'low')">
+                        {{ (r.severity || 'low') | titlecase }}
+                      </div>
                     </div>
+                    <div class="report-details">{{ r.details }}</div>
                   </ion-label>
                 </ion-item>
               </ion-list>
@@ -86,10 +49,143 @@
           </ion-card-content>
         </ion-card>
 
-      </ion-col>
+        <!-- Current Report - Right -->
+        <ion-card class="report-card">
+          <ion-card-header>
+            <ion-card-title>Current Report</ion-card-title>
+            <div class="report-meta" *ngIf="currentInspection">
+              <div class="submitter-info">
+                <ion-icon name="person-outline"></ion-icon>
+                <span>{{ currentSubmitterName }}</span>
+              </div>
+              <div class="submission-date" *ngIf="currentInspection.createdAt?.toDate">
+                <ion-icon name="calendar-outline"></ion-icon>
+                <span>{{ currentInspection.createdAt.toDate() | date:'medium' }}</span>
+              </div>
+            </div>
+          </ion-card-header>
+          <ion-card-content>
+            <ng-container *ngIf="currReportItems?.length; else noCurr">
+              <ion-list>
+                <ion-item *ngFor="let r of currReportItems">
+                  <ion-label>
+                    <div class="report-header">
+                      <div class="report-name">{{ r.name }} <span class="muted" *ngIf="r.subcategory">/ {{ r.subcategory }}</span></div>
+                      <div class="severity-badge" [class]="'severity-' + (r.severity || 'low')">
+                        {{ (r.severity || 'low') | titlecase }}
+                      </div>
+                    </div>
+                    <div class="report-details">{{ r.details }}</div>
+                  </ion-label>
+                </ion-item>
+              </ion-list>
+            </ng-container>
+            <ng-template #noCurr>
+              <ion-text color="medium">No current report.</ion-text>
+            </ng-template>
+          </ion-card-content>
+        </ion-card>
+      </div>
+    </div>
 
-    </ion-row>
-  </ion-grid>
+    <!-- Photos Section -->
+    <div class="photos-section">
+      <h2 class="section-title">Photo Comparison</h2>
+      
+      <!-- Mobile: Stack photos vertically -->
+      <div class="photos-mobile">
+        <div class="photo-group" *ngFor="let row of comparisonRows">
+          <h3 class="photo-group-title">{{ row.side | titlecase }}</h3>
+          <div class="photo-pair">
+            <div class="photo-container" *ngIf="row.prevUrl">
+              <img class="photo" 
+                   [src]="row.prevUrl" 
+                   [class.expanded]="expandedImage === row.prevUrl"
+                   (click)="toggleImageExpansion(row.prevUrl)" />
+              <div class="photo-label">Previous Day</div>
+            </div>
+            <div class="photo-container" *ngIf="row.currUrl">
+              <img class="photo" 
+                   [src]="row.currUrl" 
+                   [class.expanded]="expandedImage === row.currUrl"
+                   (click)="toggleImageExpansion(row.currUrl)" />
+              <div class="photo-label">Current Day</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Desktop: Side-by-side layout -->
+      <div class="photos-desktop">
+        <ion-grid>
+          <ion-row>
+            <ion-col size="6" class="ion-text-center">
+              <h3>Previous Day</h3>
+            </ion-col>
+            <ion-col size="6" class="ion-text-center">
+              <h3>Current Day</h3>
+            </ion-col>
+          </ion-row>
+          <ion-row *ngFor="let row of comparisonRows">
+            <ion-col size="6">
+              <div class="img-wrap" *ngIf="row.prevUrl">
+                <img class="photo" 
+                     [src]="row.prevUrl" 
+                     [class.expanded]="expandedImage === row.prevUrl"
+                     (click)="toggleImageExpansion(row.prevUrl)" />
+                <div class="photo-label">{{ row.side | titlecase }}</div>
+              </div>
+            </ion-col>
+            <ion-col size="6">
+              <div class="img-wrap" *ngIf="row.currUrl">
+                <img class="photo" 
+                     [src]="row.currUrl" 
+                     [class.expanded]="expandedImage === row.currUrl"
+                     (click)="toggleImageExpansion(row.currUrl)" />
+                <div class="photo-label">{{ row.side | titlecase }}</div>
+              </div>
+            </ion-col>
+          </ion-row>
+        </ion-grid>
+      </div>
+    </div>
 
-  <ion-text color="danger" *ngIf="errorMsg">{{ errorMsg }}</ion-text>
+    <ion-text color="danger" *ngIf="errorMsg">{{ errorMsg }}</ion-text>
+  </div>
+  
+  <!-- Backdrop overlay for expanded image -->
+  <div class="image-backdrop" 
+       *ngIf="expandedImage" 
+       (click)="toggleImageExpansion('')">
+  </div>
+
+  <!-- Approval Overlay - Fixed Bottom (only in review mode) -->
+  <div class="approval-overlay" *ngIf="reviewMode">
+    <div class="approval-content">
+      <div class="approval-info">
+        <h3>Review Submission</h3>
+        <p>Approve or reject this inspection report</p>
+      </div>
+      <div class="approval-buttons">
+        <ion-button 
+          fill="outline" 
+          color="danger" 
+          size="large"
+          (click)="deny()"
+          class="reject-button">
+          <ion-icon name="close-circle" slot="start"></ion-icon>
+          Reject
+        </ion-button>
+        <ion-button 
+          fill="solid" 
+          color="success" 
+          size="large"
+          (click)="approve()"
+          class="approve-button">
+          <ion-icon name="checkmark-circle" slot="start"></ion-icon>
+          Approve
+        </ion-button>
+      </div>
+    </div>
+  </div>
 </ion-content>

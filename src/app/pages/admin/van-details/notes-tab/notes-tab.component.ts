@@ -1,13 +1,7 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, OnChanges, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IonicModule } from '@ionic/angular';
-
-interface NoteEntry {
-  id: string;
-  content: string;
-  timestamp: Date;
-  author: string;
-}
+import { NotesHistoryService, NoteEntry } from '../../../../services/notes-history.service';
 
 @Component({
   selector: 'app-notes-tab',
@@ -20,21 +14,6 @@ interface NoteEntry {
         <p class="section-subtitle">Historical notes for this van</p>
       </div>
 
-      <!-- Current Note -->
-      <ion-card *ngIf="currentNotes" class="current-note-card">
-        <ion-card-content>
-          <div class="note-header">
-            <ion-icon name="document-text" class="note-icon current"></ion-icon>
-            <div class="note-meta">
-              <h4>Current Note</h4>
-              <p class="note-date">Active</p>
-            </div>
-          </div>
-          <div class="note-content current">
-            {{ currentNotes }}
-          </div>
-        </ion-card-content>
-      </ion-card>
 
       <!-- Previous Notes List -->
       <div class="notes-list">
@@ -43,7 +22,7 @@ interface NoteEntry {
             <div class="note-header">
               <ion-icon name="document-text" class="note-icon"></ion-icon>
               <div class="note-meta">
-                <h4>Note by {{ note.author }}</h4>
+                <h4>{{ note.author }}</h4>
                 <p class="note-date">{{ formatDate(note.timestamp) }}</p>
               </div>
             </div>
@@ -81,11 +60,6 @@ interface NoteEntry {
         }
       }
 
-      .current-note-card {
-        background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
-        border-left: 4px solid var(--ion-color-primary);
-        margin-bottom: 24px;
-      }
 
       .note-card {
         margin-bottom: 12px;
@@ -101,10 +75,6 @@ interface NoteEntry {
           font-size: 20px;
           color: var(--ion-color-medium);
           flex-shrink: 0;
-          
-          &.current {
-            color: var(--ion-color-primary);
-          }
         }
 
         .note-meta {
@@ -133,10 +103,6 @@ interface NoteEntry {
         line-height: 1.4;
         color: var(--ion-color-dark-tint);
         
-        &.current {
-          background: rgba(255, 255, 255, 0.7);
-          font-weight: 500;
-        }
       }
 
       .empty-state {
@@ -164,39 +130,35 @@ interface NoteEntry {
     }
   `]
 })
-export class NotesTabComponent implements OnInit {
+export class NotesTabComponent implements OnInit, OnChanges {
   @Input() vanId!: string;
   @Input() currentNotes?: string;
 
+  private notesHistoryService = inject(NotesHistoryService);
   previousNotes: NoteEntry[] = [];
 
   ngOnInit() {
     this.loadPreviousNotes();
   }
 
-  private loadPreviousNotes() {
-    // TODO: Load from Firestore when you add notes history
-    // For now, showing placeholder data
-    this.previousNotes = [
-      {
-        id: '1',
-        content: 'Van completed routine maintenance check. All systems operating normally.',
-        timestamp: new Date('2024-12-15T14:30:00'),
-        author: 'Admin User'
-      },
-      {
-        id: '2',
-        content: 'Minor scratches noted on passenger side. Scheduled for cosmetic repair.',
-        timestamp: new Date('2024-12-01T10:15:00'),
-        author: 'Admin User'
-      },
-      {
-        id: '3',
-        content: 'Battery performance excellent after recent charging system upgrade.',
-        timestamp: new Date('2024-11-20T16:45:00'),
-        author: 'Fleet Technician'
-      }
-    ];
+  ngOnChanges() {
+    // Reload notes when vanId changes
+    if (this.vanId) {
+      this.loadPreviousNotes();
+    }
+  }
+
+  async refreshNotes() {
+    await this.loadPreviousNotes();
+  }
+
+  private async loadPreviousNotes() {
+    try {
+      this.previousNotes = await this.notesHistoryService.getNotesHistory(this.vanId);
+    } catch (error: any) {
+      console.error('Failed to load notes history:', error);
+      this.previousNotes = [];
+    }
   }
 
   formatDate(date: Date): string {

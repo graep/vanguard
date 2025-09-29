@@ -13,6 +13,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Van } from 'src/app/models/van.model';
 import { StatusCountBarComponent, StatusDataSource } from '@app/components/status-count-bar/status-count-bar.component';
+import { NavService } from '@app/services/nav.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -65,6 +66,7 @@ export class DashboardPage implements OnInit {
   private router = inject(Router);
   private auth = inject(Auth);
   private ngZone = inject(NgZone);
+  private navService = inject(NavService);
 
   ngOnInit() {
     this.loadVans();
@@ -121,6 +123,7 @@ export class DashboardPage implements OnInit {
 
   async logout(): Promise<void> {
     await this.auth.signOut();
-    this.router.navigate(['/login']);
+    this.navService.enhancedLogout(); // Clear both app and browser history
+    this.router.navigate(['/login'], { replaceUrl: true });
   }
 }

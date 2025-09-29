@@ -25,6 +25,7 @@ import { InspectionService } from 'src/app/services/inspection.service';
 import { Auth } from '@angular/fire/auth';
 import { getApp } from '@angular/fire/app';
 import { AppHeaderComponent } from '@app/components/app-header/app-header.component';
+import { NavService } from '@app/services/nav.service';
 
 @Component({
   selector: 'app-photo-capture',
@@ -69,7 +70,8 @@ export class PhotoCapturePage implements OnInit {
     private inspection: InspectionService,
     private router: Router,
     private toastCtrl: ToastController,
-    private auth: Auth
+    private auth: Auth,
+    private navService: NavService
   ) {}
   ngOnInit() {
     // Pull vanType and vanNumber out of the URL
@@ -105,26 +107,51 @@ export class PhotoCapturePage implements OnInit {
   async submitAll() {
     console.log('runtime bucket =', getApp().options.storageBucket);
     console.log('uid at upload:', this.auth.currentUser?.uid);
+    console.log('auth state:', this.auth.currentUser);
+    
+    // Check authentication before proceeding
+    if (!this.auth.currentUser) {
+      console.error('User not authenticated');
+      const errToast = await this.toastCtrl.create({
+        message: 'Please log in again to upload photos.',
+        color: 'danger',
+        duration: 3000,
+        position: 'top',
+      });
+      await errToast.present();
+      return;
+    }
+
     this.isLoading = true;
     try {
       // 1. Upload all four photos and collect URLs
       const urls: Record<string, string> = {};
       for (const side of this.sides) {
+        console.log(`Uploading ${side} photo...`);
         const data = this.photos[side]!;
-        urls[side] = await this.inspection.uploadPhoto(
-          this.vanType,
-          this.vanNumber,
-          side,
-          data
-        );
+        try {
+          urls[side] = await this.inspection.uploadPhoto(
+            this.vanType,
+            this.vanNumber,
+            side,
+            data
+          );
+          console.log(`${side} photo uploaded successfully:`, urls[side]);
+        } catch (uploadError) {
+          console.error(`Failed to upload ${side} photo:`, uploadError);
+          const errorMessage = uploadError instanceof Error ? uploadError.message : String(uploadError);
+          throw new Error(`Failed to upload ${side} photo: ${errorMessage}`);
+        }
       }
 
       // 2. Save the inspection (photos) and grab its new Firestore ID
+      console.log('Saving inspection to Firestore...');
       const inspectionId = await this.inspection.saveInspection(
         this.vanType,
         this.vanNumber,
         urls
       );
+      console.log('Inspection saved with ID:', inspectionId);
 
       // 3. Hide the spinner
       this.isLoading = false;
@@ -141,11 +168,31 @@ export class PhotoCapturePage implements OnInit {
       });
     } catch (e) {
       console.error('Upload or save failed', e);
+      
+      // Type-safe error handling
+      const error = e as any;
+      console.error('Error details:', {
+        message: error?.message,
+        code: error?.code,
+        stack: error?.stack
+      });
       this.isLoading = false;
+      
+      let errorMessage = 'Could not upload photos. Try again.';
+      if (error?.code === 'storage/unauthorized') {
+        errorMessage = 'Permission denied. Please contact support.';
+      } else if (error?.code === 'storage/unauthenticated') {
+        errorMessage = 'Please log in again to upload photos.';
+      } else if (error?.code === 'storage/quota-exceeded') {
+        errorMessage = 'Storage quota exceeded. Please contact support.';
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+      
       const errToast = await this.toastCtrl.create({
-        message: 'Could not upload photos. Try again.',
+        message: errorMessage,
         color: 'danger',
-        duration: 2000,
+        duration: 3000,
         position: 'top',
       });
       await errToast.present();
@@ -153,6 +200,7 @@ export class PhotoCapturePage implements OnInit {
   }
   async logout() {
     await this.auth.signOut();
-    this.router.navigate(['/login']);
+    this.navService.enhancedLogout(); // Clear both app and browser history
+    this.router.navigate(['/login'], { replaceUrl: true });
   }
 }

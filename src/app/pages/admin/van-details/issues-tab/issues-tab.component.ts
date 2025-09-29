@@ -1,7 +1,9 @@
-import { Component, Input, OnInit, inject } from '@angular/core';
+import { Component, Input, OnInit, inject, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IonicModule, ModalController, ToastController } from '@ionic/angular';
 import { AddIssueModalComponent } from './add-issue-modal.component';
+import { InspectionService, Inspection } from 'src/app/services/inspection.service';
+import { AuthService } from 'src/app/services/auth.service';
 
 interface IssueRecord {
   id: string;
@@ -10,7 +12,7 @@ interface IssueRecord {
   subcategory?: string;
   description: string;
   severity: 'low' | 'medium' | 'high' | 'critical';
-  status: 'open' | 'in_progress' | 'resolved' | 'closed';
+  status: 'open' | 'resolved';
   reportedDate: Date;
   resolvedDate?: Date;
   reportedBy: string;
@@ -42,25 +44,30 @@ interface IssueRecord {
         </div>
       </div>
 
-      <!-- Compact Status Boxes -->
-      <div class="compact-stats-row">
-        <div class="compact-stat-card danger">
-          <div class="compact-stat-number">{{ getOpenIssues() }}</div>
-          <div class="compact-stat-label">Open</div>
-        </div>
-        <div class="compact-stat-card warning">
-          <div class="compact-stat-number">{{ getInProgressIssues() }}</div>
-          <div class="compact-stat-label">In Progress</div>
-        </div>
-        <div class="compact-stat-card success">
-          <div class="compact-stat-number">{{ getResolvedIssues() }}</div>
-          <div class="compact-stat-label">Resolved</div>
-        </div>
+      <!-- Issue Tabs -->
+      <div class="issue-tabs">
+        <ion-button 
+          [fill]="activeIssueTab === 'open' ? 'solid' : 'outline'"
+          [color]="activeIssueTab === 'open' ? 'danger' : 'medium'"
+          (click)="setActiveIssueTab('open')"
+          class="tab-button">
+          <ion-icon name="alert-circle" slot="start"></ion-icon>
+          Open ({{ getOpenIssues() }})
+        </ion-button>
+        
+        <ion-button 
+          [fill]="activeIssueTab === 'resolved' ? 'solid' : 'outline'"
+          [color]="activeIssueTab === 'resolved' ? 'success' : 'medium'"
+          (click)="setActiveIssueTab('resolved')"
+          class="tab-button">
+          <ion-icon name="checkmark-circle" slot="start"></ion-icon>
+          Resolved ({{ getResolvedIssues() }})
+        </ion-button>
       </div>
 
       <!-- Issues List -->
       <div class="issues-list">
-        <ion-card *ngFor="let issue of issueRecords" class="issue-card" [class]="'severity-' + issue.severity">
+        <ion-card *ngFor="let issue of getFilteredIssues()" class="issue-card" [class]="'severity-' + issue.severity">
           <ion-card-content>
             <div class="issue-header">
               <div class="issue-priority">
@@ -77,10 +84,23 @@ interface IssueRecord {
                 </div>
               </div>
 
-              <ion-chip [color]="getStatusColor(issue.status)" class="status-chip">
-                <ion-icon [name]="getStatusIcon(issue.status)"></ion-icon>
-                <ion-label>{{ getStatusLabel(issue.status) }}</ion-label>
-              </ion-chip>
+              <div class="issue-actions">
+                <ion-chip [color]="getStatusColor(issue.status)" class="status-chip">
+                  <ion-icon [name]="getStatusIcon(issue.status)"></ion-icon>
+                  <ion-label>{{ getStatusLabel(issue.status) }}</ion-label>
+                </ion-chip>
+                
+                <ion-button 
+                  *ngIf="issue.status === 'open'"
+                  fill="clear" 
+                  size="small" 
+                  color="success"
+                  (click)="markAsResolved(issue)"
+                  class="resolve-button">
+                  <ion-icon name="checkmark-circle" slot="start"></ion-icon>
+                  Mark Resolved
+                </ion-button>
+              </div>
             </div>
 
             <div class="issue-description">
@@ -88,17 +108,6 @@ interface IssueRecord {
             </div>
 
             <div class="issue-footer">
-              <div class="issue-dates">
-                <span class="reported-date">
-                  <ion-icon name="calendar" class="date-icon"></ion-icon>
-                  Reported: {{ formatDate(issue.reportedDate) }}
-                </span>
-                <span *ngIf="issue.resolvedDate" class="resolved-date">
-                  <ion-icon name="checkmark" class="date-icon"></ion-icon>
-                  Resolved: {{ formatDate(issue.resolvedDate) }}
-                </span>
-              </div>
-              
               <div class="issue-people">
                 <span class="reported-by">
                   <ion-icon name="person" class="person-icon"></ion-icon>
@@ -109,15 +118,27 @@ interface IssueRecord {
                   Assigned: {{ issue.assignedTo }}
                 </span>
               </div>
+              
+              <div class="issue-dates">
+                <span class="reported-date">
+                  <ion-icon name="calendar" class="date-icon"></ion-icon>
+                  {{ formatDate(issue.reportedDate) }}
+                </span>
+                <span *ngIf="issue.resolvedDate" class="resolved-date">
+                  <ion-icon name="checkmark" class="date-icon"></ion-icon>
+                  Resolved: {{ formatDate(issue.resolvedDate) }}
+                </span>
+              </div>
             </div>
           </ion-card-content>
         </ion-card>
 
         <!-- Empty State -->
-        <div *ngIf="issueRecords.length === 0" class="empty-state">
-          <ion-icon name="checkmark-done-circle" class="empty-icon success"></ion-icon>
-          <h3>No Issues Reported</h3>
-          <p>This van has no reported issues. Great work!</p>
+        <div *ngIf="getFilteredIssues().length === 0" class="empty-state">
+          <ion-icon [name]="activeIssueTab === 'open' ? 'checkmark-done-circle' : 'time'" 
+                   [class]="'empty-icon ' + (activeIssueTab === 'open' ? 'success' : 'medium')"></ion-icon>
+          <h3>{{ activeIssueTab === 'open' ? 'No Open Issues' : 'No Resolved Issues' }}</h3>
+          <p>{{ activeIssueTab === 'open' ? 'All issues have been resolved. Great work!' : 'No issues have been resolved yet.' }}</p>
         </div>
       </div>
     </div>
@@ -158,9 +179,17 @@ interface IssueRecord {
         }
       }
 
-      .compact-stats-row {
+      .issue-tabs {
         display: flex;
-        justify-content: space-evenly;
+        gap: 12px;
+        margin-bottom: 20px;
+        
+        .tab-button {
+          flex: 1;
+          --height: 40px;
+          font-size: 0.9rem;
+          font-weight: 600;
+        }
       }
 
       .issue-card {
@@ -253,10 +282,22 @@ interface IssueRecord {
           }
         }
 
-        .status-chip {
-          align-self: flex-start;
-          height: 28px;
-          font-size: 0.8rem;
+        .issue-actions {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-end;
+          gap: 8px;
+
+          .status-chip {
+            height: 28px;
+            font-size: 0.8rem;
+          }
+
+          .resolve-button {
+            --height: 32px;
+            font-size: 0.8rem;
+            font-weight: 600;
+          }
         }
       }
 
@@ -273,7 +314,7 @@ interface IssueRecord {
       .issue-footer {
         display: flex;
         justify-content: space-between;
-        align-items: flex-start;
+        align-items: flex-end;
         gap: 16px;
         font-size: 0.85rem;
         color: var(--ion-color-medium);
@@ -379,59 +420,113 @@ interface IssueRecord {
 })
 export class IssuesTabComponent implements OnInit {
   @Input() vanId!: string;
+  @Output() issueAdded = new EventEmitter<{ severity: string; category: string }>();
 
   private modalCtrl = inject(ModalController);
   private toastCtrl = inject(ToastController);
+  private inspectionService = inject(InspectionService);
+  private authService = inject(AuthService);
 
   issueRecords: IssueRecord[] = [];
+  activeIssueTab: 'open' | 'resolved' = 'open';
 
   ngOnInit() {
     this.loadIssueRecords();
   }
 
-  private loadIssueRecords() {
-    // TODO: Load from Firestore inspection reports
-    // Placeholder data for now
-    this.issueRecords = [
-      {
-        id: '1',
-        title: 'Passenger Side Mirror Adjustment Issue',
-        category: 'Body & Interior',
-        subcategory: 'Mirrors & Windows',
-        description: 'Passenger side mirror does not adjust properly when using electronic controls. May require manual adjustment.',
-        severity: 'low',
-        status: 'open',
-        reportedDate: new Date('2024-12-15'),
-        reportedBy: 'Admin User',
-        inspectionId: 'insp_123'
-      },
-      {
-        id: '2',
-        title: 'Engine Oil Level Low',
-        category: 'Fluids & Maintenance',
-        subcategory: 'Engine Oil & Filter',
-        description: 'Oil level indicator showing below minimum. Requires immediate attention before next operation.',
-        severity: 'high',
-        status: 'in_progress',
-        reportedDate: new Date('2024-12-10'),
-        reportedBy: 'Admin User',
-        assignedTo: 'Fleet Maintenance Team',
-        inspectionId: 'insp_122'
-      },
-      {
-        id: '3',
-        title: 'Minor Scratches on Rear Panel',
-        category: 'Body & Interior',
-        description: 'Cosmetic scratches noted on rear panel. Does not affect functionality but should be addressed for fleet appearance standards.',
-        severity: 'low',
-        status: 'resolved',
-        reportedDate: new Date('2024-11-20'),
-        resolvedDate: new Date('2024-12-01'),
-        reportedBy: 'Admin User',
-        assignedTo: 'Body Shop Team',
-        inspectionId: 'insp_121'
+  // Public method to refresh issues (can be called from parent component)
+  async refreshIssues() {
+    await this.loadIssueRecords();
+  }
+
+  private async loadIssueRecords() {
+    try {
+      console.log('Loading issue records for vanId:', this.vanId);
+      
+      // Get van data to determine vanType and vanNumber
+      const vanData = await this.getVanData();
+      console.log('Van data:', vanData);
+      
+      if (!vanData) {
+        console.error('Could not load van data');
+        return;
       }
-    ];
+
+      // Load all approved inspections for this van
+      const approvedInspections = await this.inspectionService.getApprovedInspectionsByVan(
+        vanData.vanType, 
+        vanData.vanNumber
+      );
+      
+      console.log('Approved inspections:', approvedInspections);
+
+      // Convert approved inspection reports to issue records
+      this.issueRecords = [];
+      for (const inspection of approvedInspections) {
+        console.log('Processing inspection:', inspection.id, 'Status:', inspection.status, 'Report:', inspection.report);
+        
+        if (inspection.report && inspection.report.length > 0) {
+          // Get submitter display name
+          let submitterName = 'Unknown';
+          if (inspection.createdBy) {
+            try {
+              const userProfile = await this.authService.getUserProfile(inspection.createdBy);
+              submitterName = userProfile?.displayName || 'Unknown';
+            } catch (error) {
+              console.error('Failed to load user profile:', error);
+            }
+          }
+
+          // Convert each reported issue to an IssueRecord
+          for (const reportedIssue of inspection.report) {
+            console.log('Converting issue:', reportedIssue);
+            
+            const issueRecord: IssueRecord = {
+              id: `${inspection.id}_${reportedIssue.name}`,
+              title: reportedIssue.name,
+              category: 'Driver Report', // Default category for driver-reported issues
+              subcategory: reportedIssue.subcategory,
+              description: reportedIssue.details,
+              severity: reportedIssue.severity || 'low',
+              status: reportedIssue.status || 'open', // Use status from database or default to open
+              reportedDate: inspection.createdAt?.toDate ? inspection.createdAt.toDate() : new Date(),
+              resolvedDate: reportedIssue.resolvedDate ? new Date(reportedIssue.resolvedDate) : undefined,
+              reportedBy: submitterName,
+              inspectionId: inspection.id
+            };
+            this.issueRecords.push(issueRecord);
+          }
+        }
+      }
+
+      console.log('Final issue records:', this.issueRecords);
+
+      // Sort by reported date (newest first)
+      this.issueRecords.sort((a, b) => b.reportedDate.getTime() - a.reportedDate.getTime());
+
+    } catch (error) {
+      console.error('Failed to load issue records:', error);
+      this.issueRecords = [];
+    }
+  }
+
+  private async getVanData(): Promise<{vanType: string, vanNumber: string} | null> {
+    try {
+      // This is a simplified approach - in a real app, you might want to pass van data as input
+      // For now, we'll extract it from the vanId or make an additional call
+      // Since we have the vanId, we can make a call to get van details
+      const vanDoc = await this.inspectionService.getVanByDocId(this.vanId);
+      if (vanDoc) {
+        return {
+          vanType: vanDoc.vanType,
+          vanNumber: vanDoc.vanNumber
+        };
+      }
+      return null;
+    } catch (error) {
+      console.error('Failed to get van data:', error);
+      return null;
+    }
   }
 
   getSeverityIcon(severity: string): string {
@@ -457,9 +552,7 @@ export class IssuesTabComponent implements OnInit {
   getStatusColor(status: string): string {
     switch (status) {
       case 'open': return 'danger';
-      case 'in_progress': return 'warning';
       case 'resolved': return 'success';
-      case 'closed': return 'medium';
       default: return 'medium';
     }
   }
@@ -467,9 +560,7 @@ export class IssuesTabComponent implements OnInit {
   getStatusIcon(status: string): string {
     switch (status) {
       case 'open': return 'alert-circle';
-      case 'in_progress': return 'construct';
       case 'resolved': return 'checkmark-circle';
-      case 'closed': return 'close-circle';
       default: return 'help-circle';
     }
   }
@@ -477,9 +568,7 @@ export class IssuesTabComponent implements OnInit {
   getStatusLabel(status: string): string {
     switch (status) {
       case 'open': return 'Open';
-      case 'in_progress': return 'In Progress';
       case 'resolved': return 'Resolved';
-      case 'closed': return 'Closed';
       default: return 'Unknown';
     }
   }
@@ -488,12 +577,16 @@ export class IssuesTabComponent implements OnInit {
     return this.issueRecords.filter(i => i.status === 'open').length;
   }
 
-  getInProgressIssues(): number {
-    return this.issueRecords.filter(i => i.status === 'in_progress').length;
+  getResolvedIssues(): number {
+    return this.issueRecords.filter(i => i.status === 'resolved').length;
   }
 
-  getResolvedIssues(): number {
-    return this.issueRecords.filter(i => i.status === 'resolved' || i.status === 'closed').length;
+  getFilteredIssues(): IssueRecord[] {
+    return this.issueRecords.filter(issue => issue.status === this.activeIssueTab);
+  }
+
+  setActiveIssueTab(tab: 'open' | 'resolved') {
+    this.activeIssueTab = tab;
   }
 
   formatDate(date: Date): string {
@@ -502,6 +595,36 @@ export class IssuesTabComponent implements OnInit {
       month: 'short',
       day: 'numeric'
     });
+  }
+
+  async markAsResolved(issue: IssueRecord) {
+    try {
+      if (!issue.inspectionId) {
+        throw new Error('No inspection ID found for this issue');
+      }
+      
+      // Update the issue in the database
+      await this.inspectionService.markIssueResolved(issue.inspectionId, issue.title);
+      
+      // Update the local issue status
+      issue.status = 'resolved';
+      issue.resolvedDate = new Date();
+      
+      const toast = await this.toastCtrl.create({
+        message: 'Issue marked as resolved',
+        duration: 2000,
+        color: 'success'
+      });
+      await toast.present();
+    } catch (error) {
+      console.error('Failed to mark issue as resolved:', error);
+      const toast = await this.toastCtrl.create({
+        message: 'Failed to mark issue as resolved',
+        duration: 2000,
+        color: 'danger'
+      });
+      await toast.present();
+    }
   }
 
   async openAddIssueModal() {
@@ -517,6 +640,14 @@ export class IssuesTabComponent implements OnInit {
     if (role === 'saved' && data) {
       // Add the new issue to the list
       this.issueRecords.unshift(data);
+      
+      // Check if severity is medium or higher and emit event for grounding
+      if (data.severity === 'medium' || data.severity === 'high' || data.severity === 'critical') {
+        this.issueAdded.emit({
+          severity: data.severity,
+          category: data.category
+        });
+      }
       
       const toast = await this.toastCtrl.create({
         message: 'Issue added successfully',

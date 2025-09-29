@@ -27,6 +27,10 @@ export interface ReportedIssue {
   name: string;
   subcategory?: string;
   details: string;
+  severity?: 'high' | 'medium' | 'low';
+  status?: 'open' | 'resolved';
+  resolvedDate?: Date;
+  resolvedBy?: string;
 }
 
 export interface Inspection {
@@ -66,23 +70,90 @@ export class InspectionService {
     side: string, 
     dataUrl: string
   ): Promise<string> {
-    const fileName = `${side}_${Date.now()}.jpg`;
-    const path = `inspections/${vanType}/${vanNumber}/${fileName}`;
-    const storageRef = ref(this.storage, path);
-
-    const blob = await (await fetch(dataUrl)).blob();
-    const contentType = blob.type?.startsWith('image/') ? blob.type : 'image/jpeg';
-
+    console.log(`[InspectionService] Starting upload for ${side} photo`);
+    
+    // Check authentication first
     const ownerUid = this.auth.currentUser?.uid;
-    if (!ownerUid) throw new Error('Not authenticated');
-    if (blob.size >= 8 * 1024 * 1024) throw new Error('Image is larger than 8 MB.');
-
-    const snap = await uploadBytes(storageRef, blob, {
-      contentType,
-      customMetadata: { ownerUid },
+    if (!ownerUid) {
+      console.error('[InspectionService] User not authenticated');
+      throw new Error('Not authenticated - please log in again');
+    }
+    
+    console.log(`[InspectionService] User authenticated: ${ownerUid}`);
+    console.log(`[InspectionService] Auth state:`, {
+      uid: this.auth.currentUser?.uid,
+      email: this.auth.currentUser?.email,
+      emailVerified: this.auth.currentUser?.emailVerified,
+      isAnonymous: this.auth.currentUser?.isAnonymous
     });
 
-    return getDownloadURL(snap.ref);
+    const fileName = `${side}_${Date.now()}.jpg`;
+    const path = `inspections/${vanType}/${vanNumber}/${fileName}`;
+    console.log(`[InspectionService] Upload path: ${path}`);
+    
+    const storageRef = ref(this.storage, path);
+
+    try {
+      const blob = await (await fetch(dataUrl)).blob();
+      const contentType = blob.type?.startsWith('image/') ? blob.type : 'image/jpeg';
+      
+      console.log(`[InspectionService] Blob size: ${blob.size} bytes, type: ${contentType}`);
+      
+      if (blob.size >= 8 * 1024 * 1024) {
+        throw new Error('Image is larger than 8 MB.');
+      }
+
+      console.log(`[InspectionService] Uploading to Firebase Storage...`);
+      console.log(`[InspectionService] Upload details:`, {
+        path,
+        blobSize: blob.size,
+        contentType,
+        ownerUid,
+        vanType,
+        vanNumber,
+        side
+      });
+      
+      const snap = await uploadBytes(storageRef, blob, {
+        contentType,
+        customMetadata: { 
+          ownerUid,
+          uploadedAt: new Date().toISOString(),
+          vanType,
+          vanNumber,
+          side
+        },
+      });
+
+      console.log(`[InspectionService] Upload successful, getting download URL...`);
+      const downloadURL = await getDownloadURL(snap.ref);
+      console.log(`[InspectionService] Download URL obtained: ${downloadURL}`);
+      
+      return downloadURL;
+    } catch (error) {
+      console.error(`[InspectionService] Upload failed for ${side}:`, error);
+      
+      // Type-safe error handling with more detailed logging
+      const firebaseError = error as any;
+      console.error(`[InspectionService] Full error object:`, error);
+      console.error(`[InspectionService] Error details:`, {
+        code: firebaseError?.code,
+        message: firebaseError?.message,
+        serverResponse: firebaseError?.serverResponse,
+        customData: firebaseError?.customData,
+        name: firebaseError?.name,
+        stack: firebaseError?.stack
+      });
+      
+      // Check if it's a Firebase Storage error
+      if (firebaseError?.code) {
+        console.error(`[InspectionService] Firebase error code: ${firebaseError.code}`);
+      }
+      
+      // Re-throw with more context
+      const errorMessage = firebaseError?.message || String(error);
+      throw new Error(`Upload failed for ${side}: ${errorMessage}`);
+    }
   }
 
   /** Create inspection document with photos */
@@ -117,11 +188,13 @@ export class InspectionService {
 
   /** Admin actions */
   async approveInspection(id: string): Promise<void> {
+    console.log('Approving inspection:', id);
     await updateDoc(doc(this.firestore, 'inspections', id), {
       status: 'approved',
       reviewedAt: serverTimestamp(),
       rejectReason: null,
     });
+    console.log('Inspection approved successfully:', id);
   }
 
   async rejectInspection(id: string, reason?: string): Promise<void> {
@@ -320,5 +393,86 @@ export class InspectionService {
         )
       )
     );
+  }
+
+  /** Get all approved inspections for a specific van */
+  async getApprovedInspectionsByVan(vanType: string, vanNumber: string): Promise<Inspection[]> {
+    const normalizedVanNumber = this.normalizeVanNumber(vanNumber);
+    console.log('Querying approved inspections for:', { vanType, vanNumber, normalizedVanNumber });
+    
+    const q = query(
+      this.col,
+      where('vanType', '==', vanType),
+      where('vanNumber', '==', normalizedVanNumber),
+      where('status', '==', 'approved'),
+      orderBy('createdAt', 'desc')
+    );
+    
+    const querySnapshot = await getDocs(q);
+    const inspections = querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    })) as Inspection[];
+    
+    console.log('Found approved inspections:', inspections);
+    return inspections;
+  }
+
+  /** Get van data by document ID */
+  async getVanByDocId(vanId: string): Promise<{vanType: string, vanNumber: string} | null> {
+    try {
+      const vanDocRef = doc(this.firestore, 'vans', vanId);
+      const vanDoc = await getDoc(vanDocRef);
+      
+      if (vanDoc.exists()) {
+        const data = vanDoc.data();
+        return {
+          vanType: data['type'] || data['vanType'], // Support both field names
+          vanNumber: data['number']?.toString() || data['vanNumber'] // Support both field names and convert number to string
+        };
+      }
+      return null;
+    } catch (error) {
+      console.error('Failed to get van data:', error);
+      return null;
+    }
+  }
+
+  /** Mark a specific issue as resolved in an inspection */
+  async markIssueResolved(inspectionId: string, issueName: string): Promise<void> {
+    try {
+      const inspectionRef = doc(this.firestore, 'inspections', inspectionId);
+      const inspectionDoc = await getDoc(inspectionRef);
+      
+      if (!inspectionDoc.exists()) {
+        throw new Error('Inspection not found');
+      }
+      
+      const data = inspectionDoc.data();
+      const report = data['report'] || [];
+      
+      // Find and update the specific issue
+      const updatedReport = report.map((issue: ReportedIssue) => {
+        if (issue.name === issueName) {
+          return {
+            ...issue,
+            status: 'resolved',
+            resolvedDate: new Date(),
+            resolvedBy: this.auth.currentUser?.uid || 'unknown'
+          };
+        }
+        return issue;
+      });
+      
+      // Update the inspection document
+      await updateDoc(inspectionRef, {
+        report: updatedReport
+      });
+      
+      console.log('Issue marked as resolved:', { inspectionId, issueName });
+    } catch (error) {
+      console.error('Failed to mark issue as resolved:', error);
+      throw error;
+    }
   }
 }

@@ -1,10 +1,10 @@
 // src/app/pages/dashboard/van-report/van-report.component.ts
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { IonicModule, AlertController, ToastController, ModalController } from '@ionic/angular';
+import { IonicModule, AlertController, ToastController } from '@ionic/angular';
 import { ActivatedRoute, Router } from '@angular/router';
-import { ImageViewerComponent } from 'src/app/components/image-viewer/image-viewer.component';
 import { InspectionService, Inspection } from 'src/app/services/inspection.service';
+import { AuthService } from 'src/app/services/auth.service';
 
 type Side = 'front' | 'passenger' | 'rear' | 'driver';
 
@@ -14,12 +14,15 @@ type Side = 'front' | 'passenger' | 'rear' | 'driver';
   imports: [CommonModule, IonicModule],
   templateUrl: './van-report.component.html',
   styleUrls: ['./van-report.component.scss'],
+  host: {
+    '[class.review-mode]': 'reviewMode'
+  }
 })
 export class VanReportComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private insp = inject(InspectionService);
-  private modalCtrl = inject(ModalController);
+  private auth = inject(AuthService);
   private toast = inject(ToastController);
   private alert = inject(AlertController);
 
@@ -28,9 +31,14 @@ export class VanReportComponent implements OnInit {
   comparisonRows: { side: string; prevUrl: string; currUrl: string }[] = [];
 
   currInspectionId: string | null = null;
+  currentInspection: any = null;
+  previousInspection: any = null;
+  currentSubmitterName: string = 'Unknown';
+  previousSubmitterName: string = 'Unknown';
   loading = true;
   errorMsg = '';
   reviewMode = false;
+  expandedImage: string | null = null;
 
   async ngOnInit() {
     this.loading = true;
@@ -48,15 +56,20 @@ export class VanReportComponent implements OnInit {
       const curr = await this.insp.getInspectionById(id);
       if (!curr) throw new Error('Inspection not found.');
       this.currInspectionId = curr.id;
+      this.currentInspection = curr;
 
       // 2. Load latest 2 inspections for this van
       const latestTwo = await this.insp.getLatestInspectionsByVan(curr.vanType, curr.vanNumber, 2);
       const prev = latestTwo.find(x => x.id !== curr.id);
+      this.previousInspection = prev;
 
       // 3. Build rows for comparison
       this.buildComparisonRows([curr, prev].filter(Boolean) as Inspection[]);
       this.currReportItems = curr.report ?? [];
       this.prevReportItems = prev?.report ?? [];
+
+      // 4. Load user display names
+      await this.loadUserDisplayNames();
     } catch (e: any) {
       this.errorMsg = e?.message ?? 'Failed to load report.';
       this.buildComparisonRows([]);
@@ -77,13 +90,30 @@ export class VanReportComponent implements OnInit {
     }));
   }
 
-  async openImageViewer(url: string) {
-    const modal = await this.modalCtrl.create({
-      component: ImageViewerComponent,
-      componentProps: { imageUrl: url },
-      cssClass: 'image-viewer-modal',
-    });
-    await modal.present();
+  private async loadUserDisplayNames() {
+    try {
+      // Load current inspection submitter name
+      if (this.currentInspection?.createdBy) {
+        const currentUser = await this.auth.getUserProfile(this.currentInspection.createdBy);
+        this.currentSubmitterName = currentUser?.displayName || 'Unknown';
+      }
+
+      // Load previous inspection submitter name
+      if (this.previousInspection?.createdBy) {
+        const previousUser = await this.auth.getUserProfile(this.previousInspection.createdBy);
+        this.previousSubmitterName = previousUser?.displayName || 'Unknown';
+      }
+    } catch (error) {
+      console.error('Failed to load user display names:', error);
+    }
+  }
+
+  toggleImageExpansion(url: string) {
+    if (this.expandedImage === url) {
+      this.expandedImage = null;
+    } else {
+      this.expandedImage = url;
+    }
   }
 
   // ----- Approve / Deny -----

@@ -1,5 +1,5 @@
 // src/app/pages/van-detail/van-detail.page.ts
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
@@ -7,24 +7,29 @@ import { IonicModule, AlertController, ToastController } from '@ionic/angular';
 import { Firestore, doc, getDoc } from '@angular/fire/firestore';
 import { Van } from '../../../models/van.model';
 import { InspectionService } from '../../../services/inspection.service';
+import { NotesHistoryService } from '../../../services/notes-history.service';
 import { IssuesTabComponent } from "./issues-tab/issues-tab.component";
 import { MaintenanceTabComponent } from "./maintenance-tab/maintenance-tab.component";
 import { NotesTabComponent } from "./notes-tab/notes-tab.component";
 import { DriversTabComponent } from "./drivers-tab/drivers-tab.component";
-import { AppHeaderComponent } from '@app/components/app-header/app-header.component';
+
 
 @Component({
   selector: 'app-van-details',
   standalone: true,
-  imports: [CommonModule, FormsModule, IonicModule, RouterModule, IssuesTabComponent, MaintenanceTabComponent, NotesTabComponent, DriversTabComponent, AppHeaderComponent],
+  imports: [CommonModule, FormsModule, IonicModule, RouterModule, IssuesTabComponent, MaintenanceTabComponent, NotesTabComponent, DriversTabComponent],
   templateUrl: './van-details.page.html',
   styleUrls: ['./van-details.page.scss']
 })
 export class VanDetailsPage implements OnInit {
+  @ViewChild('notesTab') notesTab!: NotesTabComponent;
+  @ViewChild('issuesTab') issuesTab!: IssuesTabComponent;
+  
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private firestore = inject(Firestore);
   private inspectionService = inject(InspectionService);
+  private notesHistoryService = inject(NotesHistoryService);
   private alertCtrl = inject(AlertController);
   private toastCtrl = inject(ToastController);
 
@@ -93,7 +98,7 @@ export class VanDetailsPage implements OnInit {
         this.van.type, 
         this.van.number.toString()
       );
-    } catch (error) {
+    } catch (error: any) {
       // Inspection loading is optional, don't throw error
       console.warn('Could not load latest inspection:', error);
     }
@@ -182,7 +187,7 @@ export class VanDetailsPage implements OnInit {
               });
               toast.present();
 
-            } catch (error) {
+            } catch (error: any) {
               const toast = await this.toastCtrl.create({
                 message: 'Failed to update van status',
                 duration: 2000,
@@ -198,12 +203,46 @@ export class VanDetailsPage implements OnInit {
     await alert.present();
   }
 
+  async groundVanAutomatically(reason: string) {
+    if (!this.van || this.van.isGrounded) return;
+
+    try {
+      // Update in Firebase
+      const vanDocRef = doc(this.firestore, 'vans', this.van.docId);
+      const { setDoc } = await import('@angular/fire/firestore');
+      
+      await setDoc(vanDocRef, {
+        ...this.van,
+        isGrounded: true
+      }, { merge: true });
+
+      // Update local state
+      this.van.isGrounded = true;
+
+      const toast = await this.toastCtrl.create({
+        message: `Van automatically grounded due to ${reason}`,
+        duration: 3000,
+        color: 'warning'
+      });
+      toast.present();
+
+    } catch (error: any) {
+      console.error('Failed to ground van automatically:', error);
+      const toast = await this.toastCtrl.create({
+        message: 'Failed to ground van automatically',
+        duration: 2000,
+        color: 'danger'
+      });
+      toast.present();
+    }
+  }
+
   startEditingNotes() {
     if (!this.van) return;
     
     this.editingNotes = true;
-    this.notesText = this.van.notes || '';
-    this.originalNotes = this.van.notes || '';
+    this.notesText = '';
+    this.originalNotes = '';
   }
 
   cancelEditingNotes() {
@@ -213,40 +252,43 @@ export class VanDetailsPage implements OnInit {
   }
 
   hasNotesChanged(): boolean {
-    return this.notesText.trim() !== this.originalNotes.trim();
+    return this.notesText.trim().length > 0;
   }
 
   async saveNotes() {
-    if (!this.van || !this.hasNotesChanged()) return;
+    if (!this.van || !this.hasNotesChanged() || !this.notesText.trim()) return;
 
     try {
-      // Update in Firebase
-      const vanDocRef = doc(this.firestore, 'vans', this.van.docId);
-      const { setDoc } = await import('@angular/fire/firestore');
-      
-      const newNotes = this.notesText.trim() || null;
-      
-      await setDoc(vanDocRef, {
-        ...this.van,
-        notes: newNotes
-      }, { merge: true });
+      // Add note to history
+      await this.notesHistoryService.addNote(this.van.docId, this.notesText.trim());
 
-      // Update local state
-      this.van.notes = newNotes || undefined;
-      this.editingNotes = false;
+      // Clear the input and exit edit mode
       this.notesText = '';
       this.originalNotes = '';
+      this.editingNotes = false;
 
       const toast = await this.toastCtrl.create({
-        message: 'Notes updated successfully',
+        message: 'Note added successfully',
         duration: 2000,
         color: 'success'
       });
       toast.present();
 
-    } catch (error) {
+      // Refresh the notes tab to show the new note
+      if (this.notesTab) {
+        await this.notesTab.refreshNotes();
+      } else {
+        // Force a re-render by switching tabs briefly
+        const currentTab = this.activeTab;
+        this.activeTab = 'issues';
+        setTimeout(() => {
+          this.activeTab = currentTab;
+        }, 100);
+      }
+
+    } catch (error: any) {
       const toast = await this.toastCtrl.create({
-        message: 'Failed to update notes',
+        message: 'Failed to add note',
         duration: 2000,
         color: 'danger'
       });
@@ -255,10 +297,22 @@ export class VanDetailsPage implements OnInit {
   }
 
   selectTab(tabId: string): void {
-  this.activeTab = tabId;
-}
+    this.activeTab = tabId;
+    
+    // Refresh issues when switching to issues tab
+    if (tabId === 'issues' && this.issuesTab) {
+      this.issuesTab.refreshIssues();
+    }
+  }
+
+  async onIssueAdded(event: { severity: string; category: string }) {
+    if (event.severity === 'medium' || event.severity === 'high' || event.severity === 'critical') {
+      const severityText = event.severity.charAt(0).toUpperCase() + event.severity.slice(1);
+      await this.groundVanAutomatically(`${severityText} severity issue in ${event.category}`);
+    }
+  }
 
   goBack() {
-    this.router.navigate(['/admin']);
+    this.router.navigate(['/admin'], { replaceUrl: true });
   }
 }

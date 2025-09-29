@@ -92,7 +92,7 @@ export class AuthService {
             uid: user.uid,
             email: user.email ?? '',
             displayName: user.displayName ?? 'User',
-            roles: ['admin'],            // choose sensible default(s)
+            roles: ['driver'],           // Safe default - drivers only, not admin
             isActive: true,
             createdAt: new Date(),
           };

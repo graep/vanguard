@@ -495,9 +495,16 @@ ion-content {
 
 /* ========== Add Issue Modal ========== */
 .add-issue-modal {
-  --width: 90%;
-  --max-width: 500px;
+  --width: 95%;
+  --max-width: 800px;
   --height: auto;
-  --max-height: 80vh;
-  --border-radius: 12px;
+  --max-height: 90vh;
+  --border-radius: 16px;
+  --box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  
+  @media (max-width: 768px) {
+    --width: 98%;
+    --max-width: none;
+    --max-height: 95vh;
+  }
 }

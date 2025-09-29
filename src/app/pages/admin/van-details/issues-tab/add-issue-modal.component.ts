@@ -6,6 +6,7 @@ import { IonicModule, ModalController, ToastController } from '@ionic/angular';
 interface IssueCategory {
   name: string;
   subcategories?: string[];
+  severity: 'high' | 'medium' | 'low';
 }
 
 interface NewIssue {
@@ -31,66 +32,68 @@ interface NewIssue {
       </ion-toolbar>
     </ion-header>
 
-    <ion-content class="ion-padding">
+    <ion-content>
       <form (ngSubmit)="saveIssue()" #issueForm="ngForm">
         
-        <!-- Category Selection -->
-        <ion-item>
-          <ion-label position="stacked">Category *</ion-label>
-          <ion-select 
-            [(ngModel)]="newIssue.category" 
-            name="category"
-            placeholder="Select a category"
-            required>
-            <ion-select-option 
-              *ngFor="let category of issueCategories" 
-              [value]="category.name">
-              {{ category.name }}
-            </ion-select-option>
-          </ion-select>
-        </ion-item>
+        <!-- Category Selection Section -->
+        <div class="form-section">
+          <div class="section-title">Issue Details</div>
+          
+          <ion-item>
+            <ion-label position="stacked">Category *</ion-label>
+            <ion-select 
+              [(ngModel)]="newIssue.category" 
+              name="category"
+              placeholder="Select a category"
+              required>
+              <ion-select-option 
+                *ngFor="let category of issueCategories" 
+                [value]="category.name">
+                {{ category.name }}
+              </ion-select-option>
+            </ion-select>
+          </ion-item>
 
-        <!-- Subcategory Selection (if available) -->
-        <ion-item *ngIf="selectedCategory?.subcategories?.length">
-          <ion-label position="stacked">Subcategory</ion-label>
-          <ion-select 
-            [(ngModel)]="newIssue.subcategory" 
-            name="subcategory"
-            placeholder="Select a subcategory">
-            <ion-select-option 
-              *ngFor="let subcategory of selectedCategory.subcategories" 
-              [value]="subcategory">
-              {{ subcategory }}
-            </ion-select-option>
-          </ion-select>
-        </ion-item>
+          <!-- Subcategory Selection (if available) -->
+          <ion-item *ngIf="selectedCategory?.subcategories?.length">
+            <ion-label position="stacked">Subcategory</ion-label>
+            <ion-select 
+              [(ngModel)]="newIssue.subcategory" 
+              name="subcategory"
+              placeholder="Select a subcategory">
+              <ion-select-option 
+                *ngFor="let subcategory of selectedCategory.subcategories" 
+                [value]="subcategory">
+                {{ subcategory }}
+              </ion-select-option>
+            </ion-select>
+          </ion-item>
 
-        <!-- Severity Selection -->
-        <ion-item>
-          <ion-label position="stacked">Severity *</ion-label>
-          <ion-select 
-            [(ngModel)]="newIssue.severity" 
-            name="severity"
-            placeholder="Select severity level"
-            required>
-            <ion-select-option value="low">Low</ion-select-option>
-            <ion-select-option value="medium">Medium</ion-select-option>
-            <ion-select-option value="high">High</ion-select-option>
-            <ion-select-option value="critical">Critical</ion-select-option>
-          </ion-select>
-        </ion-item>
+          <!-- Severity Display (Auto-set based on category) -->
+          <div *ngIf="selectedCategory" class="severity-display">
+            <ion-label position="stacked">Severity Level</ion-label>
+            <ion-chip [color]="getSeverityColor(selectedCategory.severity)" class="severity-chip">
+              <ion-icon [name]="getSeverityIcon(selectedCategory.severity)"></ion-icon>
+              <ion-label>{{ getSeverityLabel(selectedCategory.severity) }}</ion-label>
+            </ion-chip>
+          </div>
+        </div>
 
-        <!-- Description -->
-        <ion-item>
-          <ion-label position="stacked">Description *</ion-label>
-          <ion-textarea
-            [(ngModel)]="newIssue.description"
-            name="description"
-            placeholder="Describe the issue in detail..."
-            rows="4"
-            required>
-          </ion-textarea>
-        </ion-item>
+        <!-- Description Section -->
+        <div class="form-section">
+          <div class="section-title">Description</div>
+          
+          <ion-item>
+            <ion-label position="stacked">Issue Description *</ion-label>
+            <ion-textarea
+              [(ngModel)]="newIssue.description"
+              name="description"
+              placeholder="Describe the issue in detail. Include any relevant information about when it occurs, symptoms, or impact..."
+              rows="4"
+              required>
+            </ion-textarea>
+          </ion-item>
+        </div>
 
         <!-- Action Buttons -->
         <div class="modal-actions">
@@ -99,7 +102,7 @@ interface NewIssue {
             type="submit"
             [disabled]="!issueForm.form.valid"
             class="save-button">
-            <ion-icon name="save" slot="start"></ion-icon>
+            <ion-icon name="checkmark-circle" slot="start"></ion-icon>
             Save Issue
           </ion-button>
           
@@ -109,6 +112,7 @@ interface NewIssue {
             color="medium"
             (click)="dismiss()"
             class="cancel-button">
+            <ion-icon name="close" slot="start"></ion-icon>
             Cancel
           </ion-button>
         </div>
@@ -117,47 +121,158 @@ interface NewIssue {
     </ion-content>
   `,
   styles: [`
-    .modal-actions {
-      margin-top: 24px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
+    ion-header {
+      ion-toolbar {
+        --background: var(--ion-color-light);
+        --color: var(--ion-color-dark);
+        
+        ion-title {
+          font-weight: 600;
+          font-size: 1.1rem;
+        }
+        
+        ion-button {
+          --color: var(--ion-color-dark);
+          --color-hover: var(--ion-color-medium);
+        }
+      }
     }
 
-    .save-button {
-      --height: 48px;
+    ion-content {
+      --background: #1e1e1e;
+    }
+
+    form {
+      padding: 32px;
+      background: #1e1e1e;
+      margin: 20px;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-section {
+      margin-bottom: 32px;
+      
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+
+    .section-title {
+      font-size: 0.9rem;
       font-weight: 600;
-    }
-
-    .cancel-button {
-      --height: 40px;
+      color: white;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 12px;
+      padding-left: 4px;
     }
 
     ion-item {
-      --padding-start: 0;
+      --background: transparent;
+      --border-radius: 12px;
+      --padding-start: 20px;
+      --padding-end: 20px;
       --inner-padding-end: 0;
-      margin-bottom: 16px;
+      margin-bottom: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 12px;
+      transition: all 0.2s ease;
+
+      &:hover {
+        border-color: var(--ion-color-primary-tint);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      }
+
+      &.item-has-focus {
+        border-color: var(--ion-color-primary);
+        box-shadow: 0 0 0 3px var(--ion-color-primary-tint);
+      }
     }
 
     ion-label[position="stacked"] {
       font-weight: 600;
-      color: var(--ion-color-dark);
+      color: white;
       margin-bottom: 8px;
+      font-size: 0.9rem;
     }
 
     ion-select,
     ion-textarea {
-      --padding-start: 12px;
-      --padding-end: 12px;
-      border: 1px solid var(--ion-color-light-shade);
-      border-radius: 8px;
-      background: var(--ion-color-light);
+      --padding-start: 0;
+      --padding-end: 0;
+      --background: transparent;
+      font-size: 1rem;
+      color: white;
+      --placeholder-color: rgba(255, 255, 255, 0.6);
     }
 
-    ion-select:focus-within,
-    ion-textarea:focus-within {
-      border-color: var(--ion-color-primary);
-      box-shadow: 0 0 0 2px var(--ion-color-primary-tint);
+    ion-textarea {
+      min-height: 100px;
+      line-height: 1.5;
+    }
+
+    .severity-display {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .severity-chip {
+      --height: 36px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .modal-actions {
+      margin-top: 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .save-button {
+      --height: 52px;
+      --border-radius: 12px;
+      font-weight: 600;
+      font-size: 1rem;
+      text-transform: none;
+      box-shadow: 0 4px 12px rgba(var(--ion-color-primary-rgb), 0.3);
+      transition: all 0.2s ease;
+
+      &:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(var(--ion-color-primary-rgb), 0.4);
+      }
+    }
+
+    .cancel-button {
+      --height: 44px;
+      --border-radius: 12px;
+      font-weight: 500;
+      text-transform: none;
+      transition: all 0.2s ease;
+
+      &:hover {
+        --background: var(--ion-color-light-shade);
+      }
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 480px) {
+      form {
+        margin: 12px;
+        padding: 24px;
+      }
+      
+      .modal-actions {
+        margin-top: 32px;
+      }
     }
   `]
 })
@@ -172,10 +287,11 @@ export class AddIssueModalComponent {
     severity: 'medium'
   };
 
-  // Categories from user-review page
+  // Categories from user-review page with predefined severity
   issueCategories: IssueCategory[] = [
     {
       name: 'Powertrain',
+      severity: 'high',
       subcategories: [
         'Engine',
         'Transmission',
@@ -185,6 +301,7 @@ export class AddIssueModalComponent {
     },
     {
       name: 'Chassis & Running Gear',
+      severity: 'high',
       subcategories: [
         'Suspension',
         'Brakes',
@@ -195,6 +312,7 @@ export class AddIssueModalComponent {
     },
     {
       name: 'Electrical & Electronics',
+      severity: 'high',
       subcategories: [
         'Battery / Charging',
         'Wiring Harness',
@@ -205,6 +323,7 @@ export class AddIssueModalComponent {
     },
     {
       name: 'HVAC & Comfort',
+      severity: 'medium',
       subcategories: [
         'Air Conditioning',
         'Heating',
@@ -215,6 +334,7 @@ export class AddIssueModalComponent {
     },
     {
       name: 'Body & Interior',
+      severity: 'low',
       subcategories: [
         'Doors & Hinges',
         'Windows & Glass',
@@ -225,6 +345,7 @@ export class AddIssueModalComponent {
     },
     {
       name: 'Safety & Security',
+      severity: 'high',
       subcategories: [
         'Seat Belts & Airbags',
         'Alarm / Immobilizer',
@@ -235,6 +356,7 @@ export class AddIssueModalComponent {
     },
     {
       name: 'Fluids & Maintenance',
+      severity: 'medium',
       subcategories: [
         'Engine Oil & Filter',
         'Coolant / Radiator',
@@ -248,6 +370,33 @@ export class AddIssueModalComponent {
 
   get selectedCategory(): IssueCategory | undefined {
     return this.issueCategories.find(cat => cat.name === this.newIssue.category);
+  }
+
+  getSeverityIcon(severity: string): string {
+    switch (severity) {
+      case 'high': return 'warning';
+      case 'medium': return 'information-circle';
+      case 'low': return 'ellipse';
+      default: return 'help';
+    }
+  }
+
+  getSeverityLabel(severity: string): string {
+    switch (severity) {
+      case 'high': return 'High';
+      case 'medium': return 'Medium';
+      case 'low': return 'Low';
+      default: return 'Unknown';
+    }
+  }
+
+  getSeverityColor(severity: string): string {
+    switch (severity) {
+      case 'high': return 'danger';
+      case 'medium': return 'warning';
+      case 'low': return 'success';
+      default: return 'medium';
+    }
   }
 
   async saveIssue() {
@@ -264,6 +413,7 @@ export class AddIssueModalComponent {
     // Create the issue data
     const issueData = {
       ...this.newIssue,
+      severity: this.selectedCategory?.severity || 'medium', // Use predefined severity
       id: Date.now().toString(), // Simple ID generation
       title: this.generateTitle(),
       status: 'open' as const,

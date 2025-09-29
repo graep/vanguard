@@ -13,6 +13,7 @@ import { Subscription } from 'rxjs';
 
 import { RecentSubmissionsModalComponent } from '@app/components/recent-submissions/recent-submissions-modal.component';
 import { InspectionService } from '@app/services/inspection.service';
+import { NavService } from '@app/services/nav.service';
 
 @Component({
   selector: 'app-admin-navbar',
@@ -52,7 +53,8 @@ export class NavbarComponent implements OnInit, OnDestroy {
     private auth: Auth,
     private router: Router,
     private modalCtrl: ModalController,
-    private inspectionService: InspectionService
+    private inspectionService: InspectionService,
+    private navService: NavService
   ) {}
 
   // ---------- Lifecycle ----------
@@ -115,7 +117,8 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
   async logout() {
     await this.auth.signOut();
-    this.router.navigate(['/login']);
+    this.navService.enhancedLogout(); // Clear both app and browser history
+    this.router.navigate(['/login'], { replaceUrl: true });
   }
 
   // ---------- Menu item clicks ----------
