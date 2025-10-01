@@ -62,59 +62,8 @@
               </div>
             </div>
 
-            <!-- Notes -->
-            <div class="notes-section">
-              <!-- edit notes -->
-              <div *ngIf="editingNotes" class="notes-editor">
-                <ion-icon name="document-text" class="info-icon"></ion-icon>
-                <div class="editor-content">
-                  <h3 class="editor-label">Add Note</h3>
-                  <ion-textarea
-                    [(ngModel)]="notesText"
-                    placeholder="Enter a new note..."
-                    rows="4"
-                    fill="outline"
-                    class="notes-textarea">
-                  </ion-textarea>
-                </div>
-              </div>
-
-              <!-- add/edit controls -->
-              <div class="add-notes-container">
-                <ion-button
-                  *ngIf="!editingNotes"
-                  fill="clear"
-                  color="medium"
-                  (click)="startEditingNotes()"
-                  class="add-notes-button">
-                  <ion-icon name="add" slot="start"></ion-icon>
-                  Add Note
-                </ion-button>
-
-                <div *ngIf="editingNotes" class="editor-actions">
-                  <ion-button
-                    fill="solid"
-                    color="primary"
-                    (click)="saveNotes()"
-                    [disabled]="!notesText.trim()"
-                    class="save-button">
-                    <ion-icon name="checkmark" slot="start"></ion-icon>
-                    Save Note
-                  </ion-button>
-
-                  <ion-button
-                    fill="clear"
-                    color="medium"
-                    (click)="cancelEditingNotes()"
-                    class="cancel-button">
-                    <ion-icon name="close" slot="start"></ion-icon>
-                    Cancel
-                  </ion-button>
-                </div>
-              </div>
-
-              <!-- ACTIONS: side-by-side, small -->
-              <div class="action-buttons">
+            <!-- ACTIONS: side-by-side, small -->
+            <div class="action-buttons">
                 <ion-button
                   fill="solid"
                   color="primary"
@@ -137,7 +86,6 @@
                   </span>
                 </ion-button>
               </div>
-            </div>
           </div>
 
           <!-- RIGHT: image + toggle -->
@@ -201,9 +149,7 @@
         <!-- Issues Tab -->
         <div *ngIf="activeTab === 'issues'" class="tab-panel">
           <app-issues-tab
-            #issuesTab
-            [vanId]="van.docId"
-            (issueAdded)="onIssueAdded($event)">
+            [vanId]="van.docId">
           </app-issues-tab>
         </div>
 
@@ -225,5 +171,5 @@
     </ion-card>
 
   </div>
-</div>
+  </div>
 </ion-content>

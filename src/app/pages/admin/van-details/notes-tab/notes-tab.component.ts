@@ -1,19 +1,66 @@
 import { Component, Input, OnInit, OnChanges, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { IonicModule } from '@ionic/angular';
+import { FormsModule } from '@angular/forms';
+import { IonicModule, ToastController, AlertController } from '@ionic/angular';
 import { NotesHistoryService, NoteEntry } from '../../../../services/notes-history.service';
 
 @Component({
   selector: 'app-notes-tab',
   standalone: true,
-  imports: [CommonModule, IonicModule],
+  imports: [CommonModule, FormsModule, IonicModule],
   template: `
     <div class="notes-tab-content">
       <div class="section-header">
-        <h3>Previous Notes History</h3>
-        <p class="section-subtitle">Historical notes for this van</p>
+        <div class="header-content">
+          <div class="header-text">
+            <h3>Notes History</h3>
+            <p class="section-subtitle">Add and view notes for this van</p>
+          </div>
+          <ion-button 
+            *ngIf="!editingNotes"
+            fill="solid" 
+            color="primary" 
+            size="small"
+            (click)="startEditingNotes()"
+            class="add-note-button">
+            <ion-icon name="add" slot="start"></ion-icon>
+            Add Note
+          </ion-button>
+        </div>
       </div>
 
+      <!-- Note Editor -->
+      <div *ngIf="editingNotes" class="note-editor">
+        <div class="editor-header">
+          <h4>Add New Note</h4>
+        </div>
+        <ion-textarea
+          [(ngModel)]="notesText"
+          placeholder="Enter a new note..."
+          rows="4"
+          fill="outline"
+          class="notes-textarea">
+        </ion-textarea>
+        <div class="editor-actions">
+          <ion-button
+            fill="solid"
+            color="primary"
+            (click)="saveNotes()"
+            [disabled]="!notesText.trim()"
+            class="save-button">
+            <ion-icon name="checkmark" slot="start"></ion-icon>
+            Save Note
+          </ion-button>
+          <ion-button
+            fill="clear"
+            color="medium"
+            (click)="cancelEditingNotes()"
+            class="cancel-button">
+            <ion-icon name="close" slot="start"></ion-icon>
+            Cancel
+          </ion-button>
+        </div>
+      </div>
 
       <!-- Previous Notes List -->
       <div class="notes-list">
@@ -25,6 +72,14 @@ import { NotesHistoryService, NoteEntry } from '../../../../services/notes-histo
                 <h4>{{ note.author }}</h4>
                 <p class="note-date">{{ formatDate(note.timestamp) }}</p>
               </div>
+              <ion-button
+                fill="clear"
+                color="danger"
+                size="small"
+                (click)="deleteNote(note)"
+                class="delete-button">
+                <ion-icon name="trash" slot="icon-only"></ion-icon>
+              </ion-button>
             </div>
             <div class="note-content">
               {{ note.content }}
@@ -46,6 +101,17 @@ import { NotesHistoryService, NoteEntry } from '../../../../services/notes-histo
       .section-header {
         margin-bottom: 20px;
         
+        .header-content {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          gap: 16px;
+        }
+        
+        .header-text {
+          flex: 1;
+        }
+        
         h3 {
           font-size: 1.2rem;
           font-weight: 600;
@@ -58,8 +124,61 @@ import { NotesHistoryService, NoteEntry } from '../../../../services/notes-histo
           color: var(--ion-color-medium);
           margin: 0;
         }
+        
+        .add-note-button {
+          --height: 36px;
+          font-size: 0.85rem;
+          white-space: nowrap;
+        }
       }
 
+      .note-editor {
+        margin-bottom: 24px;
+        padding: 16px;
+        background: var(--ion-color-light);
+        border-radius: 12px;
+        border: 1px solid var(--ion-color-light-shade);
+
+        .editor-header {
+          margin-bottom: 12px;
+          
+          h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--ion-color-dark);
+            margin: 0;
+          }
+        }
+
+        .notes-textarea {
+          margin-bottom: 16px;
+          --background: var(--ion-color-light);
+          --border-radius: 8px;
+          --padding-start: 12px;
+          --padding-end: 12px;
+          --padding-top: 12px;
+          --padding-bottom: 12px;
+        }
+
+        .editor-actions {
+          display: flex;
+          gap: 12px;
+          justify-content: flex-end;
+
+          .save-button {
+            --padding-start: 16px;
+            --padding-end: 16px;
+            height: 40px;
+            font-weight: 600;
+          }
+
+          .cancel-button {
+            --padding-start: 16px;
+            --padding-end: 16px;
+            height: 40px;
+          }
+        }
+      }
 
       .note-card {
         margin-bottom: 12px;
@@ -91,6 +210,23 @@ import { NotesHistoryService, NoteEntry } from '../../../../services/notes-histo
             font-size: 0.85rem;
             color: var(--ion-color-medium);
             margin: 0;
+          }
+        }
+
+        .delete-button {
+          --height: 32px;
+          --width: 32px;
+          --border-radius: 50%;
+          flex-shrink: 0;
+          opacity: 0.7;
+          transition: opacity 0.2s ease;
+
+          &:hover {
+            opacity: 1;
+          }
+
+          ion-icon {
+            font-size: 16px;
           }
         }
       }
@@ -135,7 +271,14 @@ export class NotesTabComponent implements OnInit, OnChanges {
   @Input() currentNotes?: string;
 
   private notesHistoryService = inject(NotesHistoryService);
+  private toastCtrl = inject(ToastController);
+  private alertCtrl = inject(AlertController);
+  
   previousNotes: NoteEntry[] = [];
+  
+  // Note editing state
+  editingNotes = false;
+  notesText = '';
 
   ngOnInit() {
     this.loadPreviousNotes();
@@ -155,7 +298,7 @@ export class NotesTabComponent implements OnInit, OnChanges {
   private async loadPreviousNotes() {
     try {
       this.previousNotes = await this.notesHistoryService.getNotesHistory(this.vanId);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to load notes history:', error);
       this.previousNotes = [];
     }
@@ -169,5 +312,91 @@ export class NotesTabComponent implements OnInit, OnChanges {
       hour: '2-digit',
       minute: '2-digit'
     });
+  }
+
+  startEditingNotes() {
+    this.editingNotes = true;
+    this.notesText = '';
+  }
+
+  cancelEditingNotes() {
+    this.editingNotes = false;
+    this.notesText = '';
+  }
+
+  hasNotesChanged(): boolean {
+    return this.notesText.trim().length > 0;
+  }
+
+  async saveNotes() {
+    if (!this.hasNotesChanged() || !this.notesText.trim()) return;
+
+    try {
+      // Add note to history
+      await this.notesHistoryService.addNote(this.vanId, this.notesText.trim());
+
+      // Clear the input and exit edit mode
+      this.notesText = '';
+      this.editingNotes = false;
+
+      const toast = await this.toastCtrl.create({
+        message: 'Note added successfully',
+        duration: 2000,
+        color: 'success'
+      });
+      toast.present();
+
+      // Refresh the notes list to show the new note
+      await this.loadPreviousNotes();
+
+    } catch (error: unknown) {
+      const toast = await this.toastCtrl.create({
+        message: 'Failed to add note',
+        duration: 2000,
+        color: 'danger'
+      });
+      toast.present();
+    }
+  }
+
+  async deleteNote(note: NoteEntry) {
+    const alert = await this.alertCtrl.create({
+      header: 'Delete Note',
+      message: 'Are you sure you want to delete this note? This action cannot be undone.',
+      buttons: [
+        {
+          text: 'Cancel',
+          role: 'cancel'
+        },
+        {
+          text: 'Delete',
+          role: 'destructive',
+          handler: async () => {
+            try {
+              await this.notesHistoryService.deleteNote(note.id);
+              
+              const toast = await this.toastCtrl.create({
+                message: 'Note deleted successfully',
+                duration: 2000,
+                color: 'success'
+              });
+              toast.present();
+
+              // Refresh the notes list
+              await this.loadPreviousNotes();
+            } catch (error: unknown) {
+              const toast = await this.toastCtrl.create({
+                message: 'Failed to delete note',
+                duration: 2000,
+                color: 'danger'
+              });
+              toast.present();
+            }
+          }
+        }
+      ]
+    });
+
+    await alert.present();
   }
 }
