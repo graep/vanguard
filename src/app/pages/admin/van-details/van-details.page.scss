@@ -49,6 +49,24 @@
   }
 }
 
+/* ========== Document Images ========== */
+.document-image {
+  max-width: 80px;
+  max-height: 80px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 2px solid var(--ion-color-light);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 8px;
+  
+  &:hover {
+    border-color: var(--ion-color-primary);
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+}
+
 /* ========== Page Container ========== */
 .van-details-container {
   max-width: 1300px;

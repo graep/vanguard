@@ -98,6 +98,23 @@ export class VanDetailsPage implements OnInit {
     return this.van ? this.vanTypeLabels[this.van.type.toUpperCase()] || this.van.type : '';
   }
 
+  getVehicleInfo(): string {
+    if (!this.van) return '';
+    
+    const parts: string[] = [];
+    if (this.van.year) parts.push(this.van.year.toString());
+    if (this.van.make) parts.push(this.van.make);
+    if (this.van.model) parts.push(this.van.model);
+    
+    return parts.length > 0 ? parts.join(' ') : 'Not specified';
+  }
+
+
+  viewDocument(imageUrl: string, title: string) {
+    // Open document in a new tab/window for full view
+    window.open(imageUrl, '_blank');
+  }
+
   getVanImage(): string {
     if (!this.van) return '';
     

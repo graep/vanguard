@@ -7,6 +7,26 @@ export interface Van {
   number: number;
   isGrounded: boolean;
   
+  // Vehicle Information
+  year?: number;
+  make?: string;
+  model?: string;
+  licensePlate?: string;
+  
+  // Registration & Insurance
+  registrationInfo?: {
+    imageUrl?: string;
+    registrationNumber?: string;
+    registrationExpiry?: string;
+    registrationState?: string;
+  };
+  insuranceInfo?: {
+    imageUrl?: string;
+    policyNumber?: string;
+    insuranceProvider?: string;
+    coverageExpiry?: string;
+  };
+  
   notes?: string;
   imageUrl?: string;
 }

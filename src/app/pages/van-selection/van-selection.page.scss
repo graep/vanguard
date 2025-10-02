@@ -52,3 +52,16 @@
 .van-selection-box ion-item::part(native) {
   max-width: 100%;
 }
+
+/* Add Van button styling */
+.add-van-item {
+  --background: var(--ion-color-primary-tint);
+  --color: var(--ion-color-primary-contrast);
+  margin-top: 8px;
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+.add-van-item:hover {
+  --background: var(--ion-color-primary);
+}

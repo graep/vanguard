@@ -121,6 +121,25 @@
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
   }
   
+  // ADD VAN Card specific styles
+  &.add-van-card {
+    .van-card-content {
+      background: #1e1e1e;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      min-height: 200px;
+    }
+    
+    .add-van-icon {
+      ion-icon {
+        font-size: 4rem;
+        color: var(--ion-color-medium);
+      }
+    }
+  }
+  
   // Active status - green pulsing border
   &.active {
     position: relative;
@@ -193,6 +212,7 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  position: relative;
 }
 
 .van-image {
@@ -220,6 +240,33 @@
   color: var(--ion-color-medium);
   // margin: 0.25rem 0 0.75rem 0;
   word-break: break-all;
+}
+
+.van-actions {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  display: flex;
+  gap: 0.25rem;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  
+  ion-button {
+    --padding-start: 6px;
+    --padding-end: 6px;
+    --padding-top: 6px;
+    --padding-bottom: 6px;
+    height: 32px;
+    width: 32px;
+    
+    ion-icon {
+      font-size: 16px;
+    }
+  }
+}
+
+.van-card:hover .van-actions {
+  opacity: 1;
 }
 
 .van-type {

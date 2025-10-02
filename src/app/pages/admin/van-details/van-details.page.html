@@ -60,6 +60,49 @@
                   <p>{{ van.type }} - {{ getVanTypeLabel() }}</p>
                 </div>
               </div>
+
+              <!-- Vehicle Information -->
+              <div class="detail-item" *ngIf="van.year || van.make || van.model">
+                <ion-icon name="car-sport" class="info-icon"></ion-icon>
+                <div class="info-content">
+                  <h3>Vehicle</h3>
+                  <p>{{ getVehicleInfo() }}</p>
+                </div>
+              </div>
+
+              <div class="detail-item" *ngIf="van.licensePlate">
+                <ion-icon name="card" class="info-icon"></ion-icon>
+                <div class="info-content">
+                  <h3>License Plate</h3>
+                  <p>{{ van.licensePlate }}</p>
+                </div>
+              </div>
+
+              <!-- Registration Information -->
+              <div class="detail-item" *ngIf="van.registrationInfo?.imageUrl">
+                <ion-icon name="document-text" class="info-icon"></ion-icon>
+                <div class="info-content">
+                  <h3>Registration</h3>
+                  <img 
+                    [src]="van.registrationInfo!.imageUrl!" 
+                    alt="Registration document"
+                    class="document-image"
+                    (click)="viewDocument(van.registrationInfo!.imageUrl!, 'Registration Document')">
+                </div>
+              </div>
+
+              <!-- Insurance Information -->
+              <div class="detail-item" *ngIf="van.insuranceInfo?.imageUrl">
+                <ion-icon name="shield-checkmark" class="info-icon"></ion-icon>
+                <div class="info-content">
+                  <h3>Insurance</h3>
+                  <img 
+                    [src]="van.insuranceInfo!.imageUrl!" 
+                    alt="Insurance document"
+                    class="document-image"
+                    (click)="viewDocument(van.insuranceInfo!.imageUrl!, 'Insurance Document')">
+                </div>
+              </div>
             </div>
 
             <!-- ACTIONS: side-by-side, small -->

@@ -7,13 +7,15 @@ import {
   collectionData,
   CollectionReference,
 } from '@angular/fire/firestore';
-import { IonicModule } from '@ionic/angular';
+import { IonicModule, LoadingController, ToastController, ModalController } from '@ionic/angular';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Van } from 'src/app/models/van.model';
 import { StatusCountBarComponent, StatusDataSource } from '@app/components/status-count-bar/status-count-bar.component';
 import { NavService } from '@app/services/nav.service';
+import { VanService } from '@app/services/van.service';
+import { AddVanModalComponent } from '@app/components/add-van-modal/add-van-modal.component';
 
 @Component({
   selector: 'app-dashboard',
@@ -22,7 +24,8 @@ import { NavService } from '@app/services/nav.service';
     CommonModule, 
     IonicModule, 
     FormsModule, 
-    StatusCountBarComponent
+    StatusCountBarComponent,
+    AddVanModalComponent
   ],
   templateUrl: './dashboard.page.html',
   styleUrls: ['./dashboard.page.scss'],
@@ -33,6 +36,7 @@ export class DashboardPage implements OnInit {
   filteredVans: Van[] = [];
   filteredCdvs: Van[] = [];
   filteredEdvs: Van[] = [];
+  filteredLmrs: Van[] = [];
 
   // Data sources for the status bars
   overallDataSource: StatusDataSource = {
@@ -60,6 +64,15 @@ export class DashboardPage implements OnInit {
     filterValue: 'EDV'
   };
 
+  lmrDataSource: StatusDataSource = {
+    items: [],
+    statusField: 'isGrounded',
+    activeValue: false,
+    searchFields: ['docId', 'vin', 'number'],
+    filterField: 'type',
+    filterValue: 'LMR'
+  };
+
   // Inject only what we need
   private route = inject(ActivatedRoute);
   private firestore = inject(Firestore);
@@ -67,6 +80,10 @@ export class DashboardPage implements OnInit {
   private auth = inject(Auth);
   private ngZone = inject(NgZone);
   private navService = inject(NavService);
+  private vanService = inject(VanService);
+  private loadingCtrl = inject(LoadingController);
+  private toastCtrl = inject(ToastController);
+  private modalCtrl = inject(ModalController);
 
   ngOnInit() {
     this.loadVans();
@@ -106,19 +123,66 @@ export class DashboardPage implements OnInit {
     this.filteredVans = data;
     this.filteredCdvs = data.filter((v) => (v.type || '').toUpperCase() === 'CDV');
     this.filteredEdvs = data.filter((v) => (v.type || '').toUpperCase() === 'EDV');
+    this.filteredLmrs = data.filter((v) => (v.type || '').toUpperCase() === 'LMR');
   }
 
   // Handle filtered data from overall status bar
   onOverallFilteredData(filteredData: Van[]): void {
     this.filteredVans = filteredData;
-    // Update both CDV and EDV lists based on overall filter
+    // Update CDV, EDV, and LMR lists based on overall filter
     this.filteredCdvs = filteredData.filter((v) => (v.type || '').toUpperCase() === 'CDV');
     this.filteredEdvs = filteredData.filter((v) => (v.type || '').toUpperCase() === 'EDV');
+    this.filteredLmrs = filteredData.filter((v) => (v.type || '').toUpperCase() === 'LMR');
   }
 
   viewVan(van: Van): void {
     // Navigate to the dynamic van detail page using the van's docId
     this.router.navigate(['van', van.docId], { relativeTo: this.route });
+  }
+
+  async addVan(): Promise<void> {
+    const modal = await this.modalCtrl.create({
+      component: AddVanModalComponent,
+      componentProps: {
+        existingVans: this.vans
+      }
+    });
+
+    await modal.present();
+
+    const { data } = await modal.onWillDismiss();
+    
+    if (data) {
+      // Van was added successfully, the data will be automatically updated via the Firestore subscription
+      console.log('New van added:', data);
+    }
+  }
+
+  async deleteVan(van: Van): Promise<void> {
+    try {
+      await this.vanService.deleteVan(van.docId);
+      
+      // Show success message
+      const toast = await this.toastCtrl.create({
+        message: `${van.type} van #${van.number} deleted successfully!`,
+        duration: 3000,
+        color: 'success',
+        position: 'top'
+      });
+      await toast.present();
+
+    } catch (error) {
+      console.error('Error deleting van:', error);
+
+      // Show error message
+      const toast = await this.toastCtrl.create({
+        message: 'Failed to delete van. Please try again.',
+        duration: 4000,
+        color: 'danger',
+        position: 'top'
+      });
+      await toast.present();
+    }
   }
 
   async logout(): Promise<void> {

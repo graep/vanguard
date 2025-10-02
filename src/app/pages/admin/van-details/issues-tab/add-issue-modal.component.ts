@@ -62,7 +62,7 @@ interface NewIssue {
               name="subcategory"
               placeholder="Select a subcategory">
               <ion-select-option 
-                *ngFor="let subcategory of selectedCategory.subcategories" 
+                *ngFor="let subcategory of selectedCategory?.subcategories" 
                 [value]="subcategory">
                 {{ subcategory }}
               </ion-select-option>

@@ -9,9 +9,9 @@ import { NavbarComponent } from '../navbar/navbar.component';
   standalone: true,
   imports: [IonicModule, RouterOutlet, NavbarComponent],
   template: `
-    <app-admin-navbar></app-admin-navbar>
-    <router-outlet></router-outlet>
-    
+    <app-admin-navbar>
+      <router-outlet></router-outlet>
+    </app-admin-navbar>
   `,
   styles: [`
     :host {

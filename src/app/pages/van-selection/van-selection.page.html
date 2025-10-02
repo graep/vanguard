@@ -19,6 +19,11 @@
                 <ion-item *ngFor="let num of numbersMap[van]" button (click)="selectVan(van, num)">
                   <ion-label>{{ num }}</ion-label>
                 </ion-item>
+                <!-- Add Van button for LMR section -->
+                <ion-item *ngIf="van === 'LMR'" button (click)="addVan()" class="add-van-item">
+                  <ion-icon name="add-circle-outline" slot="start"></ion-icon>
+                  <ion-label>Add New LMR</ion-label>
+                </ion-item>
               </ion-list>
             </div>
           </ion-accordion>

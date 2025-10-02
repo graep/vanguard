@@ -200,7 +200,7 @@ export class PhotoCapturePage implements OnInit {
   }
   async logout() {
     await this.auth.signOut();
-    this.navService.enhancedLogout(); // Clear both app and browser history
-    this.router.navigate(['/login'], { replaceUrl: true });
+    this.navService.reset(); // Clear navigation history to prevent back navigation to protected routes
+    this.router.navigate(['/login']);
   }
 }
