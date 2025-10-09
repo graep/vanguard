@@ -61,31 +61,19 @@ export class AppHeaderComponent {
   ) {}
 
   async goBack() {
-    // Wait for user profile to load to ensure accurate role checking
-    const currentUser = this.authService.currentUserProfile$.value;
+    console.log('[AppHeader] Back button pressed');
     
-    if (!currentUser) {
-      // If no user profile, redirect to login
-      console.warn('[AppHeader] No user profile available, redirecting to login');
-      this.router.navigate(['/login']);
-      return;
+    // Check if we're on the photo-capture page
+    const currentUrl = this.router.url;
+    console.log('[AppHeader] Current URL:', currentUrl);
+    
+    if (currentUrl.includes('/photo-capture/')) {
+      console.log('[AppHeader] On photo-capture page - navigating to van-selection');
+      this.router.navigate(['/van-selection']);
+    } else {
+      console.log('[AppHeader] Using standard back navigation');
+      this.location.back();
     }
-    
-    const isAdmin = currentUser.roles?.includes('admin') || currentUser.roles?.includes('owner') || false;
-    console.log('[AppHeader] Back button pressed, isAdmin:', isAdmin, 'roles:', currentUser.roles);
-    
-    // Use NavService to get safe URL instead of location.back() to prevent unauthorized access
-    const safeUrl = this.navService.getLastSafeUrl(isAdmin);
-    console.log('[AppHeader] Navigating to safe URL:', safeUrl);
-    
-    // Double-check: if user is not admin and safeUrl contains admin, force to van-selection
-    if (!isAdmin && safeUrl.includes('/admin')) {
-      console.warn('[AppHeader] Blocking admin URL for non-admin user, redirecting to van-selection');
-      this.router.navigateByUrl('/van-selection', { replaceUrl: true });
-      return;
-    }
-    
-    this.router.navigateByUrl(safeUrl);
   }
   
   async logout() {

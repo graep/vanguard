@@ -141,16 +141,22 @@ export class NavService {
     // Listen for popstate events (browser back/forward)
     window.addEventListener('popstate', (event) => {
       console.log('[NavService] Browser navigation detected:', window.location.pathname);
+      console.log('[NavService] Event state:', event.state);
+      console.log('[NavService] Current user roles:', this.currentUserRoles);
       
       // Check if the target URL requires admin access
       const targetUrl = window.location.pathname;
       const requiresAdmin = targetUrl.includes('/admin');
+      
+      console.log('[NavService] Target URL:', targetUrl, 'Requires admin:', requiresAdmin);
       
       if (requiresAdmin && !this.hasAdminRole()) {
         console.warn('[NavService] Blocking unauthorized admin access via browser navigation');
         // Replace the current history entry to prevent going back to admin
         window.history.replaceState(null, '', '/van-selection');
         this.router.navigateByUrl('/van-selection', { replaceUrl: true });
+      } else {
+        console.log('[NavService] Allowing navigation to:', targetUrl);
       }
     });
   }

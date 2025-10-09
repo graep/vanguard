@@ -1,68 +1,99 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { IonContent, IonHeader, IonTitle, IonToolbar, IonItem, IonList, IonLabel, IonAccordionGroup, IonAccordion, IonButtons, IonButton, IonIcon, ModalController } from '@ionic/angular/standalone';
+import { IonContent, IonItem, IonList, IonLabel, IonAccordionGroup, IonAccordion, IonSpinner } from '@ionic/angular/standalone';
 import { RouterModule, Router } from '@angular/router';
 import { Auth } from '@angular/fire/auth';
+import { Firestore, collection, collectionData } from '@angular/fire/firestore';
 import { AppHeaderComponent } from '@app/components/app-header/app-header.component';
 import { NavService } from '@app/services/nav.service';
-import { AddVanModalComponent } from '@app/components/add-van-modal/add-van-modal.component';
+import { ShiftSessionService } from '@app/services/shift-session.service';
+import { Van } from '@app/models/van.model';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-van-selection',
   templateUrl: './van-selection.page.html',
   styleUrls: ['./van-selection.page.scss'],
   standalone: true,
-  imports: [ IonLabel, IonAccordion, IonAccordionGroup,  IonList, IonItem, IonContent, IonIcon, CommonModule, RouterModule, AppHeaderComponent ]
+  imports: [ IonLabel, IonAccordion, IonAccordionGroup, IonList, IonItem, IonContent, CommonModule, RouterModule, AppHeaderComponent, IonSpinner ]
 })
-export class VanSelectionPage {
-  vans = ['EDV', 'CDV', 'LMR'];
+export class VanSelectionPage implements OnInit {
+  vans$: Observable<Van[]>;
+  vansByType: Record<string, Van[]> = {};
+  isLoading = true;
 
-   numbersMap: Record<string,string[]> = {
-    EDV: Array.from({ length: 14 }, (_, i) => (i + 1).toString()),
-    CDV: Array.from({ length: 10 }, (_, i) => (i + 2).toString()),
-    LMR: ['5217', '7500', '3139']
-  };
+  private firestore = inject(Firestore);
+  private shiftSession = inject(ShiftSessionService);
 
   constructor(
     private router: Router,
     private auth: Auth,
-    private navService: NavService,
-    private modalCtrl: ModalController
-  ) { }
+    private navService: NavService
+  ) {
+    // Load vans from Firestore
+    const vansRef = collection(this.firestore, 'vans');
+    this.vans$ = collectionData(vansRef, { idField: 'docId' }) as Observable<Van[]>;
+  }
+
+  ngOnInit() {
+    this.vans$.subscribe(vans => {
+      // Group vans by type
+      this.vansByType = vans.reduce((acc, van) => {
+        if (!acc[van.type]) {
+          acc[van.type] = [];
+        }
+        acc[van.type].push(van);
+        return acc;
+      }, {} as Record<string, Van[]>);
+
+      // Sort vans by number within each type
+      Object.keys(this.vansByType).forEach(type => {
+        this.vansByType[type].sort((a, b) => (a.number || 0) - (b.number || 0));
+      });
+
+      this.isLoading = false;
+    });
+  }
 
   async logout() {
     await this.auth.signOut();
     this.navService.enhancedLogout(); // Clear both app and browser history
     this.router.navigate(['/login'], { replaceUrl: true });
   }
-  selectVan(vanType: string, vanNumber: string) {
-    this.router.navigate([
-      '/photo-capture',
-      vanType,
-      vanNumber
-    ], { replaceUrl: true });
+
+  async selectVan(van: Van) {
+    try {
+      // Start GPS tracking session for this van (tracks entire shift)
+      await this.shiftSession.startShift(van.docId);
+      
+      // Navigate to photo capture with van info
+      this.router.navigate([
+        '/photo-capture',
+        van.type,
+        van.number.toString()
+      ], { 
+        replaceUrl: true,
+        queryParams: { vanId: van.docId } // NEW: Pass the van document ID
+      });
+    } catch (error) {
+      console.error('Failed to start shift:', error);
+      // Still navigate even if GPS fails
+      this.router.navigate([
+        '/photo-capture',
+        van.type,
+        van.number.toString()
+      ], { 
+        replaceUrl: true,
+        queryParams: { vanId: van.docId } // NEW: Pass the van document ID
+      });
+    }
   }
 
-  async addVan(): Promise<void> {
-    const modal = await this.modalCtrl.create({
-      component: AddVanModalComponent,
-      componentProps: {
-        existingVans: [] // Empty array since we're using hardcoded data
-      }
-    });
+  getVanTypes(): string[] {
+    return Object.keys(this.vansByType);
+  }
 
-    await modal.present();
-
-    const { data } = await modal.onWillDismiss();
-    
-    if (data) {
-      // Van was added successfully, add it to the end of the LMR list
-      console.log('New van added:', data);
-      
-      // Add the new van number to the end of the LMR array
-      if (data.type === 'LMR') {
-        this.numbersMap['LMR'].push(data.number.toString());
-      }
-    }
+  getVansByType(type: string): Van[] {
+    return this.vansByType[type] || [];
   }
 }

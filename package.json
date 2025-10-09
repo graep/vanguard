@@ -29,6 +29,7 @@
     "@capacitor/geolocation": "^7.1.5",
     "@capacitor/haptics": "7.0.1",
     "@capacitor/keyboard": "7.0.1",
+    "@capacitor/screen-orientation": "^7.0.2",
     "@capacitor/status-bar": "7.0.1",
     "@dataconnect/generated": "file:src/dataconnect-generated",
     "@ionic/angular": "^8.0.0",

@@ -21,6 +21,8 @@ import { InspectionService, ReportedIssue } from 'src/app/services/inspection.se
 import { AuthService }                     from 'src/app/services/auth.service';
 import { AppHeaderComponent } from '@app/components/app-header/app-header.component';
 import { NavService } from '@app/services/nav.service';
+import { GpsTrackerService } from '@app/services/gps-tracker.service';
+import { ShiftSessionService } from '@app/services/shift-session.service';
 
 interface IssueCategory {
   name: string;
@@ -55,6 +57,7 @@ interface IssueCategory {
 export class UserReviewPage implements OnInit {
   vanType    = '';
   vanNumber  = '';
+  vanId      = ''; // NEW: Store the van document ID
   photoUrls: Record<string,string> = {};
   noIssues   = false;
   inspectionId = '';
@@ -166,13 +169,16 @@ export class UserReviewPage implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private toastCtrl: ToastController,
-    private navService: NavService
+    private navService: NavService,
+    private gps: GpsTrackerService,
+    private shiftSession: ShiftSessionService
   ) {}
 
   ngOnInit() {
     // Read van info from query params
     this.vanType   = this.route.snapshot.queryParamMap.get('vanType')   || '';
     this.vanNumber = this.route.snapshot.queryParamMap.get('vanNumber') || '';
+    this.vanId     = this.route.snapshot.queryParamMap.get('vanId')     || ''; // NEW: Get van document ID
     this.inspectionId = this.route.snapshot.queryParamMap.get('inspectionId') ?? '';
 
     // Read photo URLs passed in navigation state
@@ -207,9 +213,23 @@ export class UserReviewPage implements OnInit {
           }));
 
     try {
+      // Step 1: Get mileage and update van
+      const miles = this.gps.getMiles();
+      console.log('📊 Miles driven this shift:', miles);
+      
+      // Update van mileage in Firestore
+      if (miles > 0 && this.vanId) {
+        await this.insp.updateVanMileage(this.vanId, miles);
+        console.log('✅ Van mileage updated');
+      }
+
       // Step 2: merge report into the *same* document
       await this.insp.saveReport(this.inspectionId, reported);
       console.log('✅ saveReport succeeded');
+
+      // Step 3: Stop GPS tracking and shift session
+      await this.shiftSession.stopShift('logout');
+      console.log('✅ Shift session ended');
 
       // show a toast immediately
       const toast = await this.toastCtrl.create({

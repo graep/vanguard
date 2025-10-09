@@ -1,11 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { ViewWillLeave } from '@ionic/angular';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule, Router } from '@angular/router';
 import {
   IonContent,
-  IonHeader,
-  IonTitle,
-  IonToolbar,
   IonGrid,
   IonRow,
   IonCol,
@@ -13,19 +11,14 @@ import {
   IonImg,
   IonLoading,
   ToastController,
-  IonBackButton,
-  IonButtons, IonIcon } from '@ionic/angular/standalone';
-import {
-  Camera,
-  CameraResultType,
-  CameraSource,
-  Photo,
-} from '@capacitor/camera';
+  Platform
+} from '@ionic/angular/standalone';
 import { InspectionService } from 'src/app/services/inspection.service';
 import { Auth } from '@angular/fire/auth';
 import { getApp } from '@angular/fire/app';
 import { AppHeaderComponent } from '@app/components/app-header/app-header.component';
 import { NavService } from '@app/services/nav.service';
+import { FullscreenCameraComponent } from '@app/components/fullscreen-camera/fullscreen-camera.component';
 
 @Component({
   selector: 'app-photo-capture',
@@ -41,12 +34,14 @@ import { NavService } from '@app/services/nav.service';
     IonGrid,
     IonContent,
     CommonModule,
-    AppHeaderComponent
+    AppHeaderComponent,
+    FullscreenCameraComponent
   ],
 })
-export class PhotoCapturePage implements OnInit {
+export class PhotoCapturePage implements OnInit, OnDestroy, ViewWillLeave {
   vanType!: string;
   vanNumber!: string;
+  vanId!: string; // NEW: Store the actual van document ID
 
   // The four sides we need to capture
   sides = ['passenger', 'rear', 'driver', 'front'];
@@ -60,6 +55,8 @@ export class PhotoCapturePage implements OnInit {
   };
 
   isLoading = false;
+  showCamera = false;
+  currentSide = '';
 
   get allPhotosTaken(): boolean {
     return this.sides.every((side) => !!this.photos[side]);
@@ -71,27 +68,78 @@ export class PhotoCapturePage implements OnInit {
     private router: Router,
     private toastCtrl: ToastController,
     private auth: Auth,
-    private navService: NavService
+    private navService: NavService,
+    private platform: Platform
   ) {}
   ngOnInit() {
     // Pull vanType and vanNumber out of the URL
     this.vanType = this.route.snapshot.paramMap.get('vanType')!;
     this.vanNumber = this.route.snapshot.paramMap.get('vanNumber')!;
+    
+    // Get vanId from query params (passed from van selection)
+    this.vanId = this.route.snapshot.queryParamMap.get('vanId') || '';
+    
+    // Check if we're returning to this page and clear photos
+    this.checkForReturnNavigation();
   }
 
-  /** Launches the camera to take (or retake) a photo for the given side */
-  async takePhoto(side: string) {
-    try {
-      const photo = await Camera.getPhoto({
-        quality: 80,
-        resultType: CameraResultType.DataUrl,
-        source: CameraSource.Camera,
-        promptLabelHeader: `Capture ${side}`,
-      });
-      this.photos[side] = photo.dataUrl!;
-    } catch (err) {
-      console.error('Unable to take photo!', err);
+  private checkForReturnNavigation() {
+    // Check if we have any photos and clear them when returning to the page
+    const hasPhotos = Object.values(this.photos).some(photo => photo !== null);
+    if (hasPhotos) {
+      console.log('Returning to photo capture page - clearing existing photos');
+      this.clearAllPhotos();
     }
+  }
+
+  ionViewWillLeave() {
+    // Clear photos when leaving the page
+    console.log('Leaving photo capture page - clearing photos');
+    console.log('Current URL:', window.location.pathname);
+    console.log('Navigation history:', this.navService);
+    this.clearAllPhotos();
+  }
+
+  ngOnDestroy() {
+    // Component cleanup
+  }
+
+  private clearAllPhotos() {
+    console.log('Clearing all photos');
+    this.photos = {
+      front: null,
+      rear: null,
+      driver: null,
+      passenger: null,
+    };
+    this.showCamera = false;
+    this.currentSide = '';
+  }
+
+  /** Shows the full-screen camera for the given side */
+  takePhoto(side: string) {
+    console.log('takePhoto called for side:', side);
+    this.currentSide = side;
+    this.showCamera = true;
+    console.log('showCamera set to:', this.showCamera);
+    console.log('currentSide set to:', this.currentSide);
+  }
+
+  /** Handles photo captured from camera component */
+  onPhotoCaptured(photo: string) {
+    console.log('onPhotoCaptured called for side:', this.currentSide);
+    this.photos[this.currentSide] = photo;
+    this.showCamera = false;
+    this.currentSide = '';
+    console.log('showCamera set to false, camera hidden');
+  }
+
+  /** Handles camera cancellation */
+  onCameraCancelled() {
+    console.log('onCameraCancelled called');
+    this.showCamera = false;
+    this.currentSide = '';
+    console.log('showCamera set to false, camera hidden');
   }
 
   private async showSuccessToast() {
@@ -164,6 +212,7 @@ export class PhotoCapturePage implements OnInit {
           inspectionId,
           vanType: this.vanType,
           vanNumber: this.vanNumber,
+          vanId: this.vanId, // NEW: Pass the van document ID
         },
       });
     } catch (e) {

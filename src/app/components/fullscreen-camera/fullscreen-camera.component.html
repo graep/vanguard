@@ -1,0 +1,46 @@
+<div class="camera-content">
+  <!-- Camera Preview -->
+  <div class="camera-preview" *ngIf="!capturedImage">
+    <video #videoElement autoplay muted playsinline class="video-stream"></video>
+    
+    <!-- Close Button -->
+    <div class="close-button">
+      <ion-button (click)="cancel()" fill="clear" color="light">
+        <ion-icon name="close" size="large"></ion-icon>
+      </ion-button>
+    </div>
+    
+    <!-- Camera Controls -->
+    <div class="camera-controls">
+      <ion-button 
+        class="capture-button" 
+        (click)="capturePhoto()"
+        [disabled]="isCapturing"
+        fill="clear"
+      >
+        <ion-icon name="camera" size="large"></ion-icon>
+      </ion-button>
+    </div>
+  </div>
+
+  <!-- Captured Image Preview -->
+  <div class="captured-preview" *ngIf="capturedImage">
+    <img [src]="capturedImage" alt="Captured photo" class="captured-image">
+    
+    <!-- Image Controls -->
+    <div class="image-controls">
+      <ion-button (click)="retakePhoto()" fill="outline" color="medium">
+        <ion-icon name="refresh"></ion-icon>
+        Retake
+      </ion-button>
+      
+      <ion-button (click)="confirmPhoto()" fill="solid" color="primary">
+        <ion-icon name="camera"></ion-icon>
+        Use Photo
+      </ion-button>
+    </div>
+  </div>
+
+  <!-- Hidden canvas for capturing -->
+  <canvas #canvasElement style="display: none;"></canvas>
+</div>

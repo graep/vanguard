@@ -4,6 +4,21 @@
     <p class="section-subtitle">Service records and upcoming maintenance</p>
   </div>
 
+  <!-- Current Mileage Display -->
+  <div class="current-mileage-card">
+    <ion-card>
+      <ion-card-content>
+        <div class="mileage-display">
+          <ion-icon name="speedometer" class="mileage-icon"></ion-icon>
+          <div class="mileage-info">
+            <h4>Current Mileage</h4>
+            <p class="mileage-value">{{ currentMileage | number:'1.0-0' }} miles</p>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+  </div>
+
   <!-- Compact Status Boxes -->
   <div class="compact-stats-row">
     <div class="compact-stat-card success">

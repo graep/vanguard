@@ -1,7 +1,8 @@
 <app-header class ="ion-text-center" title="{{ vanType }} {{ vanNumber }}"></app-header>
 
 <ion-content class="ion-padding">
-  <ion-grid class="capture-grid">
+  <!-- Photo List View -->
+  <ion-grid class="capture-grid" *ngIf="!showCamera">
     <ion-row *ngFor="let side of sides">
       <!-- Side label -->
       <ion-col size="7" class="ion-text-capitalize ion-text-center">
@@ -31,10 +32,18 @@
     </ion-button>
   </ion-grid>
 
+  <!-- Full-Screen Camera View -->
+  <app-fullscreen-camera 
+    *ngIf="showCamera"
+    [sideName]="currentSide"
+    (photoCaptured)="onPhotoCaptured($event)"
+    (cancelled)="onCameraCancelled()"
+  ></app-fullscreen-camera>
+
   <ion-loading
     [isOpen]="isLoading"
     message="Uploading photos…"
   ></ion-loading>
 
-
 </ion-content>
+

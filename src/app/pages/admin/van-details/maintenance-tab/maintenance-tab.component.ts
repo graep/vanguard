@@ -1,6 +1,7 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IonicModule } from '@ionic/angular';
+import { Firestore, doc, getDoc } from '@angular/fire/firestore';
 
 interface MaintenanceRecord {
   id: string;
@@ -25,9 +26,27 @@ export class MaintenanceTabComponent implements OnInit {
   @Input() vanId!: string;
 
   maintenanceRecords: MaintenanceRecord[] = [];
+  currentMileage: number = 0;
+  isLoading = true;
 
-  ngOnInit() {
+  private firestore = inject(Firestore);
+
+  async ngOnInit() {
+    await this.loadCurrentMileage();
     this.loadMaintenanceRecords();
+    this.isLoading = false;
+  }
+
+  private async loadCurrentMileage() {
+    try {
+      const vanDoc = await getDoc(doc(this.firestore, 'vans', this.vanId));
+      if (vanDoc.exists()) {
+        this.currentMileage = vanDoc.data()?.['estimatedMiles'] || 0;
+      }
+    } catch (error) {
+      console.error('Failed to load current mileage:', error);
+      this.currentMileage = 0;
+    }
   }
 
   private loadMaintenanceRecords() {

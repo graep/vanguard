@@ -1,33 +1,46 @@
 <!-- src/app/pages/van-selection/van-selection.page.html -->
 <app-header class="ion-text-center" title="Van Selection" [showBackButton]="false"></app-header>
 
-
 <ion-content class="ion-padding">
   <div class="van-selection-box">
     <h2 class="box-title">Select your van</h2>
-      <div class="van-options">
-        <ion-accordion-group>
-          <ion-accordion *ngFor="let van of vans">
-            <!-- Accordion header: click to expand/collapse -->
-            <ion-item slot="header">
-              <ion-label class="ion-text-center">{{ van }}</ion-label>
-            </ion-item>
-          
-            <!-- Accordion content: list of numbers -->
-            <div slot="content" class="ion-text-center">
-              <ion-list class="number-grid">
-                <ion-item *ngFor="let num of numbersMap[van]" button (click)="selectVan(van, num)">
-                  <ion-label>{{ num }}</ion-label>
-                </ion-item>
-                <!-- Add Van button for LMR section -->
-                <ion-item *ngIf="van === 'LMR'" button (click)="addVan()" class="add-van-item">
-                  <ion-icon name="add-circle-outline" slot="start"></ion-icon>
-                  <ion-label>Add New LMR</ion-label>
-                </ion-item>
-              </ion-list>
-            </div>
-          </ion-accordion>
-        </ion-accordion-group>
-      </div>
+    
+    <!-- Loading spinner -->
+    <div *ngIf="isLoading" class="loading-container">
+      <ion-spinner name="crescent"></ion-spinner>
+      <p>Loading vans...</p>
+    </div>
+    
+    <!-- Van selection accordion -->
+    <div *ngIf="!isLoading" class="van-options">
+      <ion-accordion-group>
+        <ion-accordion *ngFor="let vanType of getVanTypes()">
+          <!-- Accordion header: click to expand/collapse -->
+          <ion-item slot="header">
+            <ion-label class="ion-text-center">{{ vanType }}</ion-label>
+          </ion-item>
+        
+          <!-- Accordion content: list of van numbers -->
+          <div slot="content" class="ion-text-center">
+            <ion-list class="number-grid">
+              <ion-item *ngFor="let van of getVansByType(vanType)" 
+                        button 
+                        (click)="selectVan(van)"
+                        [disabled]="van.isGrounded">
+                <ion-label>
+                  <div class="van-item">
+                    <span class="van-number">{{ van.number }}</span>
+                    <span *ngIf="van.isGrounded" class="grounded-badge">GROUNDED</span>
+                    <span *ngIf="van.estimatedMiles" class="mileage-info">
+                      {{ van.estimatedMiles | number:'1.0-0' }} miles
+                    </span>
+                  </div>
+                </ion-label>
+              </ion-item>
+            </ion-list>
+          </div>
+        </ion-accordion>
+      </ion-accordion-group>
+    </div>
   </div>
 </ion-content>

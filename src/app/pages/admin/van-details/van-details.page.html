@@ -37,11 +37,12 @@
 
             <!-- Details (vertical list) -->
             <div class="van-details-list">
-              <div class="detail-item">
-                <ion-icon name="car" class="info-icon"></ion-icon>
+              <!-- Vehicle Information -->
+              <div class="detail-item" *ngIf="van.year || van.make || van.model">
+                <ion-icon name="car-sport" class="info-icon"></ion-icon>
                 <div class="info-content">
-                  <h3>Van ID</h3>
-                  <p>{{ van.docId }}</p>
+                  <h3>Vehicle</h3>
+                  <p>{{ getVehicleInfo() }}</p>
                 </div>
               </div>
 
@@ -54,19 +55,18 @@
               </div>
 
               <div class="detail-item">
+                <ion-icon name="car" class="info-icon"></ion-icon>
+                <div class="info-content">
+                  <h3>Van ID</h3>
+                  <p>{{ van.docId }}</p>
+                </div>
+              </div>
+
+              <div class="detail-item">
                 <ion-icon name="build" class="info-icon"></ion-icon>
                 <div class="info-content">
                   <h3>Type</h3>
                   <p>{{ van.type }} - {{ getVanTypeLabel() }}</p>
-                </div>
-              </div>
-
-              <!-- Vehicle Information -->
-              <div class="detail-item" *ngIf="van.year || van.make || van.model">
-                <ion-icon name="car-sport" class="info-icon"></ion-icon>
-                <div class="info-content">
-                  <h3>Vehicle</h3>
-                  <p>{{ getVehicleInfo() }}</p>
                 </div>
               </div>
 

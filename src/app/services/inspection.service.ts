@@ -16,6 +16,7 @@ import {
   getDoc,
   getDocs,
   collectionData,
+  increment,
 } from '@angular/fire/firestore';
 import { Observable, combineLatest, from } from 'rxjs';
 import { map, filter, switchMap } from 'rxjs/operators';
@@ -46,6 +47,7 @@ export interface Inspection {
   rejectReason?: string | null;
   seen?: boolean;
   createdBy?: string | null;
+  milesDriven?: number; // NEW: Track mileage for this inspection
 }
 
 @Injectable({ providedIn: 'root' })
@@ -474,5 +476,43 @@ export class InspectionService {
       console.error('Failed to mark issue as resolved:', error);
       throw error;
     }
+  }
+
+  /** Update van mileage with miles driven during shift */
+  async updateVanMileage(vanId: string, miles: number): Promise<void> {
+    try {
+      const vanRef = doc(this.firestore, 'vans', vanId);
+      await updateDoc(vanRef, {
+        estimatedMiles: increment(miles)
+      });
+      console.log('Van mileage updated:', { vanId, miles });
+    } catch (error) {
+      console.error('Failed to update van mileage:', error);
+      throw error;
+    }
+  }
+
+  /** Save inspection with mileage data */
+  async saveInspectionWithMileage(
+    vanType: string, 
+    vanNumber: string, 
+    photoUrls: Record<string, string>,
+    milesDriven: number
+  ): Promise<string> {
+    const normalizedVanNumber = this.normalizeVanNumber(vanNumber);
+    const createdBy = this.auth.currentUser?.uid ?? null;
+    
+    const docRef = await addDoc(this.col, {
+      vanType,
+      vanNumber: normalizedVanNumber,
+      photos: photoUrls,
+      milesDriven, // NEW: Include mileage in inspection
+      createdAt: serverTimestamp(),
+      status: 'pending',
+      seen: false,
+      createdBy,
+    });
+    
+    return docRef.id;
   }
 }

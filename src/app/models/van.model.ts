@@ -27,6 +27,12 @@ export interface Van {
     coverageExpiry?: string;
   };
   
+  // Mileage Tracking
+  estimatedMiles?: number;
+  lastShiftMiles?: number;
+  lastShiftEndedAt?: Date;
+  lastShiftReason?: 'logout' | 'manual' | 'admin' | 'midnight';
+  
   notes?: string;
   imageUrl?: string;
 }
