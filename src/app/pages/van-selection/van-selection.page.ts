@@ -1,6 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { IonContent, IonItem, IonList, IonLabel, IonAccordionGroup, IonAccordion, IonSpinner } from '@ionic/angular/standalone';
+import { IonContent, IonSpinner, IonIcon } from '@ionic/angular/standalone';
 import { RouterModule, Router } from '@angular/router';
 import { Auth } from '@angular/fire/auth';
 import { Firestore, collection, collectionData } from '@angular/fire/firestore';
@@ -15,7 +15,7 @@ import { Observable } from 'rxjs';
   templateUrl: './van-selection.page.html',
   styleUrls: ['./van-selection.page.scss'],
   standalone: true,
-  imports: [ IonLabel, IonAccordion, IonAccordionGroup, IonList, IonItem, IonContent, CommonModule, RouterModule, AppHeaderComponent, IonSpinner ]
+  imports: [ IonContent, IonSpinner, IonIcon, CommonModule, RouterModule, AppHeaderComponent ]
 })
 export class VanSelectionPage implements OnInit {
   vans$: Observable<Van[]>;
@@ -90,10 +90,24 @@ export class VanSelectionPage implements OnInit {
   }
 
   getVanTypes(): string[] {
-    return Object.keys(this.vansByType);
+    const orderedTypes = ['EDV', 'CDV', 'LMR'];
+    return orderedTypes.filter(type => this.vansByType[type] && this.vansByType[type].length > 0);
   }
 
   getVansByType(type: string): Van[] {
     return this.vansByType[type] || [];
+  }
+
+  getVanTypeIcon(vanType: string): string {
+    switch (vanType) {
+      case 'EDV':
+        return 'car';
+      case 'CDV':
+        return 'car-sport';
+      case 'LMR':
+        return 'truck';
+      default:
+        return 'car';
+    }
   }
 }

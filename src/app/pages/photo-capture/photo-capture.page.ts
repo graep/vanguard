@@ -4,12 +4,10 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule, Router } from '@angular/router';
 import {
   IonContent,
-  IonGrid,
-  IonRow,
-  IonCol,
   IonButton,
   IonImg,
   IonLoading,
+  IonIcon,
   ToastController,
   Platform
 } from '@ionic/angular/standalone';
@@ -29,9 +27,7 @@ import { FullscreenCameraComponent } from '@app/components/fullscreen-camera/ful
     IonLoading,
     IonImg,
     IonButton,
-    IonCol,
-    IonRow,
-    IonGrid,
+    IonIcon,
     IonContent,
     CommonModule,
     AppHeaderComponent,
@@ -60,6 +56,33 @@ export class PhotoCapturePage implements OnInit, OnDestroy, ViewWillLeave {
 
   get allPhotosTaken(): boolean {
     return this.sides.every((side) => !!this.photos[side]);
+  }
+
+  getCompletedCount(): number {
+    return this.sides.filter(side => !!this.photos[side]).length;
+  }
+
+  getProgressPercentage(): number {
+    return (this.getCompletedCount() / this.sides.length) * 100;
+  }
+
+  getSideIcon(side: string): string {
+    switch (side) {
+      case 'front':
+        return 'arrow-forward';
+      case 'rear':
+        return 'arrow-back';
+      case 'driver':
+        return 'arrow-down';
+      case 'passenger':
+        return 'arrow-up';
+      default:
+        return 'camera';
+    }
+  }
+
+  getSideDisplayName(side: string): string {
+    return side.charAt(0).toUpperCase() + side.slice(1);
   }
 
   constructor(

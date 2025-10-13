@@ -1,67 +1,106 @@
-<app-header class ="ion-text-center" title="{{ vanType }} - {{ vanNumber }} Review"></app-header>
+<app-header class="ion-text-center" title="{{ vanType }} - {{ vanNumber }} Review"></app-header>
 
-<ion-content class="ion-padding">
-  <!-- 1️⃣ No-Issues Checkbox -->
-  <ion-list>
-    <ion-item>
+<ion-content class="user-review-content">
+  <div class="user-review-container">
+    <!-- Hero Section -->
+    <div class="hero-section">
+      <div class="hero-content">
+        <h1 class="hero-title">{{ vanType }} {{ vanNumber }}</h1>
+        <p class="hero-subtitle">Complete your inspection by reporting any issues found</p>
+        <div class="inspection-status">
+          <ion-icon name="checkmark-circle" class="status-icon"></ion-icon>
+          <span class="status-text">Photos captured successfully</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- No Issues Card -->
+    <div class="no-issues-card" (click)="toggleNoIssues()">
+      <div class="card-header">
+        <div class="card-icon">
+          <ion-icon name="checkmark-circle"></ion-icon>
+        </div>
+        <div class="card-content">
+          <h3 class="card-title">No Issues Found</h3>
+          <p class="card-description">Check this if no issues were found during inspection</p>
+        </div>
+      </div>
       <ion-checkbox
-        slot="start"
         [(ngModel)]="noIssues"
-      ></ion-checkbox>
-      <ion-label>No issues / Already Reported</ion-label>
-    </ion-item>
-  </ion-list>
+        class="main-checkbox"
+        (click)="$event.stopPropagation()">
+      </ion-checkbox>
+    </div>
 
-  <!-- 2️⃣ Only show categories if they DIDN'T check “no issues” -->
-  <ng-container *ngIf="!noIssues">
-    <h2 class="ion-margin-top">Any additional issues to report?</h2>
+    <!-- Issue Categories Section -->
+    <div class="categories-section" *ngIf="!noIssues">
+      <div class="section-header">
+        <h2 class="section-title">Report Issues by Category</h2>
+        <p class="section-subtitle">Select any categories where issues were found</p>
+      </div>
 
-    <!-- Checklist of categories -->
-    <ng-container *ngFor="let cat of issueCategories">
-      <ion-item>
-        <ion-checkbox
-          slot="start"
-          [(ngModel)]="cat.hasIssue"
-        ></ion-checkbox>
-        <ion-label>{{ cat.name }}</ion-label>
-      </ion-item>
+      <div class="categories-container">
+        <div *ngFor="let cat of issueCategories" 
+             class="category-card" 
+             [class.selected]="cat.hasIssue"
+             (click)="toggleCategory(cat)">
+          <div class="category-header">
+            <div class="category-icon" [class]="'severity-' + cat.severity">
+              <ion-icon [name]="getCategoryIcon(cat.name)"></ion-icon>
+            </div>
+            <div class="category-info">
+              <h3 class="category-title">{{ cat.name }}</h3>
+              <p class="category-severity">{{ cat.severity | titlecase }} Priority</p>
+            </div>
+            <ion-checkbox
+              [(ngModel)]="cat.hasIssue"
+              class="category-checkbox"
+              (click)="$event.stopPropagation()">
+            </ion-checkbox>
+          </div>
 
-      <ng-container *ngIf="cat.hasIssue">
-        <!-- Optional dropdown for Powertrain (or any with subcategories) -->
-        <ion-item *ngIf="cat.subcategories?.length">
-          <ion-label>Which area?</ion-label>
-          <ion-select
-            placeholder="Select area"
-            [(ngModel)]="cat.selectedSubcategory"
-          >
-            <ion-select-option
-              *ngFor="let sub of cat.subcategories"
-              [value]="sub"
-            >
-              {{ sub }}
-            </ion-select-option>
-          </ion-select>
-        </ion-item>
+          <!-- Issue Details (shown when category is selected) -->
+          <div class="issue-details" *ngIf="cat.hasIssue">
+            <!-- Subcategory Selection -->
+            <div class="subcategory-section" *ngIf="cat.subcategories?.length">
+              <label class="form-label">Which area?</label>
+              <ion-select
+                [(ngModel)]="cat.selectedSubcategory"
+                placeholder="Select specific area"
+                class="subcategory-select">
+                <ion-select-option
+                  *ngFor="let sub of cat.subcategories"
+                  [value]="sub">
+                  {{ sub }}
+                </ion-select-option>
+              </ion-select>
+            </div>
 
-        <!-- Always show the details textarea -->
-        <ion-item>
-          <ion-textarea
-            [(ngModel)]="cat.details"
-            [placeholder]="'Describe issues with ' + (cat.selectedSubcategory || cat.name)"
-            auto-grow="true"
-          ></ion-textarea>
-        </ion-item>
-      </ng-container>
-    </ng-container>
-  </ng-container>
+            <!-- Details Textarea -->
+            <div class="details-section">
+              <label class="form-label">Describe the issue</label>
+              <ion-textarea
+                [(ngModel)]="cat.details"
+                [placeholder]="'Describe issues with ' + (cat.selectedSubcategory || cat.name)"
+                auto-grow="true"
+                class="details-textarea">
+              </ion-textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
-  <!-- 3️⃣ Submit button enabled if noIssues OR at least one checked category -->
-  <ion-button
-    expand="block"
-    class="ion-margin-top"
-    (click)="submitReview()"
-    [disabled]="!canSubmit"
-  >
-    Submit Review
-  </ion-button>
+    <!-- Submit Button -->
+    <div class="submit-section">
+      <ion-button
+        class="submit-button"
+        (click)="submitReview()"
+        [disabled]="!canSubmit"
+        expand="block">
+        <ion-icon name="checkmark-circle" slot="start"></ion-icon>
+        Submit Review
+      </ion-button>
+    </div>
+  </div>
 </ion-content>

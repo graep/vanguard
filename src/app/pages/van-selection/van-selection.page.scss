@@ -1,104 +1,339 @@
-/* 1) The card/box that wraps "Select your van" */
-.van-selection-box {
-  max-width: 600px;
-  width: 100%;
-  margin-inline: auto;
-  position: relative;   /* create a containing block for absolute children */
-  overflow: hidden;     /* prevent visual overflow past the rounded box */
-  box-sizing: border-box;
-  border: 1px solid white;
-  border-radius: 15px;
-  padding: 25px;
+/* Modern Van Selection Page Styles */
+
+.van-selection-content {
+  --background: linear-gradient(135deg, #232F3E 0%, #1a252f 100%);
+  min-height: 100vh;
 }
 
-/* Safety: ensure everything inside measures to the box edges */
-.van-selection-box *, .van-selection-box *::before, .van-selection-box *::after {
-  box-sizing: border-box;
+.van-selection-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
 }
 
-/* Loading container */
-.loading-container {
+/* Hero Section */
+.hero-section {
   text-align: center;
+  margin-bottom: 40px;
   padding: 40px 20px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  border-radius: 20px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.hero-content {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.hero-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 16px 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  background: linear-gradient(135deg, #ffffff 0%, #e0e0e0 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-subtitle {
+  font-size: 1.1rem;
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0;
+  font-weight: 400;
+}
+
+/* Loading Container */
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+}
+
+.loading-spinner {
+  text-align: center;
+  padding: 40px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   
   ion-spinner {
-    margin-bottom: 16px;
+    --color: #4CAF50;
+    margin-bottom: 20px;
+    transform: scale(1.5);
   }
   
   p {
-    color: var(--ion-color-medium);
+    color: rgba(255, 255, 255, 0.8);
     margin: 0;
+    font-size: 1.1rem;
+    font-weight: 500;
   }
 }
 
-/* 2) Constrain the accordion to the box width */
-.van-selection-box ion-accordion-group,
-.van-selection-box ion-accordion {
+/* Van Types Container */
+.van-types-container {
   display: flex;
   flex-direction: column;
-  width: 100%;
-  max-width: 100%;
-  gap:12px;
-  border-radius: 15px;
+  gap: 24px;
 }
 
-/* Accordion headers can overflow due to internal paddings/ripple layers. Clamp them. */
-.van-selection-box ion-accordion > ion-item[slot="header"] {
-  width: 100%;
-  max-width: 100%;
-  /* Tame Ionic's big defaults so it never "pushes" wider than the box */
-  --padding-start: 0;
-  --padding-end: 0;
-  --inner-padding-start: 16px;
-  --inner-padding-end: 16px;
-  justify-content: center; /* keep the label centered */
+/* Van Type Cards */
+.van-type-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  border-radius: 20px;
+  padding: 24px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
 }
 
-/* If you have a list/grid under each accordion, remove default list padding */
-.van-selection-box ion-list {
-  padding-left: 0;
-  padding-right: 0;
+.van-type-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.van-type-icon {
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(76, 175, 80, 0.3);
+  
+  ion-icon {
+    font-size: 28px;
+    color: white;
+  }
+  
+  .van-type-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 16px;
+  }
+}
+
+.van-type-info {
+  flex: 1;
+}
+
+.van-type-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 4px 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.van-type-count {
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.7);
   margin: 0;
-  width: 100%;
-  max-width: 100%;
+  font-weight: 500;
 }
 
-/* Van item styling */
-.van-item {
-  display: flex;
-  flex-direction: column;
+/* Van Grid */
+.van-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 16px;
+}
+
+/* Van Item Cards */
+.van-item-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.08) 100%);
+  border-radius: 16px;
+  padding: 20px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(76, 175, 80, 0.1) 0%, rgba(76, 175, 80, 0.05) 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  
+  &:hover:not(.disabled) {
+    transform: translateY(-4px);
+    border-color: rgba(76, 175, 80, 0.5);
+    box-shadow: 0 8px 24px rgba(76, 175, 80, 0.2);
+    
+    &::before {
+      opacity: 1;
+    }
+  }
+  
+  &.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background: linear-gradient(135deg, rgba(255, 0, 0, 0.1) 0%, rgba(255, 0, 0, 0.05) 100%);
+    border-color: rgba(255, 0, 0, 0.2);
+  }
+}
+
+.van-number {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 8px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  position: relative;
+  z-index: 1;
+}
+
+.van-status {
+  margin-bottom: 8px;
+  position: relative;
+  z-index: 1;
+}
+
+.status-badge {
+  display: inline-flex;
   align-items: center;
   gap: 4px;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  
+  ion-icon {
+    font-size: 14px;
+  }
+  
+  &.available {
+    background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+  }
+  
+  &.grounded {
+    background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(244, 67, 54, 0.3);
+  }
+}
+
+.van-mileage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 500;
+  position: relative;
+  z-index: 1;
+  
+  ion-icon {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.6);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .van-selection-container {
+    padding: 16px;
+  }
+  
+  .hero-section {
+    padding: 30px 16px;
+    margin-bottom: 30px;
+  }
+  
+  .hero-title {
+    font-size: 2rem;
+  }
+  
+  .hero-subtitle {
+    font-size: 1rem;
+  }
+  
+  .van-type-card {
+    padding: 20px;
+  }
+  
+  .van-type-header {
+    gap: 12px;
+  }
+  
+  .van-type-icon {
+    width: 50px;
+    height: 50px;
+    
+    ion-icon {
+      font-size: 24px;
+    }
+  }
+  
+  .van-type-title {
+    font-size: 1.3rem;
+  }
+  
+  .van-grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 12px;
+  }
+  
+  .van-item-card {
+    padding: 16px 12px;
+  }
   
   .van-number {
-    font-size: 1.2rem;
-    font-weight: 600;
-    color: var(--ion-color-primary);
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .van-grid {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 10px;
   }
   
-  .grounded-badge {
+  .van-item-card {
+    padding: 14px 10px;
+  }
+  
+  .van-number {
+    font-size: 1.3rem;
+  }
+  
+  .status-badge {
+    font-size: 0.7rem;
+    padding: 3px 6px;
+  }
+  
+  .van-mileage {
     font-size: 0.8rem;
-    color: var(--ion-color-danger);
-    font-weight: 600;
-    text-transform: uppercase;
   }
-  
-  .mileage-info {
-    font-size: 0.9rem;
-    color: var(--ion-color-medium);
-  }
-}
-
-/* Disabled van styling */
-ion-item[disabled] {
-  opacity: 0.6;
-  
-  .van-item .van-number {
-    color: var(--ion-color-medium);
-  }
-}
-
-/* Optional: if you still see a hairline overflow on some platforms, add this: */
-.van-selection-box ion-item::part(native) {
-  max-width: 100%;
 }

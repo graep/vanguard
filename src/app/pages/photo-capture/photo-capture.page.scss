@@ -1,43 +1,409 @@
-ion-toolbar {
-  position: relative;     /* make a positioning context */
+/* Modern Photo Capture Page Styles */
 
-  ion-buttons[slot="start"] {
-    position: absolute;    /* remove it from the flex layout */
-    left: 0;
-    top: 50%;
-    transform: translateY(-50%);
-  }
-
-  ion-title {
-    margin: 0 auto;       /* center in the remaining space */
-    text-align: center;   /* just in case */
-  }
+.photo-capture-content {
+  --background: linear-gradient(135deg, #232F3E 0%, #1a252f 100%);
+  height: 100vh;
+  overflow-y: auto;
 }
 
-ion-row {
-  border: 2px rgb(255, 255, 255) solid;
-  border-radius: 15px;
-  box-shadow: 3px 3px 7px rgb(0, 0, 0);
-  padding:10px 0;
-  margin-bottom: 10px;
-  background-color: rgb(29, 29, 29);
-  width: 90%;
-  max-width: 325px;
+.photo-capture-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 12px;
+  padding-bottom: 80px; /* Space for fixed submit button */
 }
 
-ion-col {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+/* Hero Section */
+.hero-section {
+  text-align: center;
+  margin-bottom: 12px;
+  padding: 16px 12px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
-ion-grid {
+.hero-content {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.hero-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 6px 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  background: linear-gradient(135deg, #ffffff 0%, #e0e0e0 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-subtitle {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0 0 8px 0;
+  font-weight: 400;
+}
+
+/* Progress Indicator */
+.progress-indicator {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin: 15px 0 0 0;
+  gap: 8px;
 }
 
-.capture-btn {
-  margin-right: 10px;
+.progress-bar {
+  width: 100%;
+  max-width: 300px;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+}
+
+.progress-text {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 500;
+}
+
+/* Photo Cards Container */
+.photo-cards-container {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+/* Photo Cards */
+.photo-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  border-radius: 12px;
+  padding: 12px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(76, 175, 80, 0.1) 0%, rgba(76, 175, 80, 0.05) 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+    border-color: rgba(255, 255, 255, 0.2);
+    
+    &::before {
+      opacity: 1;
+    }
+  }
+  
+  &.completed {
+    border-color: rgba(76, 175, 80, 0.5);
+    
+    &::before {
+      opacity: 1;
+    }
+  }
+}
+
+/* Photo Card Header */
+.photo-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  position: relative;
+  z-index: 1;
+}
+
+.side-icon {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(76, 175, 80, 0.3);
+  
+  ion-icon {
+    font-size: 16px;
+    color: white;
+  }
+}
+
+.side-info {
+  flex: 1;
+}
+
+.side-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 2px 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.side-status {
+  font-size: 0.9rem;
+  color: rgba(76, 175, 80, 0.9);
+  margin: 0;
+  font-weight: 500;
+}
+
+/* Photo Preview */
+.photo-preview {
+  position: relative;
+  margin-bottom: 8px;
+  border-radius: 8px;
+  overflow: hidden;
+  aspect-ratio: 3/2;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.preview-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.preview-overlay {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(76, 175, 80, 0.9);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(10px);
+  
+  .check-icon {
+    font-size: 18px;
+    color: white;
+  }
+}
+
+/* Photo Placeholder */
+.photo-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 3/2;
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px dashed rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  margin-bottom: 8px;
+  transition: all 0.3s ease;
+  
+  .camera-icon {
+    font-size: 36px;
+    color: rgba(255, 255, 255, 0.5);
+    margin-bottom: 6px;
+  }
+  
+  .placeholder-text {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.6);
+    margin: 0;
+    font-weight: 500;
+  }
+}
+
+/* Capture Button */
+.capture-button {
+  --background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+  --background-hover: linear-gradient(135deg, #45a049 0%, #3d8b40 100%);
+  --color: white;
+  --border-radius: 12px;
+  --box-shadow: 0 4px 16px rgba(76, 175, 80, 0.3);
+  --padding-top: 12px;
+  --padding-bottom: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 1;
+  
+  &:hover {
+    --box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+    transform: translateY(-1px);
+  }
+  
+  &.retake-button {
+    --background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
+    --background-hover: linear-gradient(135deg, #F57C00 0%, #EF6C00 100%);
+    --box-shadow: 0 4px 16px rgba(255, 152, 0, 0.3);
+    
+    &:hover {
+      --box-shadow: 0 6px 20px rgba(255, 152, 0, 0.4);
+    }
+  }
+}
+
+/* Submit Section */
+.submit-section {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 12px;
+  background: linear-gradient(135deg, #232F3E 0%, #1a252f 100%);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  z-index: 1000;
+}
+
+.submit-button {
+  --background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+  --background-hover: linear-gradient(135deg, #1976D2 0%, #1565C0 100%);
+  --color: white;
+  --border-radius: 16px;
+  --box-shadow: 0 6px 24px rgba(33, 150, 243, 0.3);
+  --padding-top: 16px;
+  --padding-bottom: 16px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: all 0.3s ease;
+  
+  &:hover:not([disabled]) {
+    --box-shadow: 0 8px 28px rgba(33, 150, 243, 0.4);
+    transform: translateY(-2px);
+  }
+  
+  &[disabled] {
+    --background: rgba(255, 255, 255, 0.1);
+    --color: rgba(255, 255, 255, 0.5);
+    --box-shadow: none;
+    cursor: not-allowed;
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .photo-capture-container {
+    padding: 16px;
+  }
+  
+  .hero-section {
+    padding: 24px 16px;
+    margin-bottom: 24px;
+  }
+  
+  .hero-title {
+    font-size: 1.8rem;
+  }
+  
+  .hero-subtitle {
+    font-size: 0.95rem;
+  }
+  
+  .photo-cards-container {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .photo-card {
+    padding: 20px;
+  }
+  
+  .photo-card-header {
+    gap: 12px;
+  }
+  
+  .side-icon {
+    width: 45px;
+    height: 45px;
+    
+    ion-icon {
+      font-size: 20px;
+    }
+  }
+  
+  .side-title {
+    font-size: 1.2rem;
+  }
+  
+  .capture-button {
+    --padding-top: 10px;
+    --padding-bottom: 10px;
+    font-size: 0.9rem;
+  }
+  
+  .submit-button {
+    --padding-top: 14px;
+    --padding-bottom: 14px;
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .photo-capture-container {
+    padding: 12px;
+  }
+  
+  .hero-section {
+    padding: 20px 12px;
+  }
+  
+  .hero-title {
+    font-size: 1.6rem;
+  }
+  
+  .photo-card {
+    padding: 16px;
+  }
+  
+  .side-icon {
+    width: 40px;
+    height: 40px;
+    
+    ion-icon {
+      font-size: 18px;
+    }
+  }
+  
+  .side-title {
+    font-size: 1.1rem;
+  }
+  
+  .camera-icon {
+    font-size: 40px;
+  }
+  
+  .placeholder-text {
+    font-size: 0.8rem;
+  }
 }

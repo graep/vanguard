@@ -3,18 +3,13 @@ import { CommonModule }      from '@angular/common';
 import { FormsModule }       from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import {
-  IonHeader,
-  IonToolbar,
-  IonTitle,
   IonContent,
-  IonList,
-  IonItem,
-  IonLabel,
   IonCheckbox,
   IonSelect,
   IonSelectOption,
   IonTextarea,
   IonButton,
+  IonIcon,
   ToastController
 } from '@ionic/angular/standalone';
 import { InspectionService, ReportedIssue } from 'src/app/services/inspection.service';
@@ -43,14 +38,12 @@ interface IssueCategory {
     FormsModule,
     RouterModule,
     IonContent,
-    IonList,
-    IonItem,
-    IonLabel,
     IonCheckbox,
     IonSelect,
     IonSelectOption,
     IonTextarea,
     IonButton,
+    IonIcon,
     AppHeaderComponent
   ]
 })
@@ -194,6 +187,50 @@ export class UserReviewPage implements OnInit {
   /** allow submit when noIssues OR at least one issue */
   get canSubmit(): boolean {
     return this.noIssues || this.hasSelectedIssues;
+  }
+
+  getCategoryIcon(categoryName: string): string {
+    switch (categoryName) {
+      case 'Powertrain':
+        return 'settings';
+      case 'Chassis & Running Gear':
+        return 'car';
+      case 'Electrical & Electronics':
+        return 'flash';
+      case 'HVAC & Comfort':
+        return 'thermometer';
+      case 'Body & Interior':
+        return 'cube';
+      case 'Safety & Security':
+        return 'shield-checkmark';
+      case 'Fluids & Maintenance':
+        return 'water';
+      default:
+        return 'warning';
+    }
+  }
+
+  toggleCategory(category: IssueCategory): void {
+    category.hasIssue = !category.hasIssue;
+    
+    // Clear details and subcategory when unchecking
+    if (!category.hasIssue) {
+      category.details = '';
+      category.selectedSubcategory = '';
+    }
+  }
+
+  toggleNoIssues(): void {
+    this.noIssues = !this.noIssues;
+    
+    // Clear all category selections when "no issues" is checked
+    if (this.noIssues) {
+      this.issueCategories.forEach(cat => {
+        cat.hasIssue = false;
+        cat.details = '';
+        cat.selectedSubcategory = '';
+      });
+    }
   }
 
   /** User taps “Submit Review” */

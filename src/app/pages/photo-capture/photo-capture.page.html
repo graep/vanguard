@@ -1,49 +1,81 @@
-<app-header class ="ion-text-center" title="{{ vanType }} {{ vanNumber }}"></app-header>
+<app-header class="ion-text-center" title="{{ vanType }} {{ vanNumber }}"></app-header>
 
-<ion-content class="ion-padding">
-  <!-- Photo List View -->
-  <ion-grid class="capture-grid" *ngIf="!showCamera">
-    <ion-row *ngFor="let side of sides">
-      <!-- Side label -->
-      <ion-col size="7" class="ion-text-capitalize ion-text-center">
-        {{ side }}
-      </ion-col>
+<ion-content class="photo-capture-content">
+  <div class="photo-capture-container">
+    <!-- Hero Section -->
+    <div class="hero-section">
+      <div class="hero-content">
+        <h1 class="hero-title">{{ vanType }} {{ vanNumber }}</h1>
+        <p class="hero-subtitle">Capture photos of all four sides to complete your inspection</p>
+        <div class="progress-indicator">
+          <div class="progress-bar">
+            <div class="progress-fill" [style.width.%]="getProgressPercentage()"></div>
+          </div>
+          <span class="progress-text">{{ getCompletedCount() }}/4 photos captured</span>
+        </div>
+      </div>
+    </div>
 
-      <!-- Capture/Retake button -->
-      <ion-col size="5" class="ion-text-right">
-        <ion-button class="capture-btn" (click)="takePhoto(side)">
+    <!-- Photo Capture Cards -->
+    <div class="photo-cards-container" *ngIf="!showCamera">
+      <div *ngFor="let side of sides" class="photo-card" [class.completed]="photos[side]">
+        <div class="photo-card-header">
+          <div class="side-icon">
+            <ion-icon [name]="getSideIcon(side)"></ion-icon>
+          </div>
+          <div class="side-info">
+            <h3 class="side-title">{{ getSideDisplayName(side) }}</h3>
+            <p class="side-status" *ngIf="photos[side]">Photo captured</p>
+          </div>
+        </div>
+        
+        <div class="photo-preview" *ngIf="photos[side]">
+          <ion-img [src]="photos[side]!" class="preview-image"></ion-img>
+          <div class="preview-overlay">
+            <ion-icon name="checkmark-circle" class="check-icon"></ion-icon>
+          </div>
+        </div>
+        
+        <div class="photo-placeholder" *ngIf="!photos[side]">
+          <ion-icon name="camera" class="camera-icon"></ion-icon>
+          <p class="placeholder-text">Tap to capture</p>
+        </div>
+        
+        <ion-button 
+          class="capture-button"
+          [class.retake-button]="photos[side]"
+          (click)="takePhoto(side)"
+          expand="block">
+          <ion-icon [name]="photos[side] ? 'refresh' : 'camera'" slot="start"></ion-icon>
           {{ photos[side] ? 'Retake' : 'Capture' }}
         </ion-button>
-      </ion-col>
+      </div>
+    </div>
 
-      <!-- Preview once taken -->
-      <ion-col size="12" *ngIf="photos[side]">
-        <ion-img [src]="photos[side]!"></ion-img>
-      </ion-col>
-    </ion-row>
-  
+    <!-- Submit Button -->
+    <div class="submit-section" *ngIf="!showCamera">
+      <ion-button 
+        class="submit-button"
+        (click)="submitAll()"
+        [disabled]="!allPhotosTaken"
+        expand="block">
+        <ion-icon name="checkmark-circle" slot="start"></ion-icon>
+        Submit Inspection
+      </ion-button>
+    </div>
 
-    <ion-button 
-      class="submit-btn"
-      (click)="submitAll()"
-      [disabled]="!allPhotosTaken"
-    >
-      Submit
-    </ion-button>
-  </ion-grid>
+    <!-- Full-Screen Camera View -->
+    <app-fullscreen-camera 
+      *ngIf="showCamera"
+      [sideName]="currentSide"
+      (photoCaptured)="onPhotoCaptured($event)"
+      (cancelled)="onCameraCancelled()"
+    ></app-fullscreen-camera>
 
-  <!-- Full-Screen Camera View -->
-  <app-fullscreen-camera 
-    *ngIf="showCamera"
-    [sideName]="currentSide"
-    (photoCaptured)="onPhotoCaptured($event)"
-    (cancelled)="onCameraCancelled()"
-  ></app-fullscreen-camera>
-
-  <ion-loading
-    [isOpen]="isLoading"
-    message="Uploading photos…"
-  ></ion-loading>
-
+    <ion-loading
+      [isOpen]="isLoading"
+      message="Uploading photos…"
+    ></ion-loading>
+  </div>
 </ion-content>
 
