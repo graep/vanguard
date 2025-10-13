@@ -3,6 +3,9 @@
   <div class="camera-preview" *ngIf="!capturedImage">
     <video #videoElement autoplay muted playsinline class="video-stream"></video>
     
+    <!-- Alignment Overlay -->
+    <img [src]="alignmentOverlay" class="alignment-guide" alt="Van Alignment Guide" />
+    
     <!-- Close Button -->
     <div class="close-button">
       <ion-button (click)="cancel()" fill="clear" color="light">
@@ -16,9 +19,10 @@
         class="capture-button" 
         (click)="capturePhoto()"
         [disabled]="isCapturing"
-        fill="clear"
+        fill="solid"
+        shape="round"
       >
-        <ion-icon name="camera" size="large"></ion-icon>
+        <ion-icon name="camera"></ion-icon>
       </ion-button>
     </div>
   </div>

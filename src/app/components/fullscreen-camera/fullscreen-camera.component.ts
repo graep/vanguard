@@ -32,6 +32,9 @@ export class FullscreenCameraComponent implements OnInit, OnDestroy, OnChanges, 
   capturedImage: string | null = null;
   private streamCheckInterval: any = null;
   private originalOrientation: string | null = null;
+  
+  // Overlay properties
+  alignmentOverlay = '';
 
   constructor() {
     addIcons({ camera, close, refresh });
@@ -40,6 +43,16 @@ export class FullscreenCameraComponent implements OnInit, OnDestroy, OnChanges, 
   async ngOnInit() {
     console.log('FullscreenCameraComponent ngOnInit');
     console.log('sideName:', this.sideName);
+    
+    // Set overlay based on side name
+    const overlays: Record<string, string> = {
+      driver: 'assets/overlays/driverSideOverlay.png',
+      passenger: 'assets/overlays/passengerSideOverlay.png',
+      front: 'assets/overlays/frontOverlay.png',
+      rear: 'assets/overlays/rearOverlay.png',
+    };
+    this.alignmentOverlay = overlays[this.sideName] || overlays['driver'];
+    console.log('alignmentOverlay set to:', this.alignmentOverlay);
   }
 
   async ngAfterViewInit() {
