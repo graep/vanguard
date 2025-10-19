@@ -66,19 +66,16 @@
       <ion-grid>
         <ion-row>
           <!-- LMR Van Cards -->
-          <ion-col size="12" size-md="6" size-lg="4" *ngFor="let van of filteredLmrs">
+          <ion-col size="12" size-md="6" size-lg="4" *ngFor="let van of filteredLmrs" (click)="viewVan(van)">
             <div class="van-card" [class.active]="!van.isGrounded" [class.grounded]="van.isGrounded">
               <div class="van-card-content">
-                <img [src]="'assets/LMR.jpg'" alt="LMR" class="van-image"/>
+                <img [src]="getLmrImage(van)" alt="LMR" class="van-image"/>
                 <div class="van-details">
                   <h4 class="van-id">{{ van.number || 'Unknown' }}</h4>
                   <div class="van-vin">{{ van.VIN || 'No VIN Available' }}</div>
                 </div>
                 <div class="van-actions">
-                  <ion-button fill="clear" size="small" (click)="viewVan(van)">
-                    <ion-icon name="eye-outline"></ion-icon>
-                  </ion-button>
-                  <ion-button fill="clear" size="small" color="danger" (click)="deleteVan(van)">
+                  <ion-button fill="clear" size="small" color="danger" (click)="deleteVan(van); $event.stopPropagation()">
                     <ion-icon name="trash-outline"></ion-icon>
                   </ion-button>
                 </div>

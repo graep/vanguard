@@ -67,23 +67,30 @@
 .empty-icon { font-size: 4rem; margin-bottom: 16px; opacity: .5; }
 
 .content-container {
-  width: min(1000px, calc(100vw - 150px));
-  margin: 0 auto;
+  max-width: 1200px; // Set a maximum width for the content
+  width: 100%; // Take full width of available space
+  margin: 0 auto; // Center the container horizontally in available space
   padding: 1rem;
   
-  @media (max-width: 1150px) {
-    width: calc(100vw - 150px);
+  // For large screens (laptop L and 4K), ensure proper centering
+  @media (min-width: 1440px) {
+    max-width: 1200px; // Keep consistent max width
+  }
+  
+  // For medium-large screens, adjust max width slightly
+  @media (max-width: 1439px) and (min-width: 1200px) {
     max-width: 1000px;
   }
   
-  @media (max-width: 900px) {
-    width: calc(100vw - 150px);
+  // For smaller desktop screens
+  @media (max-width: 1199px) {
+    max-width: 100%; // Use full available width
   }
   
+  // Mobile responsive - full width with proper padding
   @media (max-width: 768px) {
     width: 100% !important;
     max-width: 100% !important;
-    margin: 0 !important;
     padding: 1rem;
     box-sizing: border-box;
   }

@@ -18,7 +18,7 @@
   height: 100vh;
   background: #1e1e1e !important;
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  z-index: 1000;
+  z-index: 1000; // Higher than content wrapper
   box-shadow: 2px 0 20px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
@@ -38,10 +38,12 @@
 .sidebar-header {
   display: flex;
   align-items: center;
+  justify-content: center;
   padding: 20px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   min-height: 80px;
   position: relative;
+  
 
   .logo {
     width: 40px;
@@ -53,6 +55,7 @@
     justify-content: center;
     color: var(--sidebar-text);
     flex-shrink: 0;
+    transition: transform 0.08s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     
     ion-icon {
       font-size: 24px;
@@ -64,8 +67,10 @@
     color: var(--sidebar-text);
     font-size: 20px;
     font-weight: 600;
-    transition: opacity 0.2s ease;
+    transition: opacity 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94), margin-left 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94), max-width 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     white-space: nowrap;
+    overflow: hidden;
+    max-width: 200px; /* Set a reasonable max width */
     
     &.hidden {
       opacity: 0;
@@ -75,12 +80,26 @@
 
 
 
-  .close-btn {
-    position: absolute;
-    right: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    --color: var(--sidebar-text);
+}
+
+/* When sidebar is collapsed, center just the logo */
+.sidebar.collapsed .sidebar-header {
+  justify-content: center;
+  
+  .brand-name {
+    opacity: 0;
+    margin-left: 0;
+    max-width: 0;
+    pointer-events: none;
+  }
+}
+
+/* When sidebar is expanded, logo and text are centered together */
+.sidebar:not(.collapsed) .sidebar-header {
+  .brand-name {
+    opacity: 1;
+    margin-left: 15px;
+    max-width: 200px;
   }
 }
 
@@ -144,6 +163,18 @@
       color: var(--sidebar-text);
       border-left-color: transparent;          /* avoid double accent with pill */
       .menu-icon ion-icon { color: var(--ion-color-secondary); }
+    }
+
+    /* Disabled state for non-functional buttons */
+    &.disabled {
+      cursor: not-allowed;
+      opacity: 0.5;
+      
+      &:hover {
+        background: transparent;
+        color: var(--sidebar-text-secondary);
+        border-left-color: transparent;
+      }
     }
 
     .menu-icon {
@@ -261,19 +292,14 @@
 
 // Content wrapper - Updated for Ionic
 .content-wrapper {
-  margin-left: 280px;
-  width: calc(100% - 280px);
+  left: 0; // Start from the very left edge
+  width: 100%; // Take full screen width
   height: 100vh;
   position: fixed;
   top: 0;
-  right: 0;
   overflow: auto;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  
-  &.sidebar-collapsed {
-    margin-left: 70px !important;
-    width: calc(100% - 70px) !important;
-  }
+  z-index: 1; // Lower than sidebar
   
   // Ensure Ionic content fills properly
   ion-content {
@@ -414,25 +440,7 @@
     }
   }
   
-  .content-wrapper {
-    margin-left: 0 !important;
-    width: 100% !important;
-    position: static !important; // Key fix - don't use fixed positioning on mobile
-    height: auto !important;
-    min-height: 100vh;
-    overflow: visible !important; // Allow natural scrolling
-    
-    // Remove any transforms or transitions that might interfere
-    transform: none !important;
-    transition: none !important;
-  }
-  
-  // Ensure the content inside behaves properly
-  .content-wrapper ion-content {
-    position: static !important;
-    height: auto !important;
-    min-height: 100vh;
-  }
+  // Content wrapper styles removed - let admin-layout handle mobile responsiveness
 }
 
 @media (min-width: 769px) {
@@ -444,9 +452,5 @@
     display: block !important;
   }
   
-  // Ensure desktop behavior is restored
-  .content-wrapper {
-    position: fixed;
-    overflow: auto;
-  }
+  // Desktop behavior handled by admin-layout component
 }

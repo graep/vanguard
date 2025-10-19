@@ -123,9 +123,35 @@ export class VanDetailsPage implements OnInit {
       return this.van.imageUrl;
     }
     
-    // Default images based on van type
+    // For LMR vans, use dynamic image based on make
+    if (this.van.type.toUpperCase() === 'LMR') {
+      return this.getLmrImage(this.van);
+    }
+    
+    // Default images based on van type for EDV and CDV
     const vanType = this.van.type.toUpperCase();
     return `assets/${vanType}.jpg`;
+  }
+
+  /**
+   * Get the appropriate LMR image based on the van's make
+   * @param van The van object
+   * @returns The path to the appropriate LMR image
+   */
+  getLmrImage(van: Van): string {
+    if (!van.make) {
+      return 'assets/LMR.jpg'; // Default fallback
+    }
+    
+    const make = van.make.toLowerCase().trim();
+    
+    if (make === 'ford') {
+      return 'assets/LMR_ford.png';
+    } else if (make === 'dodge') {
+      return 'assets/LMR_dodge.png';
+    }
+    
+    return 'assets/LMR.jpg'; // Default fallback for other makes
   }
 
   getStatusColor(): string {

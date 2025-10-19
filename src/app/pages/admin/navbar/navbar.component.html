@@ -20,14 +20,6 @@
       Vanguard
     </div>
     
-    <!-- Mobile close button -->
-    <ion-button 
-      class="close-btn mobile-only"
-      fill="clear" 
-      size="small"
-      (click)="$event.stopPropagation(); closeMobileMenu()">
-      <ion-icon name="close"></ion-icon>
-    </ion-button>
   </div>
 
   <!-- Navigation Menu -->
@@ -39,6 +31,7 @@
       routerLinkActive="active"
       [routerLinkActiveOptions]="{ exact: item.route === '/admin' }"
       [class.clickable]="!!item.route || !!item.action"
+      [class.disabled]="!item.route && !item.action"
       (click)="handleItemClick(item, i, $event)">
       
       <div class="menu-icon">

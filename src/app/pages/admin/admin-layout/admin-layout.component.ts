@@ -20,6 +20,32 @@ import { NavbarComponent } from '../navbar/navbar.component';
       height: 100vh;
       overflow: hidden;
     }
+    
+    /* Automatically reserve space for collapsed sidebar */
+    :host ::ng-deep .content-wrapper {
+      padding-left: 70px; /* Space for collapsed sidebar */
+      transition: padding-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    /* When sidebar is expanded, keep the same padding so it overlaps */
+    :host ::ng-deep .sidebar:not(.collapsed) ~ .content-wrapper {
+      padding-left: 70px; /* Keep same padding - sidebar overlaps content */
+    }
+    
+    /* Mobile: no padding needed */
+    @media (max-width: 768px) {
+      :host ::ng-deep .content-wrapper {
+        padding-left: 0 !important;
+      }
+      
+      :host ::ng-deep .sidebar {
+        transform: translateX(-100%) !important;
+      }
+      
+      :host ::ng-deep .sidebar.mobile-open {
+        transform: translateX(0) !important;
+      }
+    }
   `]
 })
 export class AdminLayoutComponent {}

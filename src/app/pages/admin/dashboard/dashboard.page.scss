@@ -1,39 +1,25 @@
-// Mobile fix - override navbar component styles
-@media (max-width: 768px) {
-  :host ::ng-deep .content-wrapper {
-    position: static !important;
-    margin-left: 0 !important;
-    width: 100% !important;
-    height: auto !important;
-    overflow: visible !important;
-  }
-  
-  :host ::ng-deep .sidebar {
-    transform: translateX(-100%) !important;
-  }
-  
-  // Make sure ion-content behaves properly
-  ion-content {
-    position: static !important;
-    height: auto !important;
-  }
-}
+// Mobile styles are now handled by admin-layout component
 
 // Admin Portal Page Styles
 .content-container {
-  width: min(1000px, calc(100vw - 150px)); // Never exceed available space
-  margin: 0 auto; // Center by default
+  max-width: 1200px; // Set a maximum width for the content
+  width: 100%; // Take full width of available space
+  margin: 0 auto; // Center the container horizontally in available space
   padding: 1rem;
   
-  // When viewport gets too small, switch to sidebar-aware sizing
-  @media (max-width: 1150px) {
-    width: calc(100vw - 150px); // Full width minus sidebar minus margins
-    max-width: 1000px; // Still respect max width if there's room
+  // For large screens (laptop L and 4K), ensure proper centering
+  @media (min-width: 1440px) {
+    max-width: 1200px; // Keep consistent max width
   }
   
-  // Further shrink for smaller screens
-  @media (max-width: 900px) {
-    width: calc(100vw - 150px); // Tighter margins
+  // For medium-large screens, adjust max width slightly
+  @media (max-width: 1439px) and (min-width: 1200px) {
+    max-width: 1000px;
+  }
+  
+  // For smaller desktop screens
+  @media (max-width: 1199px) {
+    max-width: 100%; // Use full available width
   }
   
   // Mobile responsive - full width with proper padding
@@ -48,6 +34,11 @@
   @media (max-width: 576px) {
     padding: 0.75rem;
   }
+}
+
+// Remove left margin when sidebar is expanded (allows overlay)
+:host ::ng-deep .content-wrapper:not(.sidebar-collapsed) .content-container {
+  margin-left: 0 !important; // Remove margin when sidebar is expanded
 }
 
 .status-bar-container {

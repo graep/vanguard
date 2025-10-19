@@ -21,29 +21,44 @@
 
 // Content Container - Responsive like dashboard
 .content-container {
-  width: min(1000px, calc(100vw - 150px));
-  margin: 0 auto;
+  width: min(1200px, calc(100vw - 70px)); // Max width with some constraint, minus left margin
+  margin-left: 70px; // Fixed left margin for collapsed sidebar
+  margin-right: auto; // Center the content container in remaining space
   padding: 1rem;
   
+  // When viewport gets too small, adjust sizing
   @media (max-width: 1150px) {
-    width: calc(100vw - 150px);
-    max-width: 1000px;
+    width: calc(100vw - 70px); // Use all available space minus left margin
   }
   
+  // Further shrink for smaller screens
   @media (max-width: 900px) {
-    width: calc(100vw - 150px);
+    width: calc(100vw - 70px); // Still use all available space minus left margin
   }
   
+  // Mobile responsive - full width with proper padding
   @media (max-width: 768px) {
     width: 100% !important;
     max-width: 100% !important;
     margin: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
     padding: 1rem;
     box-sizing: border-box;
   }
   
   @media (max-width: 576px) {
     padding: 0.75rem;
+  }
+}
+
+// Adjust content container when sidebar is expanded
+:host ::ng-deep .content-wrapper:not(.sidebar-collapsed) .content-container {
+  margin-left: 280px !important; // Account for expanded sidebar (280px)
+  width: min(1200px, calc(100vw - 280px)) !important; // Max width minus expanded sidebar
+  
+  @media (max-width: 1150px) {
+    width: calc(100vw - 280px) !important; // Use all available space minus expanded sidebar
   }
 }
 

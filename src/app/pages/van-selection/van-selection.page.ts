@@ -110,4 +110,25 @@ export class VanSelectionPage implements OnInit {
         return 'car';
     }
   }
+
+  /**
+   * Get the appropriate LMR image based on the van's make
+   * @param van The van object
+   * @returns The path to the appropriate LMR image
+   */
+  getLmrImage(van: Van): string {
+    if (!van.make) {
+      return 'assets/LMR.jpg'; // Default fallback
+    }
+    
+    const make = van.make.toLowerCase().trim();
+    
+    if (make === 'ford') {
+      return 'assets/LMR_ford.png';
+    } else if (make === 'dodge') {
+      return 'assets/LMR_dodge.png';
+    }
+    
+    return 'assets/LMR.jpg'; // Default fallback for other makes
+  }
 }

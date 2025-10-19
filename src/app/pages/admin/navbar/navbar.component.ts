@@ -43,10 +43,10 @@ export class NavbarComponent implements OnInit, OnDestroy {
       action: () => this.openPendingModal(),
       hasNotification: () => this.hasNewSubmissions
     },
-    { title: 'Analytics', icon: 'analytics-outline', route: '/admin/analytics' },
-    { title: 'Projects', icon: 'folder-outline', route: '/admin/projects' },
-    { title: 'Messages', icon: 'chatbubbles-outline', route: '/admin/messages' },
-    { title: 'Settings', icon: 'settings-outline', route: '/admin/settings' }
+    { title: 'Analytics', icon: 'analytics-outline' },
+    { title: 'Projects', icon: 'folder-outline' },
+    { title: 'Messages', icon: 'chatbubbles-outline' },
+    { title: 'Settings', icon: 'settings-outline' }
   ];
 
   constructor(
@@ -123,9 +123,17 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
   // ---------- Menu item clicks ----------
   /** Used by the template. Router handles navigation for items with a route.
-   *  For action-only items (like the modal), run the action and keep the current route active. */
+   *  For action-only items (like the modal), run the action and keep the current route active.
+   *  For items with no route or action, prevent navigation. */
   handleItemClick(item: any, _index: number, ev: MouseEvent) {
-    // Don't collapse on navigation - let user control sidebar state
+    // If item has no route and no action, prevent navigation
+    if (!item.route && !item.action) {
+      ev.preventDefault();
+      ev.stopPropagation();
+      return;
+    }
+    
+    // For action-only items, run the action
     if (!item.route && item.action) {
       ev.stopPropagation();
       item.action();

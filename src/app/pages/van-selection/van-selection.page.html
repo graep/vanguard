@@ -26,7 +26,8 @@
           <div class="van-type-icon">
             <img *ngIf="vanType === 'EDV'" src="assets/EDV.jpg" alt="EDV" class="van-type-image">
             <img *ngIf="vanType === 'CDV'" src="assets/CDV.jpg" alt="CDV" class="van-type-image">
-            <ion-icon *ngIf="vanType !== 'EDV' && vanType !== 'CDV'" [name]="getVanTypeIcon(vanType)"></ion-icon>
+            <img *ngIf="vanType === 'LMR'" [src]="getLmrImage(getVansByType(vanType)[0])" alt="LMR" class="van-type-image">
+            <ion-icon *ngIf="vanType !== 'EDV' && vanType !== 'CDV' && vanType !== 'LMR'" [name]="getVanTypeIcon(vanType)"></ion-icon>
           </div>
           <div class="van-type-info">
             <h3 class="van-type-title">{{ vanType }}</h3>
