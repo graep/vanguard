@@ -4,7 +4,7 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="ion-padding">
+<ion-content>
   <div class="content-container">
   <div *ngIf="loading" class="loading-container">
     <ion-spinner name="crescent"></ion-spinner>
@@ -169,9 +169,8 @@
       <div class="tab-navigation">
         <ion-button 
           *ngFor="let tab of tabs" 
-          [fill]="activeTab === tab.id ? 'solid' : 'clear'"
-          [color]="activeTab === tab.id ? 'primary' : 'medium'"
           (click)="selectTab(tab.id)"
+          [class.tab-button-selected]="activeTab === tab.id"
           class="tab-button">
           <ion-icon [name]="tab.icon" slot="start"></ion-icon>
           {{ tab.label }}
