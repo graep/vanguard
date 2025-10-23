@@ -1,6 +1,10 @@
-<app-header class="ion-text-center" title="{{ vanType }} - {{ vanNumber }} Review"></app-header>
-
 <ion-content class="user-review-content">
+  <!-- Page Header with Breadcrumb and Logout -->
+  <app-page-header 
+    [breadcrumbItems]="breadcrumbItems" 
+    (logout)="logout()">
+  </app-page-header>
+  
   <div class="user-review-container">
     <!-- Hero Section -->
     <div class="hero-section">

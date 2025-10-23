@@ -33,6 +33,16 @@
                 "glob": "**/*",
                 "input": "src/assets",
                 "output": "assets"
+              },
+              {
+                "glob": "manifest.json",
+                "input": "src",
+                "output": ""
+              },
+              {
+                "glob": "ngsw-config.json",
+                "input": ".",
+                "output": ""
               }
             ],
             "styles": ["src/global.scss", "src/theme/variables.scss"],
@@ -44,13 +54,25 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "2mb",
-                  "maximumError": "5mb"
+                  "maximumWarning": "1mb",
+                  "maximumError": "2mb"
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "8kb",
-                  "maximumError": "10kb"
+                  "maximumWarning": "10kb",
+                  "maximumError": "15kb"
+                },
+                {
+                  "type": "bundle",
+                  "name": "main",
+                  "maximumWarning": "500kb",
+                  "maximumError": "1mb"
+                },
+                {
+                  "type": "bundle",
+                  "name": "polyfills",
+                  "maximumWarning": "100kb",
+                  "maximumError": "200kb"
                 }
               ],
               "fileReplacements": [
@@ -59,7 +81,20 @@
                   "with": "src/environments/environment.prod.ts"
                 }
               ],
-              "outputHashing": "all"
+              "outputHashing": "all",
+              "serviceWorker": "ngsw-config.json",
+              "optimization": {
+                "scripts": true,
+                "styles": {
+                  "minify": true,
+                  "inlineCritical": true
+                },
+                "fonts": true
+              },
+              "sourceMap": false,
+              "namedChunks": false,
+              "extractLicenses": true,
+              "aot": true
             },
             "development": {
               "optimization": false,
@@ -104,6 +139,16 @@
                 "glob": "**/*",
                 "input": "src/assets",
                 "output": "assets"
+              },
+              {
+                "glob": "manifest.json",
+                "input": "src",
+                "output": ""
+              },
+              {
+                "glob": "ngsw-config.json",
+                "input": ".",
+                "output": ""
               }
             ],
             "styles": ["src/global.scss", "src/theme/variables.scss"],

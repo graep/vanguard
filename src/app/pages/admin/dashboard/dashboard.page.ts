@@ -24,8 +24,7 @@ import { AddVanModalComponent } from '@app/components/add-van-modal/add-van-moda
     CommonModule, 
     IonicModule, 
     FormsModule, 
-    StatusCountBarComponent,
-    AddVanModalComponent
+    StatusCountBarComponent
   ],
   templateUrl: './dashboard.page.html',
   styleUrls: ['./dashboard.page.scss'],
@@ -38,19 +37,22 @@ export class DashboardPage implements OnInit {
   filteredEdvs: Van[] = [];
   filteredLmrs: Van[] = [];
 
+  // Filter state tracking
+  hasActiveFilters = false;
+
   // Data sources for the status bars
   overallDataSource: StatusDataSource = {
     items: [],
     statusField: 'isGrounded',
     activeValue: false,
-    searchFields: ['docId', 'vin', 'type', 'number']
+    searchFields: ['docId', 'VIN', 'type', 'number']
   };
 
   cdvDataSource: StatusDataSource = {
     items: [],
     statusField: 'isGrounded',
     activeValue: false,
-    searchFields: ['docId', 'vin', 'number'],
+    searchFields: ['docId', 'VIN', 'number'],
     filterField: 'type',
     filterValue: 'CDV'
   };
@@ -59,7 +61,7 @@ export class DashboardPage implements OnInit {
     items: [],
     statusField: 'isGrounded', 
     activeValue: false,
-    searchFields: ['docId', 'vin', 'number'],
+    searchFields: ['docId', 'VIN', 'number'],
     filterField: 'type',
     filterValue: 'EDV'
   };
@@ -68,7 +70,7 @@ export class DashboardPage implements OnInit {
     items: [],
     statusField: 'isGrounded',
     activeValue: false,
-    searchFields: ['docId', 'vin', 'number'],
+    searchFields: ['docId', 'VIN', 'number'],
     filterField: 'type',
     filterValue: 'LMR'
   };
@@ -133,6 +135,9 @@ export class DashboardPage implements OnInit {
     this.filteredCdvs = filteredData.filter((v) => (v.type || '').toUpperCase() === 'CDV');
     this.filteredEdvs = filteredData.filter((v) => (v.type || '').toUpperCase() === 'EDV');
     this.filteredLmrs = filteredData.filter((v) => (v.type || '').toUpperCase() === 'LMR');
+    
+    // Check if any filters are active (filtered data is different from original data)
+    this.hasActiveFilters = filteredData.length !== this.vans.length;
   }
 
   viewVan(van: Van): void {

@@ -9,8 +9,10 @@ describe('StatusCountBarComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      declarations: [ StatusCountBarComponent ],
-      imports: [IonicModule.forRoot()]
+      imports: [ 
+        StatusCountBarComponent, // Import standalone component instead of declaring
+        IonicModule.forRoot() 
+      ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(StatusCountBarComponent);

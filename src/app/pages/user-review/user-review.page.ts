@@ -18,6 +18,8 @@ import { AppHeaderComponent } from '@app/components/app-header/app-header.compon
 import { NavService } from '@app/services/nav.service';
 import { GpsTrackerService } from '@app/services/gps-tracker.service';
 import { ShiftSessionService } from '@app/services/shift-session.service';
+import { PageHeaderComponent } from '@app/components/page-header/page-header.component';
+import { BreadcrumbItem } from '@app/components/breadcrumb/breadcrumb.component';
 
 interface IssueCategory {
   name: string;
@@ -44,7 +46,7 @@ interface IssueCategory {
     IonTextarea,
     IonButton,
     IonIcon,
-    AppHeaderComponent
+    PageHeaderComponent
   ]
 })
 export class UserReviewPage implements OnInit {
@@ -54,6 +56,9 @@ export class UserReviewPage implements OnInit {
   photoUrls: Record<string,string> = {};
   noIssues   = false;
   inspectionId = '';
+
+  // Breadcrumb items
+  breadcrumbItems: BreadcrumbItem[] = [];
 
   issueCategories: IssueCategory[] = [
     {
@@ -173,6 +178,13 @@ export class UserReviewPage implements OnInit {
     this.vanNumber = this.route.snapshot.queryParamMap.get('vanNumber') || '';
     this.vanId     = this.route.snapshot.queryParamMap.get('vanId')     || ''; // NEW: Get van document ID
     this.inspectionId = this.route.snapshot.queryParamMap.get('inspectionId') ?? '';
+
+    // Setup breadcrumb items
+    this.breadcrumbItems = [
+      { label: 'Van Selection', url: '/van-selection', icon: 'car' },
+      { label: `${this.vanType} ${this.vanNumber}`, url: `/photo-capture/${this.vanType}/${this.vanNumber}?vanId=${this.vanId}`, icon: 'camera' },
+      { label: 'Review', icon: 'checkmark-circle' }
+    ];
 
     // Read photo URLs passed in navigation state
     const nav = this.router.getCurrentNavigation();
@@ -295,5 +307,11 @@ export class UserReviewPage implements OnInit {
       });
       await errToast.present();
     }
+  }
+
+  async logout() {
+    await this.auth.logout();
+    this.navService.enhancedLogout(); // Clear both app and browser history
+    await this.router.navigateByUrl('/login', { replaceUrl: true });
   }
 }

@@ -1,20 +1,115 @@
 rules_version = '2';
 
-// Firebase Storage Security Rules
+// Firebase Storage Security Rules - Enhanced
 service firebase.storage {
   match /b/{bucket}/o {
-    // Allow authenticated users to upload inspection photos
-    match /inspections/{vanType}/{vanNumber}/{fileName} {
-      // Allow read for authenticated users
-      allow read: if request.auth != null;
-      
-      // Allow write for authenticated users with size and type restrictions
-      allow write: if request.auth != null 
-        && request.resource.size < 8 * 1024 * 1024
-        && request.resource.contentType.matches('image/.*');
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
     }
     
-    // Deny all other paths
+    function isAdmin() {
+      return isAuthenticated() && request.auth.token.admin == true;
+    }
+    
+    function isValidImageType(contentType) {
+      return contentType in ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    }
+    
+    function isValidFileSize(size) {
+      return size < 8 * 1024 * 1024; // 8MB limit
+    }
+    
+    function isValidVanType(vanType) {
+      return vanType in ['EDV', 'CDV', 'LMR'];
+    }
+    
+    function isValidVanNumber(vanNumber) {
+      return vanNumber.matches('^[0-9]+$') && vanNumber.size() <= 10;
+    }
+    
+    function isValidFileName(fileName) {
+      return fileName.matches('^[a-zA-Z0-9_-]+\\.(jpg|jpeg|png|webp)$') && fileName.size() <= 100;
+    }
+    
+    function isValidSide(side) {
+      return side in ['front', 'back', 'left', 'right', 'interior', 'engine', 'other'];
+    }
+
+    // Inspection photos - Enhanced security
+    match /inspections/{vanType}/{vanNumber}/{fileName} {
+      // Allow read for authenticated users
+      allow read: if isAuthenticated();
+      
+      // Allow write for authenticated users with strict validation
+      allow write: if isAuthenticated()
+        && isValidVanType(vanType)
+        && isValidVanNumber(vanNumber)
+        && isValidFileName(fileName)
+        && isValidImageType(request.resource.contentType)
+        && isValidFileSize(request.resource.size)
+        && request.resource.metadata.keys().hasAll(['ownerUid', 'uploadedAt', 'vanType', 'vanNumber', 'side'])
+        && request.resource.metadata.ownerUid == request.auth.uid
+        && request.resource.metadata.vanType == vanType
+        && request.resource.metadata.vanNumber == vanNumber
+        && isValidSide(request.resource.metadata.side)
+        && request.resource.metadata.uploadedAt is string;
+    }
+    
+    // User profile images - Users can manage their own
+    match /users/{uid}/profile/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated()
+        && uid == request.auth.uid
+        && isValidFileName(fileName)
+        && isValidImageType(request.resource.contentType)
+        && isValidFileSize(request.resource.size)
+        && request.resource.metadata.keys().hasAll(['ownerUid', 'uploadedAt'])
+        && request.resource.metadata.ownerUid == request.auth.uid;
+    }
+    
+    // Van documentation - Admin only
+    match /vans/{vanId}/docs/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin()
+        && isValidFileName(fileName)
+        && isValidImageType(request.resource.contentType)
+        && isValidFileSize(request.resource.size)
+        && request.resource.metadata.keys().hasAll(['uploadedBy', 'uploadedAt', 'docType'])
+        && request.resource.metadata.uploadedBy == request.auth.uid
+        && request.resource.metadata.docType in ['registration', 'insurance', 'inspection', 'other'];
+    }
+    
+    // System assets - Admin only
+    match /system/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin()
+        && isValidFileName(fileName)
+        && isValidImageType(request.resource.contentType)
+        && isValidFileSize(request.resource.size);
+    }
+    
+    // Temporary uploads - Short-lived, user-specific
+    match /temp/{uid}/{fileName} {
+      allow read, write: if isAuthenticated()
+        && uid == request.auth.uid
+        && isValidFileName(fileName)
+        && isValidImageType(request.resource.contentType)
+        && isValidFileSize(request.resource.size)
+        && request.resource.metadata.keys().hasAll(['ownerUid', 'uploadedAt', 'expiresAt'])
+        && request.resource.metadata.ownerUid == request.auth.uid
+        && request.resource.metadata.expiresAt is string;
+    }
+    
+    // Audit logs - Admin only
+    match /audit/{fileName} {
+      allow read, write: if isAdmin()
+        && fileName.matches('^[a-zA-Z0-9_-]+\\.(json|txt|log)$')
+        && request.resource.size < 1024 * 1024; // 1MB limit for logs
+    }
+    
+    // Deny all other paths explicitly
     match /{allPaths=**} {
       allow read, write: if false;
     }

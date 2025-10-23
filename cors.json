@@ -1,7 +1,25 @@
 [
   {
-    "origin": ["http://localhost:8100"],
-    "method": ["GET","HEAD","PUT","POST","DELETE","OPTIONS"],
-    "maxAgeSeconds": 3600
+    "origin": [
+      "http://localhost:8100",
+      "http://localhost:4200",
+      "http://127.0.0.1:8100",
+      "http://127.0.0.1:4200",
+      "https://vanguard-fleet-inspection.web.app",
+      "https://vanguard-fleet-inspection.firebaseapp.com",
+      "https://vanguard-fleet.com",
+      "https://www.vanguard-fleet.com"
+    ],
+    "method": ["GET", "HEAD", "PUT", "POST", "DELETE", "OPTIONS"],
+    "maxAgeSeconds": 3600,
+    "responseHeader": [
+      "Content-Type",
+      "Authorization",
+      "X-Requested-With",
+      "Accept",
+      "Origin",
+      "Access-Control-Request-Method",
+      "Access-Control-Request-Headers"
+    ]
   }
 ]

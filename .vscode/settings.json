@@ -1,3 +1,10 @@
 {
-  "typescript.preferences.autoImportFileExcludePatterns": ["@ionic/angular/common", "@ionic/angular"]
+  "typescript.preferences.autoImportFileExcludePatterns": ["@ionic/angular/common", "@ionic/angular"],
+  "git.enableCommitSigning": false,
+  "git.confirmSync": true,
+  "git.confirmEmptyCommits": true,
+  "git.showActionButton.commit": false,
+  "git.showActionButton.publish": false,
+  "git.showActionButton.sync": false,
+  "cursor.ai.commitApprovalRequired": true
 }

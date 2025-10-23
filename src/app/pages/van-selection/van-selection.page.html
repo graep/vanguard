@@ -1,8 +1,13 @@
 <!-- src/app/pages/van-selection/van-selection.page.html -->
-<app-header class="ion-text-center" title="Van Selection" [showBackButton]="false"></app-header>
-
 <ion-content class="van-selection-content">
-  <div class="van-selection-container">
+  <!-- Page Header with Breadcrumb and Logout -->
+  <app-page-header 
+    [breadcrumbItems]="breadcrumbItems" 
+    (logout)="logout()">
+  </app-page-header>
+  
+  <div class="content-container">
+    
     <!-- Hero Section -->
     <div class="hero-section">
       <div class="hero-content">
@@ -21,18 +26,9 @@
     
     <!-- Van selection cards -->
     <div *ngIf="!isLoading" class="van-types-container">
-      <div *ngFor="let vanType of getVanTypes()" class="van-type-card">
-        <div class="van-type-header">
-          <div class="van-type-icon">
-            <img *ngIf="vanType === 'EDV'" src="assets/EDV.jpg" alt="EDV" class="van-type-image">
-            <img *ngIf="vanType === 'CDV'" src="assets/CDV.jpg" alt="CDV" class="van-type-image">
-            <img *ngIf="vanType === 'LMR'" [src]="getLmrImage(getVansByType(vanType)[0])" alt="LMR" class="van-type-image">
-            <ion-icon *ngIf="vanType !== 'EDV' && vanType !== 'CDV' && vanType !== 'LMR'" [name]="getVanTypeIcon(vanType)"></ion-icon>
-          </div>
-          <div class="van-type-info">
-            <h3 class="van-type-title">{{ vanType }}</h3>
-            <p class="van-type-count">{{ getVansByType(vanType).length }} available</p>
-          </div>
+      <div *ngFor="let vanType of getVanTypes()" class="van-section-container">
+        <div class="section-header">
+          <h3 class="section-title">{{ vanType }}</h3>
         </div>
         
         <div class="van-grid">
@@ -40,16 +36,12 @@
                class="van-item-card"
                [class.disabled]="van.isGrounded"
                (click)="selectVan(van)">
-            <div class="van-number">{{ van.number }}</div>
-            <div class="van-status" *ngIf="van.isGrounded">
-              <span class="status-badge grounded">
-                <ion-icon name="warning"></ion-icon>
-                Grounded
-              </span>
-            </div>
-            <div *ngIf="van.estimatedMiles" class="van-mileage">
-              <ion-icon name="speedometer"></ion-icon>
-              {{ van.estimatedMiles | number:'1.0-0' }} miles
+            <div class="van-card-content">
+              <div class="van-number">{{ van.number }}</div>
+              <div *ngIf="van.estimatedMiles" class="van-mileage">
+                <ion-icon name="speedometer"></ion-icon>
+                {{ van.estimatedMiles | number:'1.0-0' }} miles
+              </div>
             </div>
           </div>
         </div>

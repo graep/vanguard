@@ -1,0 +1,79 @@
+{
+  "$schema": "./node_modules/@angular/service-worker/config/schema.json",
+  "index": "/index.html",
+  "assetGroups": [
+    {
+      "name": "app",
+      "installMode": "prefetch",
+      "updateMode": "prefetch",
+      "resources": {
+        "files": [
+          "/favicon.ico",
+          "/index.html",
+          "/manifest.json",
+          "/*.css",
+          "/*.js"
+        ],
+        "urls": [
+          "https://cdn.jsdelivr.net/npm/ionicons/**/*"
+        ]
+      }
+    },
+    {
+      "name": "assets",
+      "installMode": "lazy",
+      "updateMode": "prefetch",
+      "resources": {
+        "files": [
+          "/assets/**",
+          "/*.(eot|svg|cur|jpg|png|webp|gif|otf|ttf|woff|woff2|ani)"
+        ]
+      }
+    }
+  ],
+  "dataGroups": [
+    {
+      "name": "api-freshness",
+      "urls": [
+        "https://firestore.googleapis.com/**",
+        "https://firebasestorage.googleapis.com/**"
+      ],
+      "cacheConfig": {
+        "strategy": "freshness",
+        "maxSize": 100,
+        "maxAge": "1h",
+        "timeout": "5s"
+      }
+    },
+    {
+      "name": "api-performance",
+      "urls": [
+        "https://identitytoolkit.googleapis.com/**"
+      ],
+      "cacheConfig": {
+        "strategy": "performance",
+        "maxSize": 100,
+        "maxAge": "1d"
+      }
+    },
+    {
+      "name": "static-resources",
+      "urls": [
+        "https://cdn.jsdelivr.net/**"
+      ],
+      "cacheConfig": {
+        "strategy": "cacheFirst",
+        "maxSize": 100,
+        "maxAge": "7d"
+      }
+    }
+  ],
+  "navigationUrls": [
+    "/**",
+    "!/**/*.*",
+    "!/**/*__*",
+    "!/**/*__*/**",
+    "!/camera/**",
+    "!/photo-capture/**"
+  ]
+}

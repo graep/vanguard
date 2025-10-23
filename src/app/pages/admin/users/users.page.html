@@ -3,39 +3,43 @@
 <ion-content class="ion-padding">
   <div class="content-container">
   
-  <!-- Stats - Fixed for 5 columns -->
+  <!-- Interactive Stats Cards as Tabs -->
   <div class="stats-container" *ngIf="counts$ | async as c">
-    <ion-card class="stat-card">
+    <ion-card class="stat-card total-users" 
+              [class.active]="activeFilter === 'all'"
+              (click)="setFilter('all')">
       <ion-card-content>
         <div class="stat-value">{{ c.total }}</div>
         <div class="stat-label">Total Users</div>
+        <div class="stat-icon">
+          <ion-icon name="people"></ion-icon>
+        </div>
       </ion-card-content>
     </ion-card>
 
-    <ion-card class="stat-card">
+    <ion-card class="stat-card drivers" 
+              [class.active]="activeFilter === 'drivers'"
+              (click)="setFilter('drivers')">
       <ion-card-content>
         <div class="stat-value">{{ c.drivers }}</div>
         <div class="stat-label">Drivers</div>
+        <div class="stat-icon">
+          <ion-icon name="car"></ion-icon>
+        </div>
       </ion-card-content>
     </ion-card>
 
-    <ion-card class="stat-card">
+    <ion-card class="stat-card admins" 
+              [class.active]="activeFilter === 'admins'"
+              (click)="setFilter('admins')">
       <ion-card-content>
         <div class="stat-value">{{ c.admins }}</div>
         <div class="stat-label">Admins</div>
+        <div class="stat-icon">
+          <ion-icon name="shield-checkmark"></ion-icon>
+        </div>
       </ion-card-content>
     </ion-card>
-
-  </div>
-
-  <!-- Rest of your content stays the same -->
-  <!-- Filter segment -->
-  <div class="header-actions">
-    <ion-segment [(ngModel)]="activeFilter" (ionChange)="onSegmentChange($event)">
-      <ion-segment-button value="all"><ion-label>All Users</ion-label></ion-segment-button>
-      <ion-segment-button value="drivers"><ion-label>Drivers</ion-label></ion-segment-button>
-      <ion-segment-button value="admins"><ion-label>Admins</ion-label></ion-segment-button>
-    </ion-segment>
   </div>
 
   <!-- Users list -->
@@ -58,7 +62,7 @@
 
             <div class="roles">
               <ion-chip *ngFor="let r of (user.roles ?? []); trackBy: trackByRole"
-                        [color]="getRoleColor(r)" outline="true" size="small">
+                        [class]="r" size="small">
                 <ion-icon [name]="getRoleIcon(r)"></ion-icon>
                 <ion-label>{{ r | titlecase }}</ion-label>
               </ion-chip>

@@ -111,6 +111,22 @@ export class NavbarComponent implements OnInit, OnDestroy {
     }
   }
 
+  // Prevent dragging behavior on touch devices
+  onTouchStart(event: TouchEvent) {
+    // Prevent default touch behavior that could cause dragging
+    event.preventDefault();
+  }
+
+  onTouchMove(event: TouchEvent) {
+    // Prevent touch move events that could cause dragging
+    event.preventDefault();
+  }
+
+  onMouseDown(event: MouseEvent) {
+    // Prevent mouse down events that could cause dragging
+    event.preventDefault();
+  }
+
   onDateClick() { 
     /* noop or open date picker */ 
   }

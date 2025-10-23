@@ -9,8 +9,10 @@ describe('DriversTabComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      declarations: [ DriversTabComponent ],
-      imports: [IonicModule.forRoot()]
+      imports: [ 
+        DriversTabComponent, // Import standalone component instead of declaring
+        IonicModule.forRoot() 
+      ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(DriversTabComponent);

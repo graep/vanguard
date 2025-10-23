@@ -10,7 +10,7 @@
   max-width: 1200px;
   margin: 0 auto;
   padding: 12px;
-  padding-bottom: 80px; /* Space for fixed submit button */
+  padding-bottom: 20px;
 }
 
 /* Hero Section */
@@ -100,6 +100,7 @@
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
+  cursor: pointer;
   
   &::before {
     content: '';
@@ -143,14 +144,22 @@
 }
 
 .side-icon {
-  width: 32px;
-  height: 32px;
-  background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #000000 0%, #333333 100%);
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 16px rgba(76, 175, 80, 0.3);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  
+  .overlay-icon {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: brightness(0) invert(1); /* Make overlay white */
+  }
   
   ion-icon {
     font-size: 16px;
@@ -160,6 +169,36 @@
 
 .side-info {
   flex: 1;
+}
+
+.retake-button-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
+}
+
+.retake-button {
+  --color: rgba(255, 255, 255, 0.8);
+  --background: rgba(0, 0, 0, 0.3);
+  --border-radius: 8px;
+  --padding-start: 8px;
+  --padding-end: 8px;
+  --padding-top: 8px;
+  --padding-bottom: 8px;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
+  
+  &:hover {
+    --color: rgba(255, 255, 255, 1);
+    --background: rgba(0, 0, 0, 0.5);
+  }
+  
+  ion-icon {
+    font-size: 16px;
+  }
 }
 
 .side-title {
@@ -172,9 +211,17 @@
 
 .side-status {
   font-size: 0.9rem;
-  color: rgba(76, 175, 80, 0.9);
+  color: rgba(255, 255, 255, 0.7);
   margin: 0;
   font-weight: 500;
+  
+  &.captured {
+    color: rgba(76, 175, 80, 0.9);
+  }
+  
+  &.pending {
+    color: rgba(255, 193, 7, 0.9);
+  }
 }
 
 /* Photo Preview */
@@ -224,28 +271,55 @@
   border-radius: 8px;
   margin-bottom: 8px;
   transition: all 0.3s ease;
+  cursor: pointer;
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: translateY(-2px);
+  }
+  
+  &:active {
+    transform: translateY(0);
+    background: rgba(255, 255, 255, 0.15);
+  }
   
   .camera-icon {
     font-size: 36px;
-    color: rgba(255, 255, 255, 0.5);
+    color: rgba(255, 255, 255, 0.7);
     margin-bottom: 6px;
+    transition: all 0.3s ease;
   }
   
   .placeholder-text {
     font-size: 0.9rem;
-    color: rgba(255, 255, 255, 0.6);
+    color: rgba(255, 255, 255, 0.8);
     margin: 0;
     font-weight: 500;
+    transition: all 0.3s ease;
+  }
+  
+  &:hover .camera-icon {
+    color: rgba(255, 255, 255, 0.9);
+    transform: scale(1.1);
+  }
+  
+  &:hover .placeholder-text {
+    color: rgba(255, 255, 255, 1);
   }
 }
 
-/* Capture Button */
-.capture-button {
-  --background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
-  --background-hover: linear-gradient(135deg, #45a049 0%, #3d8b40 100%);
+/* Retake Section */
+.retake-section {
+  margin-top: 8px;
+}
+
+.retake-button {
+  --background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
+  --background-hover: linear-gradient(135deg, #F57C00 0%, #EF6C00 100%);
   --color: white;
   --border-radius: 12px;
-  --box-shadow: 0 4px 16px rgba(76, 175, 80, 0.3);
+  --box-shadow: 0 4px 16px rgba(255, 152, 0, 0.3);
   --padding-top: 12px;
   --padding-bottom: 12px;
   font-weight: 600;
@@ -256,32 +330,15 @@
   z-index: 1;
   
   &:hover {
-    --box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+    --box-shadow: 0 6px 20px rgba(255, 152, 0, 0.4);
     transform: translateY(-1px);
-  }
-  
-  &.retake-button {
-    --background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
-    --background-hover: linear-gradient(135deg, #F57C00 0%, #EF6C00 100%);
-    --box-shadow: 0 4px 16px rgba(255, 152, 0, 0.3);
-    
-    &:hover {
-      --box-shadow: 0 6px 20px rgba(255, 152, 0, 0.4);
-    }
   }
 }
 
 /* Submit Section */
 .submit-section {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 12px;
-  background: linear-gradient(135deg, #232F3E 0%, #1a252f 100%);
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  z-index: 1000;
+  margin-top: 20px;
+  padding: 0 12px;
 }
 
 .submit-button {
@@ -356,10 +413,14 @@
     font-size: 1.2rem;
   }
   
-  .capture-button {
+  .retake-button {
     --padding-top: 10px;
     --padding-bottom: 10px;
     font-size: 0.9rem;
+  }
+  
+  .submit-section {
+    padding: 0 16px;
   }
   
   .submit-button {
@@ -405,5 +466,9 @@
   
   .placeholder-text {
     font-size: 0.8rem;
+  }
+  
+  .submit-section {
+    padding: 0 12px;
   }
 }

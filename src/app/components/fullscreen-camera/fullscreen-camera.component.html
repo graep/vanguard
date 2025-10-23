@@ -1,29 +1,48 @@
 <div class="camera-content">
   <!-- Camera Preview -->
   <div class="camera-preview" *ngIf="!capturedImage">
-    <video #videoElement autoplay muted playsinline class="video-stream"></video>
-    
-    <!-- Alignment Overlay -->
-    <img [src]="alignmentOverlay" class="alignment-guide" alt="Van Alignment Guide" />
-    
-    <!-- Close Button -->
-    <div class="close-button">
-      <ion-button (click)="cancel()" fill="clear" color="light">
-        <ion-icon name="close" size="large"></ion-icon>
-      </ion-button>
-    </div>
-    
-    <!-- Camera Controls -->
-    <div class="camera-controls">
-      <ion-button 
-        class="capture-button" 
-        (click)="capturePhoto()"
-        [disabled]="isCapturing"
-        fill="solid"
-        shape="round"
-      >
-        <ion-icon name="camera"></ion-icon>
-      </ion-button>
+    <div class="camera-shell">
+      <video #videoElement autoplay muted playsinline webkit-playsinline></video>
+      
+      <!-- Alignment Overlay -->
+      <div class="overlay">
+        <img [src]="alignmentOverlay" class="alignment-guide" alt="Van Alignment Guide" />
+      </div>
+      
+      <!-- Debug Message -->
+      <div class="debug-message" *ngIf="showDebug && debugMessage">
+        {{ debugMessage }}
+      </div>
+      
+      <!-- Close Button -->
+      <div class="close-button">
+        <ion-button (click)="cancel()" fill="clear" color="light">
+          <ion-icon name="close" size="large"></ion-icon>
+        </ion-button>
+      </div>
+      
+      <!-- Camera Controls -->
+      <div class="camera-controls">
+        <!-- Camera Switch Button -->
+        <ion-button 
+          class="switch-camera-button" 
+          (click)="switchCamera()"
+          fill="clear"
+          color="light"
+        >
+          <ion-icon name="camera-reverse"></ion-icon>
+        </ion-button>
+        
+        <ion-button 
+          class="capture-button" 
+          (click)="capturePhoto()"
+          [disabled]="isCapturing"
+          fill="solid"
+          shape="round"
+        >
+          <ion-icon name="camera"></ion-icon>
+        </ion-button>
+      </div>
     </div>
   </div>
 

@@ -24,6 +24,14 @@ ion-content {
   }
 }
 
+/* Override global background for mobile */
+@media (max-width: 426px) {
+  ion-content {
+    --background: transparent !important;
+    --ion-background-color: transparent !important;
+  }
+}
+
 .login-form-container {
   background-color: #232F3E;
   border-radius: 16px;
@@ -243,8 +251,120 @@ ion-segment-button:hover {
   }
 }
 
-/* Small screen adjustments */
-@media (max-width: 480px) {
+/* Mobile full-screen adjustments (426px and below) */
+@media (max-width: 426px) {
+  ion-content {
+    --padding-start: 0 !important;
+    --padding-end: 0 !important;
+    --padding-top: 0 !important;
+    --padding-bottom: 0 !important;
+  }
+  
+  .wrapper {
+    min-height: 100vh !important;
+    padding: 0 !important;
+    justify-content: flex-start !important;
+    padding-top: 20px !important;
+    margin: 0 !important;
+  }
+  
+  .login-form-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    border-radius: 0 !important;
+    background-color: transparent !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  
+  .login-form {
+    padding: 30px 20px !important;
+    gap: 12px !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    background: transparent !important;
+    min-height: calc(100vh - 40px) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    margin: 0 !important;
+    width: 100% !important;
+  }
+  
+  /* Style input fields with proper background and borders */
+  .email,
+  .password {
+    --background: rgba(255, 255, 255, 0.15) !important;
+    --border-color: rgba(255, 255, 255, 0.3) !important;
+    --color: #ffffff !important;
+    background: rgba(255, 255, 255, 0.15) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 8px !important;
+    margin-bottom: 12px !important;
+  }
+  
+  .email:focus-within,
+  .password:focus-within {
+    --background: rgba(255, 255, 255, 0.25) !important;
+    background: rgba(255, 255, 255, 0.25) !important;
+    border-color: rgba(255, 255, 255, 0.6) !important;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.2) !important;
+  }
+  
+  /* Style buttons with blue backgrounds and rounded corners */
+  .login-button {
+    --background: #2196F3 !important;
+    --color: #ffffff !important;
+    --border-color: #2196F3 !important;
+    --border-radius: 25px !important;
+    background: #2196F3 !important;
+    border: 2px solid #2196F3 !important;
+    border-radius: 25px !important;
+    box-shadow: 0 4px 16px rgba(33, 150, 243, 0.4) !important;
+    font-weight: 600 !important;
+    opacity: 1 !important;
+  }
+  
+  .login-button:hover {
+    --background: #1976D2 !important;
+    background: #1976D2 !important;
+    box-shadow: 0 6px 20px rgba(33, 150, 243, 0.5) !important;
+    border-color: #1976D2 !important;
+  }
+  
+  .signup-button {
+    --background: rgba(33, 150, 243, 0.2) !important;
+    --color: #ffffff !important;
+    --border-color: rgba(33, 150, 243, 0.6) !important;
+    --border-radius: 25px !important;
+    background: rgba(33, 150, 243, 0.2) !important;
+    border: 2px solid rgba(33, 150, 243, 0.6) !important;
+    border-radius: 25px !important;
+    opacity: 1 !important;
+  }
+  
+  .signup-button:hover {
+    --background: rgba(33, 150, 243, 0.3) !important;
+    --color: #ffffff !important;
+    background: rgba(33, 150, 243, 0.3) !important;
+    border-color: rgba(33, 150, 243, 0.8) !important;
+  }
+  
+  .logo-container img {
+    max-width: 180px !important;
+  }
+  
+  .login-button,
+  .signup-button {
+    --padding-top: 14px !important;
+    --padding-bottom: 14px !important;
+  }
+}
+
+/* Small screen adjustments (427px to 480px) */
+@media (min-width: 427px) and (max-width: 480px) {
   .login-form {
     padding: 20px;
     gap: 10px;

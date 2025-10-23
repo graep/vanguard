@@ -8,6 +8,8 @@ import { AppHeaderComponent } from '@app/components/app-header/app-header.compon
 import { NavService } from '@app/services/nav.service';
 import { ShiftSessionService } from '@app/services/shift-session.service';
 import { Van } from '@app/models/van.model';
+import { PageHeaderComponent } from '@app/components/page-header/page-header.component';
+import { BreadcrumbItem } from '@app/components/breadcrumb/breadcrumb.component';
 import { Observable } from 'rxjs';
 
 @Component({
@@ -15,12 +17,15 @@ import { Observable } from 'rxjs';
   templateUrl: './van-selection.page.html',
   styleUrls: ['./van-selection.page.scss'],
   standalone: true,
-  imports: [ IonContent, IonSpinner, IonIcon, CommonModule, RouterModule, AppHeaderComponent ]
+  imports: [ IonContent, IonSpinner, IonIcon, CommonModule, RouterModule, PageHeaderComponent ]
 })
 export class VanSelectionPage implements OnInit {
   vans$: Observable<Van[]>;
   vansByType: Record<string, Van[]> = {};
   isLoading = true;
+  breadcrumbItems: BreadcrumbItem[] = [
+    { label: 'Van Selection', icon: 'car' }
+  ];
 
   private firestore = inject(Firestore);
   private shiftSession = inject(ShiftSessionService);
@@ -62,6 +67,12 @@ export class VanSelectionPage implements OnInit {
   }
 
   async selectVan(van: Van) {
+    // Prevent selection of grounded vans
+    if (van.isGrounded) {
+      console.log('Cannot select grounded van:', van.number);
+      return;
+    }
+
     try {
       // Start GPS tracking session for this van (tracks entire shift)
       await this.shiftSession.startShift(van.docId);
@@ -72,7 +83,6 @@ export class VanSelectionPage implements OnInit {
         van.type,
         van.number.toString()
       ], { 
-        replaceUrl: true,
         queryParams: { vanId: van.docId } // NEW: Pass the van document ID
       });
     } catch (error) {
@@ -83,7 +93,6 @@ export class VanSelectionPage implements OnInit {
         van.type,
         van.number.toString()
       ], { 
-        replaceUrl: true,
         queryParams: { vanId: van.docId } // NEW: Pass the van document ID
       });
     }
@@ -131,4 +140,5 @@ export class VanSelectionPage implements OnInit {
     
     return 'assets/LMR.jpg'; // Default fallback for other makes
   }
+
 }

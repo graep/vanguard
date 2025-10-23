@@ -2,45 +2,171 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    function signedIn() { return request.auth != null; }
-    function isAdmin() { return signedIn() && request.auth.token.admin == true; }
-    function isOwner(uid) { return signedIn() && request.auth.uid == uid; }
+    // Helper functions
+    function signedIn() { 
+      return request.auth != null; 
+    }
+    
+    function isAdmin() { 
+      return signedIn() && request.auth.token.admin == true; 
+    }
+    
+    function isOwner(uid) { 
+      return signedIn() && request.auth.uid == uid; 
+    }
+    
+    function isValidEmail(email) {
+      return email is string && email.matches('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$');
+    }
+    
+    function isValidVanType(vanType) {
+      return vanType in ['EDV', 'CDV', 'LMR'];
+    }
+    
+    function isValidStatus(status) {
+      return status in ['pending', 'approved', 'rejected'];
+    }
+    
+    function isValidRole(role) {
+      return role in ['driver', 'admin', 'owner'];
+    }
+    
+    function isValidSeverity(severity) {
+      return severity in ['high', 'medium', 'low'];
+    }
+    
+    function isValidIssueStatus(status) {
+      return status in ['open', 'resolved'];
+    }
 
-    // ✅ Users: user can read/create/update ONLY their own doc; admins can manage all
+    // Users collection - Enhanced security
     match /users/{uid} {
       allow read, create, update: if isOwner(uid) || isAdmin();
       allow delete: if isAdmin();
+      
+      // Validate user data on create/update
+      allow create: if signedIn() 
+        && request.resource.data.keys().hasAll(['uid', 'email', 'displayName', 'roles', 'createdAt', 'isActive'])
+        && request.resource.data.uid == request.auth.uid
+        && isValidEmail(request.resource.data.email)
+        && request.resource.data.displayName is string
+        && request.resource.data.displayName.size() > 0
+        && request.resource.data.displayName.size() <= 100
+        && request.resource.data.roles is list
+        && request.resource.data.roles.size() > 0
+        && request.resource.data.roles.size() <= 3
+        && request.resource.data.roles.hasAll(['driver']) // At minimum, user must be a driver
+        && request.resource.data.createdAt is timestamp
+        && request.resource.data.isActive is bool;
+        
+      allow update: if (isOwner(uid) || isAdmin())
+        && (!('roles' in request.resource.data.diff(resource.data).affectedKeys()) || isAdmin()) // Only admins can change roles
+        && (!('isActive' in request.resource.data.diff(resource.data).affectedKeys()) || isAdmin()) // Only admins can deactivate users
+        && (!('email' in request.resource.data.diff(resource.data).affectedKeys()) || isOwner(uid)) // Only user can change their email
+        && (request.resource.data.email == resource.data.email || isValidEmail(request.resource.data.email))
+        && request.resource.data.displayName is string
+        && request.resource.data.displayName.size() > 0
+        && request.resource.data.displayName.size() <= 100;
     }
 
-    // Vans: readable by any signed-in user; only admins can write
+    // Vans collection - Enhanced security
     match /vans/{vanId} {
       allow read: if signedIn();
       allow create, update, delete: if isAdmin();
+      
+      // Validate van data on create/update
+      allow create: if isAdmin()
+        && request.resource.data.keys().hasAll(['VIN', 'type', 'number', 'isGrounded'])
+        && request.resource.data.VIN is string
+        && request.resource.data.VIN.size() >= 17
+        && request.resource.data.VIN.size() <= 17
+        && isValidVanType(request.resource.data.type)
+        && request.resource.data.number is int
+        && request.resource.data.number > 0
+        && request.resource.data.number <= 9999
+        && request.resource.data.isGrounded is bool;
+        
+      allow update: if isAdmin()
+        && (!('VIN' in request.resource.data.diff(resource.data).affectedKeys()) || 
+             (request.resource.data.VIN is string && request.resource.data.VIN.size() == 17))
+        && (!('type' in request.resource.data.diff(resource.data).affectedKeys()) || 
+             isValidVanType(request.resource.data.type))
+        && (!('number' in request.resource.data.diff(resource.data).affectedKeys()) || 
+             (request.resource.data.number is int && request.resource.data.number > 0 && request.resource.data.number <= 9999));
     }
 
-    // Inspections: drivers create/read their own; admins can manage all
+    // Inspections collection - Enhanced security
     match /inspections/{insId} {
-      // driver creates with createdBy = auth.uid
+      // Driver creates inspection with proper validation
       allow create: if signedIn()
-                 && request.resource.data.createdBy == request.auth.uid;
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.keys().hasAll(['vanType', 'vanNumber', 'photos', 'createdAt', 'status', 'seen', 'createdBy'])
+        && isValidVanType(request.resource.data.vanType)
+        && request.resource.data.vanNumber is string
+        && request.resource.data.vanNumber.size() > 0
+        && request.resource.data.vanNumber.size() <= 10
+        && request.resource.data.photos is map
+        && request.resource.data.createdAt is timestamp
+        && request.resource.data.status == 'pending'
+        && request.resource.data.seen == false
+        && request.resource.data.createdBy is string;
 
-      // driver reads only their own; admins read all
+      // Driver reads only their own; admins read all
       allow read: if isOwner(resource.data.createdBy) || isAdmin();
 
-      // driver can update their pending draft; admins full control
+      // Driver can update their pending draft with strict validation
       allow update: if (
         isOwner(resource.data.createdBy)
         && resource.data.status == 'pending'
         && request.resource.data.createdBy == resource.data.createdBy
         && request.resource.data.status == 'pending'
         && request.resource.data.diff(resource.data).changedKeys()
-             .hasOnly(['photos','issues','status'])
+             .hasOnly(['photos', 'report', 'status', 'seen'])
+        && (!('report' in request.resource.data.diff(resource.data).affectedKeys()) || 
+             validateReport(request.resource.data.report))
       ) || isAdmin();
+
+      // Admin actions with validation
+      allow update: if isAdmin()
+        && (!('status' in request.resource.data.diff(resource.data).affectedKeys()) || 
+             isValidStatus(request.resource.data.status))
+        && (!('report' in request.resource.data.diff(resource.data).affectedKeys()) || 
+             validateReport(request.resource.data.report));
 
       allow delete: if isAdmin();
     }
+    
+    // Helper function to validate inspection reports
+    function validateReport(report) {
+      return report is list
+        && report.size() <= 50 // Limit number of issues
+        && report.size() >= 0
+        && report.hasAll(['name', 'details'])
+        && report[0].name is string
+        && report[0].name.size() > 0
+        && report[0].name.size() <= 100
+        && report[0].details is string
+        && report[0].details.size() > 0
+        && report[0].details.size() <= 1000
+        && (!('severity' in report[0]) || isValidSeverity(report[0].severity))
+        && (!('status' in report[0]) || isValidIssueStatus(report[0].status));
+    }
 
-    // (implicit default deny for everything else)
+    // Audit logs collection - Admin only
+    match /audit_logs/{logId} {
+      allow read, write: if isAdmin();
+    }
+    
+    // System settings collection - Admin only
+    match /system_settings/{settingId} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
+    // Default deny for all other collections
+    match /{document=**} {
+      allow read, write: if false;
+    }
   }
 }
 

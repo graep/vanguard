@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { IonicModule } from '@ionic/angular';
 
 import { ImageViewerComponent } from './image-viewer.component';
 
@@ -8,7 +9,10 @@ describe('ImageViewerComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      imports: [ImageViewerComponent],
+      imports: [
+        ImageViewerComponent,
+        IonicModule.forRoot()
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(ImageViewerComponent);

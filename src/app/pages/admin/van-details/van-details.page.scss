@@ -88,6 +88,7 @@
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
     border-color: rgba(255, 255, 255, 0.2);
   }
+}
 
   ion-card-content {
     padding: 2.5rem;
@@ -230,7 +231,7 @@
         }
       }
     }
-  }
+  
 
   /* ---------- RIGHT COLUMN (image + toggle) ---------- */
   .van-actions-section {
@@ -301,6 +302,7 @@ ion-card {
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
     border-color: rgba(255, 255, 255, 0.2);
   }
+}
 
   ion-card-content {
     padding: 2rem;
@@ -318,7 +320,7 @@ ion-card {
       text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
     }
   }
-}
+
 
 /* ========== Page Padding ========== */
 ion-content {

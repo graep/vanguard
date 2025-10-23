@@ -9,7 +9,10 @@
 <!-- Collapsible Sidebar -->
 <nav class="sidebar" 
      [class.collapsed]="isCollapsed"
-     [class.mobile-open]="isMobileMenuOpen">
+     [class.mobile-open]="isMobileMenuOpen"
+     (touchstart)="onTouchStart($event)"
+     (touchmove)="onTouchMove($event)"
+     (mousedown)="onMouseDown($event)">
   
   <!-- Sidebar Header -->
   <div class="sidebar-header" (click)="toggleSidebar()">
@@ -32,7 +35,10 @@
       [routerLinkActiveOptions]="{ exact: item.route === '/admin' }"
       [class.clickable]="!!item.route || !!item.action"
       [class.disabled]="!item.route && !item.action"
-      (click)="handleItemClick(item, i, $event)">
+      (click)="handleItemClick(item, i, $event)"
+      (touchstart)="onTouchStart($event)"
+      (touchmove)="onTouchMove($event)"
+      (mousedown)="onMouseDown($event)">
       
       <div class="menu-icon">
         <div class="icon-container">
@@ -65,7 +71,11 @@
       </div>
     </div>
     
-    <div class="menu-item logout-item" (click)="$event.stopPropagation(); logout()">
+    <div class="menu-item logout-item" 
+         (click)="$event.stopPropagation(); logout()"
+         (touchstart)="onTouchStart($event)"
+         (touchmove)="onTouchMove($event)"
+         (mousedown)="onMouseDown($event)">
       <div class="menu-icon">
         <ion-icon name="log-out-outline"></ion-icon>
       </div>

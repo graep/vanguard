@@ -1,0 +1,24 @@
+# Cursor AI Assistant Rules for Vanguard Project
+
+## CRITICAL: Git Operations
+- NEVER commit changes to Git/GitHub without explicit user approval
+- NEVER push changes to remote repositories without explicit user instruction
+- ALWAYS ask for confirmation before running any git commit, push, or merge commands
+- When staging files, inform the user but do not proceed to commit
+
+## Code Changes
+- Always ask before making destructive changes (deleting files, major refactoring)
+- Confirm before installing new packages or dependencies
+- Ask before modifying configuration files that could break the application
+
+## Safety Guidelines
+- Never access external APIs or systems without permission
+- Never modify production environment settings
+- Always preserve user data and important files
+- Ask for clarification when requirements are ambiguous
+
+## Communication
+- Explain what changes will be made before implementing them
+- Provide clear summaries of what was modified
+- Ask for feedback on implementation approaches
+- Respect user preferences and coding standards

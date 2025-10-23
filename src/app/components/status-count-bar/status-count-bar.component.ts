@@ -18,6 +18,12 @@ export interface StatusDataSource {
   filterValue?: any;
 }
 
+export interface VanTypeTotals {
+  EDV: number;
+  CDV: number;
+  LMR: number;
+}
+
 @Component({
   selector: 'app-status-count-bar',
   standalone: true,
@@ -51,9 +57,22 @@ export interface StatusDataSource {
 
       <!-- Status Section -->
       <div class="status-section">
-        <div class="total-container">
-          <span class="total-label">Total:</span>
-          <span class="total-number">{{ total }}</span>
+        <div class="totals-container">
+          <div class="total-container">
+            <span class="total-label">Total:</span>
+            <span class="total-number">{{ total }}</span>
+          </div>
+          
+          <!-- Van Type Totals -->
+          <div class="van-type-totals">
+            <div class="van-type-item" 
+                 *ngFor="let typeTotal of orderedVanTypeTotals; trackBy: trackByVanType"
+                 [class.van-type-selected]="selectedVanTypeFilter === typeTotal.key"
+                 (click)="onVanTypeClick(typeTotal.key)">
+              <span class="van-type-label">{{ typeTotal.key }}:</span>
+              <span class="van-type-count">{{ typeTotal.value }}</span>
+            </div>
+          </div>
         </div>
 
         <div class="status-items-container">
@@ -107,7 +126,7 @@ export class StatusCountBarComponent implements OnInit, OnChanges, OnDestroy {
   @Input() dataSource?: StatusDataSource;
   @Input() showProgress: boolean = true;
   @Input() clickable: boolean = false;
-  @Input() searchPlaceholder: string = 'Search by #, VIN or Type';
+  @Input() searchPlaceholder: string = 'Search by #, VIN (or last 4 digits), or Type';
   @Input() activeLabel: string = 'Active';
   @Input() inactiveLabel: string = 'Grounded';
   @Input() activeColor: string = '#22c55e';
@@ -118,6 +137,8 @@ export class StatusCountBarComponent implements OnInit, OnChanges, OnDestroy {
   searchValue: string = '';
   computedStatusData: StatusItem[] = [];
   selectedStatusFilter: string | null = null;
+  selectedVanTypeFilter: string | null = null;
+  vanTypeTotals: VanTypeTotals = { EDV: 0, CDV: 0, LMR: 0 };
   private searchDebounceTimer: any;
 
   ngOnInit(): void {
@@ -144,10 +165,56 @@ export class StatusCountBarComponent implements OnInit, OnChanges, OnDestroy {
     return this.selectedStatusFilter !== null;
   }
 
+  get hasVanTypeFilter(): boolean {
+    return this.selectedVanTypeFilter !== null;
+  }
+
+  get orderedVanTypeTotals(): { key: string; value: number }[] {
+    // Order: EDV first, then CDV, then LMR
+    const order = ['EDV', 'CDV', 'LMR'];
+    return order.map(key => ({ key, value: this.vanTypeTotals[key as keyof VanTypeTotals] }));
+  }
+
   private updateComputedData(): void {
     if (this.dataSource) {
       this.computedStatusData = this.computeStatusFromSource(this.dataSource);
+      this.updateVanTypeTotals();
     }
+  }
+
+  private updateVanTypeTotals(): void {
+    if (!this.dataSource?.items) {
+      this.vanTypeTotals = { EDV: 0, CDV: 0, LMR: 0 };
+      return;
+    }
+
+    let items = this.dataSource.items;
+    
+    // Apply search filter if active
+    if (this.searchValue) {
+      items = this.filterItemsBySearchTerm(items, this.searchValue);
+    }
+
+    // Apply status filter if active
+    if (this.selectedStatusFilter) {
+      items = items.filter(item => {
+        const statusValue = this.getNestedValue(item, this.dataSource!.statusField);
+        const activeValue = this.dataSource!.activeValue !== undefined ? this.dataSource!.activeValue : false;
+        return this.compareValues(statusValue, activeValue);
+      });
+    }
+
+    // Apply van type filter if active
+    if (this.selectedVanTypeFilter) {
+      items = items.filter(item => (item.type || '').toUpperCase() === this.selectedVanTypeFilter);
+    }
+
+    // Count by van type
+    this.vanTypeTotals = {
+      EDV: items.filter(item => (item.type || '').toUpperCase() === 'EDV').length,
+      CDV: items.filter(item => (item.type || '').toUpperCase() === 'CDV').length,
+      LMR: items.filter(item => (item.type || '').toUpperCase() === 'LMR').length
+    };
   }
 
   private computeStatusFromSource(source: StatusDataSource): StatusItem[] {
@@ -229,6 +296,9 @@ export class StatusCountBarComponent implements OnInit, OnChanges, OnDestroy {
     const target = event.target as HTMLInputElement;
     this.searchValue = target.value;
     
+    // Update van type totals immediately for responsive UI
+    this.updateVanTypeTotals();
+    
     // Clear existing timer
     if (this.searchDebounceTimer) {
       clearTimeout(this.searchDebounceTimer);
@@ -238,6 +308,28 @@ export class StatusCountBarComponent implements OnInit, OnChanges, OnDestroy {
     this.searchDebounceTimer = setTimeout(() => {
       this.filterBySearch(this.searchValue);
     }, 1200);
+  }
+
+  private filterItemsBySearchTerm(items: any[], searchTerm: string): any[] {
+    if (!searchTerm.trim()) return items;
+    
+    const term = searchTerm.trim().toLowerCase();
+    return items.filter(item => {
+      return this.dataSource!.searchFields.some(field => {
+        const value = this.getNestedValue(item, field);
+        if (!value) return false;
+        
+        const stringValue = String(value).toLowerCase();
+        
+        // Special handling for VIN field - check last 4 digits
+        if (field === 'VIN' && term.length === 4 && /^\d{4}$/.test(term)) {
+          return stringValue.endsWith(term);
+        }
+        
+        // Regular search for all other cases
+        return stringValue.includes(term);
+      });
+    });
   }
 
   private filterBySearch(searchTerm: string): void {
@@ -257,9 +349,24 @@ export class StatusCountBarComponent implements OnInit, OnChanges, OnDestroy {
       filtered = filtered.filter(item => {
         return this.dataSource!.searchFields.some(field => {
           const value = this.getNestedValue(item, field);
-          return value && String(value).toLowerCase().includes(term);
+          if (!value) return false;
+          
+          const stringValue = String(value).toLowerCase();
+          
+          // Special handling for VIN field - check last 4 digits
+          if (field === 'VIN' && term.length === 4 && /^\d{4}$/.test(term)) {
+            return stringValue.endsWith(term);
+          }
+          
+          // Regular search for all other cases
+          return stringValue.includes(term);
         });
       });
+    }
+
+    // Apply van type filter if active
+    if (this.selectedVanTypeFilter) {
+      filtered = filtered.filter(item => (item.type || '').toUpperCase() === this.selectedVanTypeFilter);
     }
 
     this.filteredData.emit(filtered);
@@ -267,15 +374,40 @@ export class StatusCountBarComponent implements OnInit, OnChanges, OnDestroy {
 
   clearSearch(): void {
     this.searchValue = '';
+    this.updateVanTypeTotals();
     this.filterBySearch('');
   }
 
   clearStatusFilter(): void {
     this.selectedStatusFilter = null;
+    this.updateVanTypeTotals();
     this.filterBySearch(this.searchValue); // Maintain search but clear status filter
+  }
+
+  onVanTypeClick(vanType: string): void {
+    if (this.selectedVanTypeFilter === vanType) {
+      // If clicking the same type, clear the filter
+      this.selectedVanTypeFilter = null;
+    } else {
+      // Set the new van type filter
+      this.selectedVanTypeFilter = vanType;
+    }
+    
+    this.updateVanTypeTotals();
+    this.filterBySearch(this.searchValue);
+  }
+
+  clearVanTypeFilter(): void {
+    this.selectedVanTypeFilter = null;
+    this.updateVanTypeTotals();
+    this.filterBySearch(this.searchValue);
   }
 
   trackByStatusId(index: number, item: StatusItem): string {
     return item.id;
+  }
+
+  trackByVanType(index: number, item: { key: string; value: number }): string {
+    return item.key;
   }
 }

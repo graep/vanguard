@@ -17,6 +17,8 @@ import { getApp } from '@angular/fire/app';
 import { AppHeaderComponent } from '@app/components/app-header/app-header.component';
 import { NavService } from '@app/services/nav.service';
 import { FullscreenCameraComponent } from '@app/components/fullscreen-camera/fullscreen-camera.component';
+import { PageHeaderComponent } from '@app/components/page-header/page-header.component';
+import { BreadcrumbItem } from '@app/components/breadcrumb/breadcrumb.component';
 
 @Component({
   selector: 'app-photo-capture',
@@ -30,14 +32,17 @@ import { FullscreenCameraComponent } from '@app/components/fullscreen-camera/ful
     IonIcon,
     IonContent,
     CommonModule,
-    AppHeaderComponent,
-    FullscreenCameraComponent
+    FullscreenCameraComponent,
+    PageHeaderComponent
   ],
 })
 export class PhotoCapturePage implements OnInit, OnDestroy, ViewWillLeave {
   vanType!: string;
   vanNumber!: string;
   vanId!: string; // NEW: Store the actual van document ID
+
+  // Breadcrumb items
+  breadcrumbItems: BreadcrumbItem[] = [];
 
   // The four sides we need to capture
   sides = ['passenger', 'rear', 'driver', 'front'];
@@ -81,6 +86,21 @@ export class PhotoCapturePage implements OnInit, OnDestroy, ViewWillLeave {
     }
   }
 
+  getSideOverlayImage(side: string): string {
+    switch (side) {
+      case 'front':
+        return 'assets/overlays/frontOverlay.png';
+      case 'rear':
+        return 'assets/overlays/rearOverlay.png';
+      case 'driver':
+        return 'assets/overlays/driverSideOverlay.png';
+      case 'passenger':
+        return 'assets/overlays/passengerSideOverlay.png';
+      default:
+        return 'assets/overlays/frontOverlay.png';
+    }
+  }
+
   getSideDisplayName(side: string): string {
     return side.charAt(0).toUpperCase() + side.slice(1);
   }
@@ -101,6 +121,12 @@ export class PhotoCapturePage implements OnInit, OnDestroy, ViewWillLeave {
     
     // Get vanId from query params (passed from van selection)
     this.vanId = this.route.snapshot.queryParamMap.get('vanId') || '';
+    
+    // Setup breadcrumb items
+    this.breadcrumbItems = [
+      { label: 'Van Selection', url: '/van-selection', icon: 'car' },
+      { label: `${this.vanType} ${this.vanNumber}`, icon: 'camera' }
+    ];
     
     // Check if we're returning to this page and clear photos
     this.checkForReturnNavigation();

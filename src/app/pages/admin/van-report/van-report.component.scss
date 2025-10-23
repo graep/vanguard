@@ -19,21 +19,26 @@
   }
 }
 
-// Content Container - Responsive like dashboard
+// Admin Portal Page Styles - Consistent with dashboard and van-details
 .content-container {
-  width: min(1200px, calc(100vw - 70px)); // Max width with some constraint, minus left margin
-  margin-left: 70px; // Fixed left margin for collapsed sidebar
-  margin-right: auto; // Center the content container in remaining space
+  max-width: 1200px; // Set a maximum width for the content
+  width: 100%; // Take full width of available space
+  margin: 0 auto; // Center the container horizontally in available space
   padding: 1rem;
   
-  // When viewport gets too small, adjust sizing
-  @media (max-width: 1150px) {
-    width: calc(100vw - 70px); // Use all available space minus left margin
+  // For large screens (laptop L and 4K), ensure proper centering
+  @media (min-width: 1440px) {
+    max-width: 1200px; // Keep consistent max width
   }
   
-  // Further shrink for smaller screens
-  @media (max-width: 900px) {
-    width: calc(100vw - 70px); // Still use all available space minus left margin
+  // For medium-large screens, adjust max width slightly
+  @media (max-width: 1439px) and (min-width: 1200px) {
+    max-width: 1000px;
+  }
+  
+  // For smaller desktop screens
+  @media (max-width: 1199px) {
+    max-width: 100%; // Use full available width
   }
   
   // Mobile responsive - full width with proper padding
@@ -41,8 +46,6 @@
     width: 100% !important;
     max-width: 100% !important;
     margin: 0 !important;
-    margin-left: 0 !important;
-    margin-right: 0 !important;
     padding: 1rem;
     box-sizing: border-box;
   }
@@ -52,14 +55,9 @@
   }
 }
 
-// Adjust content container when sidebar is expanded
+// Remove left margin when sidebar is expanded (allows overlay)
 :host ::ng-deep .content-wrapper:not(.sidebar-collapsed) .content-container {
-  margin-left: 280px !important; // Account for expanded sidebar (280px)
-  width: min(1200px, calc(100vw - 280px)) !important; // Max width minus expanded sidebar
-  
-  @media (max-width: 1150px) {
-    width: calc(100vw - 280px) !important; // Use all available space minus expanded sidebar
-  }
+  margin-left: 0 !important; // Remove margin when sidebar is expanded
 }
 
 // Add bottom padding when approval overlay is visible
@@ -71,7 +69,7 @@
   }
 }
 
-// Section Titles
+// Section Titles - Consistent with dashboard and van-details
 .section-title {
   font-size: 1.5rem;
   font-weight: 700;
@@ -402,8 +400,16 @@
   }
 }
 
-// Mobile Responsive Adjustments
+// Responsive Design - Consistent with dashboard and van-details
 @media (max-width: 768px) {
+  .content-container {
+    padding: 0.75rem;
+  }
+  
+  .section-title {
+    font-size: 1.25rem;
+  }
+  
   .photo {
     &:hover {
       transform: none; // Remove hover effects on mobile

@@ -1,18 +1,61 @@
 .camera-content {
   --background: #000;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
   height: 100vh;
   padding: 0;
   margin: 0;
+  z-index: 9999;
+  overflow: hidden;
 }
 
 .camera-preview {
-  position: relative;
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  z-index: 2;
+}
+
+.camera-shell {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+
+  video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;        /* full-bleed */
+    transform-origin: center;
+    transform: rotate(var(--vid-rotate, 0deg)) scaleX(var(--vid-mirror, 1));
+    background: #000;         /* avoids flashes on load */
+  }
+
+  .overlay {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    
+    .alignment-guide {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      opacity: 0.3;
+      pointer-events: none;
+    }
+  }
 }
 
 .close-button {
@@ -34,23 +77,24 @@
   }
 }
 
-.video-stream {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  background: #000;
-}
 
-.alignment-guide {
+.debug-message {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  opacity: 0.3;
-  pointer-events: none;
-  z-index: 1;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(255, 0, 0, 0.9);
+  color: white;
+  padding: 20px;
+  border-radius: 8px;
+  font-size: 18px;
+  font-weight: bold;
+  text-align: center;
+  z-index: 100;
+  max-width: 90%;
+  word-wrap: break-word;
+  border: 2px solid white;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
 }
 
 
@@ -62,6 +106,32 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  gap: 20px;
+  z-index: 100;
+}
+
+.switch-camera-button {
+  --background: rgba(0, 0, 0, 0.5);
+  --color: white;
+  --border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  
+  ion-icon {
+    font-size: 1.5rem;
+  }
+}
+
+.debug-orientation-button {
+  --background: rgba(255, 165, 0, 0.7);
+  --color: white;
+  --border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  
+  ion-icon {
+    font-size: 1.5rem;
+  }
 }
 
 .capture-button {
@@ -71,11 +141,12 @@
   --background: white;
   --color: black;
   --box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
-  display: flex;
+  display: flex !important;
   justify-content: center;
   align-items: center;
   font-size: 32px;
-  z-index: 2;
+  z-index: 100 !important;
+  position: relative;
   
   ion-icon {
     font-size: 32px;
@@ -87,7 +158,9 @@
 }
 
 .captured-preview {
-  position: relative;
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   display: flex;
@@ -95,6 +168,7 @@
   align-items: center;
   justify-content: center;
   background: #000;
+  z-index: 2;
 }
 
 .captured-image {
@@ -136,6 +210,12 @@
 
 // Mobile optimizations
 @media (max-width: 768px) {
+  .camera-content {
+    /* Handle mobile browser UI */
+    height: 100dvh; /* Dynamic viewport height */
+    height: 100vh; /* Fallback */
+  }
+  
   .camera-controls {
     bottom: 30px;
   }
@@ -148,6 +228,11 @@
   
   .image-controls ion-button {
     min-width: 150px;
+  }
+  
+  .close-button {
+    top: env(safe-area-inset-top, 20px);
+    right: env(safe-area-inset-right, 20px);
   }
 }
 
@@ -177,3 +262,4 @@
     right: auto;
   }
 }
+
