@@ -14,7 +14,6 @@ import {
 } from '@ionic/angular/standalone';
 import { InspectionService, ReportedIssue } from 'src/app/services/inspection.service';
 import { AuthService }                     from 'src/app/services/auth.service';
-import { AppHeaderComponent } from '@app/components/app-header/app-header.component';
 import { NavService } from '@app/services/nav.service';
 import { GpsTrackerService } from '@app/services/gps-tracker.service';
 import { ShiftSessionService } from '@app/services/shift-session.service';
@@ -28,6 +27,8 @@ interface IssueCategory {
   subcategories?: string[];
   selectedSubcategory?: string;
   severity?: 'high' | 'medium' | 'low';
+  allowPhotoCapture?: boolean;
+  capturedPhoto?: string;
 }
 
 @Component({
@@ -57,10 +58,32 @@ export class UserReviewPage implements OnInit {
   noIssues   = false;
   inspectionId = '';
 
+  // Unsure category (separate from main categories)
+  unsureIssue = {
+    hasIssue: false,
+    details: '',
+    capturedPhoto: undefined as string | undefined
+  };
+
   // Breadcrumb items
   breadcrumbItems: BreadcrumbItem[] = [];
 
-  issueCategories: IssueCategory[] = [
+  // CDV/LMR Categories (Conventional Delivery Vehicles & Last Mile Robots)
+  cdvLmrCategories: IssueCategory[] = [
+    {
+      name: 'Safety & Security',
+      hasIssue: false,
+      details: '',
+      severity: 'high',
+      subcategories: [
+        'Seat Belts & Airbags',
+        'Alarm / Immobilizer',
+        'Cameras & Sensors',
+        'Emergency Lighting',
+        'Fire Extinguisher'
+      ],
+      selectedSubcategory: ''
+    },
     {
       name: 'Powertrain',
       hasIssue: false,
@@ -103,6 +126,21 @@ export class UserReviewPage implements OnInit {
       selectedSubcategory: ''
     },
     {
+      name: 'Fluids & Maintenance',
+      hasIssue: false,
+      details: '',
+      severity: 'medium',
+      subcategories: [
+        'Engine Oil & Filter',
+        'Coolant / Radiator',
+        'Brake Fluid',
+        'Transmission Fluid',
+        'Fuel System',
+        'Air / Cabin Filters'
+      ],
+      selectedSubcategory: ''
+    },
+    {
       name: 'HVAC & Comfort',
       hasIssue: false,
       details: '',
@@ -129,7 +167,11 @@ export class UserReviewPage implements OnInit {
         'Dashboard & Trim'
       ],
       selectedSubcategory: ''
-    },
+    }
+  ];
+
+  // EDV Categories (Electric Delivery Vehicles)
+  edvCategories: IssueCategory[] = [
     {
       name: 'Safety & Security',
       hasIssue: false,
@@ -140,7 +182,92 @@ export class UserReviewPage implements OnInit {
         'Alarm / Immobilizer',
         'Cameras & Sensors',
         'Emergency Lighting',
-        'Fire Extinguisher'
+        'Fire Extinguisher',
+        'High-Voltage Safety Systems',
+        'Battery Fire Safety / Thermal Runaway Protection'
+      ],
+      selectedSubcategory: ''
+    },
+    {
+      name: 'Electric Powertrain',
+      hasIssue: false,
+      details: '',
+      severity: 'high',
+      subcategories: [
+        'Electric Motor(s)',
+        'Reduction Gear / Drive Unit',
+        'Inverter & Power Electronics',
+        'Onboard Charger',
+        'High-Voltage Cabling & Connectors',
+        'Regenerative Braking System',
+        'Drive Control Modules',
+        'Cooling System for Powertrain Components'
+      ],
+      selectedSubcategory: ''
+    },
+    {
+      name: 'Chassis & Running Gear',
+      hasIssue: false,
+      details: '',
+      severity: 'high',
+      subcategories: [
+        'Suspension',
+        'Brakes (including regen brake blending)',
+        'Steering (electronic power steering)',
+        'Axles',
+        'Wheels & Tires',
+        'Weight Distribution / Handling Issues',
+        'HV Cable Routing & Protection under chassis'
+      ],
+      selectedSubcategory: ''
+    },
+    {
+      name: 'Electrical & Electronics',
+      hasIssue: false,
+      details: '',
+      severity: 'high',
+      subcategories: [
+        '12V Battery / Low Voltage System',
+        'High Voltage Battery System',
+        'Wiring Harness',
+        'Lighting',
+        'Sensors & Gauges',
+        'Control Modules (ECUs / BMS / VCU / MCU)',
+        'Battery Management System (BMS)',
+        'Thermal Management System',
+        'DC-DC Converter',
+        'HV Junction Box / Contactors',
+        'Charging Port & Lock Mechanism'
+      ],
+      selectedSubcategory: ''
+    },
+    {
+      name: 'Charging & Energy Management',
+      hasIssue: false,
+      details: '',
+      severity: 'high',
+      subcategories: [
+        'Charging Port & Connector Integrity',
+        'Charge Port Door & Locking Mechanism',
+        'Onboard Charger Malfunctions',
+        'EVSE Compatibility',
+        'Charging Speed / Communication Errors',
+        'AC vs DC Fast Charging Issues',
+        'Vehicle-to-Grid / Vehicle-to-Load Systems',
+        'Software Updates affecting charging logic'
+      ],
+      selectedSubcategory: ''
+    },
+    {
+      name: 'Structural & Safety Integration',
+      hasIssue: false,
+      details: '',
+      severity: 'high',
+      subcategories: [
+        'Battery Enclosure & Mounting Integrity',
+        'Crash Protection for HV Components',
+        'Underbody Shielding',
+        'HV Isolation Faults'
       ],
       selectedSubcategory: ''
     },
@@ -150,16 +277,68 @@ export class UserReviewPage implements OnInit {
       details: '',
       severity: 'medium',
       subcategories: [
-        'Engine Oil & Filter',
-        'Coolant / Radiator',
         'Brake Fluid',
-        'Transmission Fluid',
-        'Fuel System',
-        'Air / Cabin Filters'
+        'Coolant / Radiator',
+        'Windshield Washer Fluid',
+        'Thermal Cooling System Maintenance',
+        'Gear Reduction Oil'
+      ],
+      selectedSubcategory: ''
+    },
+    {
+      name: 'HVAC & Comfort',
+      hasIssue: false,
+      details: '',
+      severity: 'medium',
+      subcategories: [
+        'Air Conditioning',
+        'Heating',
+        'Ventilation',
+        'Thermostat / Controls',
+        'Insulation & Seals',
+        'Heat Pump System',
+        'Battery Preconditioning HVAC Integration'
+      ],
+      selectedSubcategory: ''
+    },
+    {
+      name: 'Software & Connectivity',
+      hasIssue: false,
+      details: '',
+      severity: 'medium',
+      subcategories: [
+        'Infotainment & OTA Update Failures',
+        'Drive Mode / Range Estimation Errors',
+        'BMS or ECU Firmware Bugs',
+        'Connectivity with Mobile Apps',
+        'Driver Assistance Systems (ADAS)',
+        'Energy Usage Monitoring / Trip Logs'
+      ],
+      selectedSubcategory: ''
+    },
+    {
+      name: 'Body & Interior',
+      hasIssue: false,
+      details: '',
+      severity: 'low',
+      subcategories: [
+        'Doors & Hinges',
+        'Windows & Glass',
+        'Exterior Panels',
+        'Seats & Upholstery',
+        'Dashboard & Trim',
+        'Frunk Components',
+        'Access Panels for HV Disconnects',
+        'Acoustic Insulation'
       ],
       selectedSubcategory: ''
     }
   ];
+
+  // Dynamic categories based on van type
+  get issueCategories(): IssueCategory[] {
+    return this.vanType === 'EDV' ? this.edvCategories : this.cdvLmrCategories;
+  }
 
   constructor(
     private insp: InspectionService,
@@ -193,7 +372,7 @@ export class UserReviewPage implements OnInit {
 
   /** true if at least one category is checked */
   get hasSelectedIssues(): boolean {
-    return this.issueCategories.some(c => c.hasIssue);
+    return this.issueCategories.some(c => c.hasIssue) || this.unsureIssue.hasIssue;
   }
 
   /** allow submit when noIssues OR at least one issue */
@@ -204,6 +383,7 @@ export class UserReviewPage implements OnInit {
   getCategoryIcon(categoryName: string): string {
     switch (categoryName) {
       case 'Powertrain':
+      case 'Electric Powertrain':
         return 'settings';
       case 'Chassis & Running Gear':
         return 'car';
@@ -217,6 +397,14 @@ export class UserReviewPage implements OnInit {
         return 'shield-checkmark';
       case 'Fluids & Maintenance':
         return 'water';
+      case 'Charging & Energy Management':
+        return 'battery-charging';
+      case 'Software & Connectivity':
+        return 'laptop';
+      case 'Structural & Safety Integration':
+        return 'construct';
+      case 'Unsure':
+        return 'help-circle';
       default:
         return 'warning';
     }
@@ -229,6 +417,7 @@ export class UserReviewPage implements OnInit {
     if (!category.hasIssue) {
       category.details = '';
       category.selectedSubcategory = '';
+      category.capturedPhoto = undefined;
     }
   }
 
@@ -241,25 +430,104 @@ export class UserReviewPage implements OnInit {
         cat.hasIssue = false;
         cat.details = '';
         cat.selectedSubcategory = '';
+        cat.capturedPhoto = undefined;
       });
+      this.unsureIssue.hasIssue = false;
+      this.unsureIssue.details = '';
+      this.unsureIssue.capturedPhoto = undefined;
     }
   }
 
-  /** User taps “Submit Review” */
+  toggleUnsureIssue(): void {
+    this.unsureIssue.hasIssue = !this.unsureIssue.hasIssue;
+    
+    // Clear details and photo when unchecking
+    if (!this.unsureIssue.hasIssue) {
+      this.unsureIssue.details = '';
+      this.unsureIssue.capturedPhoto = undefined;
+    }
+  }
+
+  async capturePhoto(category?: IssueCategory): Promise<void> {
+    try {
+      // Use the camera service for proper camera functionality
+      const { Camera, CameraResultType, CameraSource } = await import('@capacitor/camera');
+      
+      const image = await Camera.getPhoto({
+        quality: 90,
+        allowEditing: false,
+        resultType: CameraResultType.DataUrl,
+        source: CameraSource.Camera
+      });
+
+      if (image.dataUrl) {
+        if (category) {
+          category.capturedPhoto = image.dataUrl;
+        } else {
+          this.unsureIssue.capturedPhoto = image.dataUrl;
+        }
+      }
+    } catch (error) {
+      console.error('Error capturing photo:', error);
+      const toast = await this.toastCtrl.create({
+        message: 'Could not capture photo. Please try again.',
+        color: 'danger',
+        duration: 2000,
+        position: 'top'
+      });
+      await toast.present();
+    }
+  }
+
+  removePhoto(category?: IssueCategory): void {
+    if (category) {
+      category.capturedPhoto = undefined;
+    } else {
+      this.unsureIssue.capturedPhoto = undefined;
+    }
+  }
+
+  /** User taps "Submit Review" */
   async submitReview() {
     console.log('🔔 submitReview start — ID:', this.inspectionId);
+
+    // Upload "Unsure" photo if it exists
+    let unsurePhotoUrl: string | undefined;
+    if (this.unsureIssue.hasIssue && this.unsureIssue.capturedPhoto) {
+      try {
+        unsurePhotoUrl = await this.insp.uploadPhoto(
+          this.vanType,
+          this.vanNumber,
+          'unsure',
+          this.unsureIssue.capturedPhoto
+        );
+        console.log('✅ Unsure photo uploaded:', unsurePhotoUrl);
+      } catch (error) {
+        console.error('❌ Failed to upload unsure photo:', error);
+        // Continue without photo rather than failing the entire submission
+      }
+    }
 
     // build the report payload
     const reported: ReportedIssue[] = this.noIssues
       ? []
-      : this.issueCategories
-          .filter(c => c.hasIssue)
-          .map(c => ({
-            name:        c.name,
-            subcategory: c.selectedSubcategory,
-            details:     c.details,
-            severity:    c.severity || 'medium'
-          }));
+      : [
+          ...this.issueCategories
+            .filter(c => c.hasIssue)
+            .map(c => ({
+              name:        c.name,
+              subcategory: c.selectedSubcategory,
+              details:     c.details,
+              severity:    c.severity || 'medium'
+            })),
+          ...(this.unsureIssue.hasIssue ? [{
+            name:        'Unsure',
+            subcategory: '',
+            details:     this.unsureIssue.details,
+            severity:    'medium' as const,
+            photoUrl:    unsurePhotoUrl
+          }] : [])
+        ];
 
     try {
       // Step 1: Get mileage and update van

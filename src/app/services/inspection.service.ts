@@ -32,6 +32,7 @@ export interface ReportedIssue {
   status?: 'open' | 'resolved';
   resolvedDate?: Date;
   resolvedBy?: string;
+  photoUrl?: string; // NEW: Optional photo URL for issues
 }
 
 export interface Inspection {

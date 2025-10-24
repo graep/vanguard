@@ -39,6 +39,17 @@
                       </div>
                     </div>
                     <div class="report-details">{{ r.details }}</div>
+                    <!-- Unsure Photo Link -->
+                    <div class="unsure-photo-link" *ngIf="r.name === 'Unsure' && r.photoUrl">
+                      <ion-button 
+                        fill="clear" 
+                        size="small" 
+                        color="primary"
+                        (click)="viewUnsurePhoto(r.photoUrl, r.details)">
+                        <ion-icon name="camera" slot="start"></ion-icon>
+                        View Photo
+                      </ion-button>
+                    </div>
                   </ion-label>
                 </ion-item>
               </ion-list>
@@ -76,6 +87,17 @@
                       </div>
                     </div>
                     <div class="report-details">{{ r.details }}</div>
+                    <!-- Unsure Photo Link -->
+                    <div class="unsure-photo-link" *ngIf="r.name === 'Unsure' && r.photoUrl">
+                      <ion-button 
+                        fill="clear" 
+                        size="small" 
+                        color="primary"
+                        (click)="viewUnsurePhoto(r.photoUrl, r.details)">
+                        <ion-icon name="camera" slot="start"></ion-icon>
+                        View Photo
+                      </ion-button>
+                    </div>
                   </ion-label>
                 </ion-item>
               </ion-list>
@@ -157,6 +179,28 @@
   <div class="image-backdrop" 
        *ngIf="expandedImage" 
        (click)="toggleImageExpansion('')">
+  </div>
+
+  <!-- Unsure Photo Modal -->
+  <div class="unsure-photo-modal" *ngIf="unsurePhotoModal">
+    <div class="modal-backdrop" (click)="closeUnsurePhotoModal()"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Unsure Issue Photo</h3>
+        <ion-button fill="clear" size="small" (click)="closeUnsurePhotoModal()">
+          <ion-icon name="close"></ion-icon>
+        </ion-button>
+      </div>
+      <div class="modal-body">
+        <div class="photo-container">
+          <img [src]="unsurePhotoModal?.photoUrl" alt="Unsure issue photo" class="unsure-photo">
+        </div>
+        <div class="photo-description">
+          <h4>Description:</h4>
+          <p>{{ unsurePhotoModal?.description }}</p>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- Approval Overlay - Fixed Bottom (only in review mode) -->

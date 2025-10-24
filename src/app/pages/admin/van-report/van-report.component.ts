@@ -39,6 +39,7 @@ export class VanReportComponent implements OnInit {
   errorMsg = '';
   reviewMode = false;
   expandedImage: string | null = null;
+  unsurePhotoModal: { photoUrl: string; description: string } | null = null;
 
   async ngOnInit() {
     this.loading = true;
@@ -114,6 +115,15 @@ export class VanReportComponent implements OnInit {
     } else {
       this.expandedImage = url;
     }
+  }
+
+  // ----- Unsure Photo Modal -----
+  viewUnsurePhoto(photoUrl: string, description: string) {
+    this.unsurePhotoModal = { photoUrl, description };
+  }
+
+  closeUnsurePhotoModal() {
+    this.unsurePhotoModal = null;
   }
 
   // ----- Approve / Deny -----
