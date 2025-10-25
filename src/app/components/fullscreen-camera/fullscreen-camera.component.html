@@ -14,6 +14,16 @@
         {{ debugMessage }}
       </div>
       
+      <!-- Rotation Prompt -->
+      <div class="rotation-prompt" *ngIf="showRotationPrompt">
+        <div class="rotation-content">
+          <ion-icon name="phone-portrait-outline" class="rotation-icon"></ion-icon>
+          <h2>Rotate Your Device</h2>
+          <p>Please rotate your phone to landscape mode to take photos</p>
+          <div class="rotation-arrow">↻</div>
+        </div>
+      </div>
+      
       <!-- Close Button -->
       <div class="close-button">
         <ion-button (click)="cancel()" fill="clear" color="light">
@@ -23,20 +33,10 @@
       
       <!-- Camera Controls -->
       <div class="camera-controls">
-        <!-- Camera Switch Button -->
-        <ion-button 
-          class="switch-camera-button" 
-          (click)="switchCamera()"
-          fill="clear"
-          color="light"
-        >
-          <ion-icon name="camera-reverse"></ion-icon>
-        </ion-button>
-        
         <ion-button 
           class="capture-button" 
           (click)="capturePhoto()"
-          [disabled]="isCapturing"
+          [disabled]="isCapturing || !isLandscape"
           fill="solid"
           shape="round"
         >

@@ -7,7 +7,7 @@ import {
   Platform
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { camera, close, refresh, cameraReverse } from 'ionicons/icons';
+import { camera, close, refresh } from 'ionicons/icons';
 
 @Component({
   selector: 'app-fullscreen-camera',
@@ -29,7 +29,6 @@ export class FullscreenCameraComponent implements OnInit, OnDestroy, OnChanges, 
   @ViewChild('canvasElement', { static: false }) canvasElement!: ElementRef<HTMLCanvasElement>;
 
   private stream?: MediaStream;
-  private usingFront = false; // toggle if I choose front cam elsewhere
   isCapturing = false;
   capturedImage: string | null = null;
   private streamCheckInterval: any = null;
@@ -43,9 +42,13 @@ export class FullscreenCameraComponent implements OnInit, OnDestroy, OnChanges, 
   // Debug properties
   debugMessage = '';
   showDebug = true;
+  
+  // Landscape mode properties
+  isLandscape = false;
+  showRotationPrompt = false;
 
   constructor(private platform: Platform) {
-    addIcons({ camera, close, refresh, cameraReverse });
+    addIcons({ camera, close, refresh });
   }
 
   private setDebugMessage(message: string) {
@@ -67,9 +70,14 @@ export class FullscreenCameraComponent implements OnInit, OnDestroy, OnChanges, 
     this.alignmentOverlay = overlays[this.sideName] || overlays['driver'];
     console.log('alignmentOverlay set to:', this.alignmentOverlay);
     
+    // Initialize landscape mode tracking
+    this.isLandscape = window.innerWidth > window.innerHeight;
+    this.showRotationPrompt = !this.isLandscape;
+    
     // Test if we can access the DOM
     console.log('Document ready state:', document.readyState);
     console.log('Window inner dimensions:', window.innerWidth, 'x', window.innerHeight);
+    console.log('Initial landscape mode:', this.isLandscape);
   }
 
   async ngAfterViewInit() {
@@ -123,7 +131,7 @@ export class FullscreenCameraComponent implements OnInit, OnDestroy, OnChanges, 
     // Do not call this on every rotation
     const constraints: MediaStreamConstraints = {
       video: {
-        facingMode: this.usingFront ? 'user' : { ideal: 'environment' },
+        facingMode: { ideal: 'environment' },
         width: { ideal: 1920 },
         height: { ideal: 1080 }
       },
@@ -186,8 +194,8 @@ export class FullscreenCameraComponent implements OnInit, OnDestroy, OnChanges, 
         console.log('Video element playing');
         console.log('Video dimensions:', this.videoElement.nativeElement.videoWidth, 'x', this.videoElement.nativeElement.videoHeight);
         
-        // Mirror for front cam
-        this.setCssVar('--vid-mirror', this.usingFront ? '-1' : '1');
+        // Set mirror for rear camera (no mirroring needed)
+        this.setCssVar('--vid-mirror', '1');
 
         this.videoElement.nativeElement.onloadedmetadata = () => {
           console.log('Video metadata loaded, applying initial orientation fix');
@@ -374,6 +382,12 @@ export class FullscreenCameraComponent implements OnInit, OnDestroy, OnChanges, 
       return;
     }
 
+    // Prevent photo capture in portrait mode
+    if (!this.isLandscape) {
+      console.log('Photo capture blocked: Device must be in landscape mode');
+      return;
+    }
+
     this.isCapturing = true;
 
     const video = this.videoElement.nativeElement;
@@ -422,17 +436,6 @@ export class FullscreenCameraComponent implements OnInit, OnDestroy, OnChanges, 
     this.startCamera();
   }
 
-  async switchCamera() {
-    this.usingFront = !this.usingFront;
-    console.log('Switching camera to:', this.usingFront ? 'front' : 'back');
-    
-    // Stop current stream
-    this.stopCamera();
-    
-    // Start camera with new facing mode
-    await this.startCamera();
-    this.applyOrientationFix();
-  }
 
   debugOrientation() {
     console.log('Manual orientation debug triggered');
@@ -492,6 +495,10 @@ export class FullscreenCameraComponent implements OnInit, OnDestroy, OnChanges, 
     setTimeout(() => {
       const orientation = window.innerWidth > window.innerHeight ? 'landscape' : 'portrait';
       console.log('Orientation changed to:', orientation);
+      
+      // Update landscape mode tracking
+      this.isLandscape = orientation === 'landscape';
+      this.showRotationPrompt = !this.isLandscape;
       
       if (this.currentOrientation !== orientation) {
         this.currentOrientation = orientation;
