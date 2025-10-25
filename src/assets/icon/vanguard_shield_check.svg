@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <!-- Background -->
+  <rect width="1024" height="1024" fill="#000000"/>
+  
+  <!-- Shield (white outline + navy fill) -->
+  <path
+    id="shield"
+    d="M512 170
+       L748 250
+       C754 436 725 566 644 679
+       C596 745 560 775 512 812
+       C464 775 428 745 380 679
+       C299 566 270 436 276 250
+       L512 170 Z"
+    fill="#232F3E"
+    stroke="#FFFFFF"
+    stroke-width="28"
+    stroke-linejoin="round"/>
+    
+  <!-- Checkmark -->
+  <path
+    id="check"
+    d="M390 525
+       L470 605
+       L640 420"
+    fill="none"
+    stroke="#D63A3A"
+    stroke-width="70"
+    stroke-linecap="round"
+    stroke-linejoin="round"/>
+</svg>

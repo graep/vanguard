@@ -29,7 +29,7 @@
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
-  touch-action: none;
+  touch-action: manipulation; // Allow clicks but prevent zoom/pan
   -webkit-touch-callout: none;
   -webkit-user-drag: none;
   -khtml-user-drag: none;
@@ -177,12 +177,12 @@
     border-left: 3px solid transparent;
     background: transparent; /* let the pill provide the bg */
     
-    // Prevent dragging of menu items
+    // Prevent dragging of menu items but allow clicks
     user-select: none;
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
-    touch-action: none;
+    touch-action: manipulation; // Allow clicks but prevent zoom/pan
     -webkit-touch-callout: none;
     -webkit-user-drag: none;
     -khtml-user-drag: none;
