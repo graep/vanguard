@@ -1,10 +1,7 @@
-<ion-header>
-  <ion-toolbar>
-    <ion-title class="ion-text-center">{{ van ? van.type + ' ' + van.number : 'Loading...' }}</ion-title>
-  </ion-toolbar>
-</ion-header>
-
 <ion-content>
+  <!-- Breadcrumb Navigation -->
+  <app-breadcrumb [items]="breadcrumbItems" *ngIf="breadcrumbItems.length > 0"></app-breadcrumb>
+  
   <div class="content-container">
   <div *ngIf="loading" class="loading-container">
     <ion-spinner name="crescent"></ion-spinner>
@@ -62,14 +59,6 @@
                 </div>
               </div>
 
-              <div class="detail-item">
-                <ion-icon name="build" class="info-icon"></ion-icon>
-                <div class="info-content">
-                  <h3>Type</h3>
-                  <p>{{ van.type }} - {{ getVanTypeLabel() }}</p>
-                </div>
-              </div>
-
               <div class="detail-item" *ngIf="van.licensePlate">
                 <ion-icon name="card" class="info-icon"></ion-icon>
                 <div class="info-content">
@@ -78,29 +67,37 @@
                 </div>
               </div>
 
-              <!-- Registration Information -->
-              <div class="detail-item" *ngIf="van.registrationInfo?.imageUrl">
+              <!-- Registration Status -->
+              <div class="detail-item">
                 <ion-icon name="document-text" class="info-icon"></ion-icon>
                 <div class="info-content">
-                  <h3>Registration</h3>
-                  <img 
-                    [src]="van.registrationInfo!.imageUrl!" 
-                    alt="Registration document"
-                    class="document-image"
-                    (click)="viewDocument(van.registrationInfo!.imageUrl!, 'Registration Document')">
+                  <h3 (click)="handleRegistrationClick()" 
+                      [class.clickable]="van.registrationInfo?.imageUrl"
+                      class="cursor-pointer">
+                    Registration
+                  </h3>
+                  <p (click)="handleRegistrationClick()" 
+                     [class.clickable]="!van.registrationInfo?.imageUrl"
+                     class="cursor-pointer">
+                    {{ van.registrationInfo?.imageUrl ? 'On file' : 'Add registration' }}
+                  </p>
                 </div>
               </div>
 
-              <!-- Insurance Information -->
-              <div class="detail-item" *ngIf="van.insuranceInfo?.imageUrl">
+              <!-- Insurance Status -->
+              <div class="detail-item">
                 <ion-icon name="shield-checkmark" class="info-icon"></ion-icon>
                 <div class="info-content">
-                  <h3>Insurance</h3>
-                  <img 
-                    [src]="van.insuranceInfo!.imageUrl!" 
-                    alt="Insurance document"
-                    class="document-image"
-                    (click)="viewDocument(van.insuranceInfo!.imageUrl!, 'Insurance Document')">
+                  <h3 (click)="handleInsuranceClick()"
+                      [class.clickable]="van.insuranceInfo?.imageUrl"
+                      class="cursor-pointer">
+                    Insurance
+                  </h3>
+                  <p (click)="handleInsuranceClick()"
+                     [class.clickable]="!van.insuranceInfo?.imageUrl"
+                     class="cursor-pointer">
+                    {{ van.insuranceInfo?.imageUrl ? 'On file' : 'Add insurance' }}
+                  </p>
                 </div>
               </div>
             </div>
@@ -161,55 +158,57 @@
 
     <!-- NEW: Tabbed History Section -->
     <ion-card class="history-card">
-      <ion-card-header>
-        <ion-card-title>Van History</ion-card-title>
-      </ion-card-header>
-      
-      <!-- Tab Navigation -->
-      <div class="tab-navigation">
-        <ion-button 
-          *ngFor="let tab of tabs" 
-          (click)="selectTab(tab.id)"
-          [class.tab-button-selected]="activeTab === tab.id"
-          class="tab-button">
-          <ion-icon [name]="tab.icon" slot="start"></ion-icon>
-          {{ tab.label }}
-        </ion-button>
-      </div>
-
-      <!-- Tab Content -->
-      <ion-card-content class="tab-content">
+      <div class="history-container">
+        <ion-card-header>
+          <ion-card-title>Van History</ion-card-title>
+        </ion-card-header>
         
-        <!-- Notes Tab -->
-        <div *ngIf="activeTab === 'notes'" class="tab-panel">
-          <app-notes-tab
-            [vanId]="van.docId" 
-            [currentNotes]="van.notes">
-          </app-notes-tab>
+        <!-- Tab Navigation -->
+        <div class="tab-navigation">
+          <ion-button 
+            *ngFor="let tab of tabs" 
+            (click)="selectTab(tab.id)"
+            [class.tab-button-selected]="activeTab === tab.id"
+            class="tab-button">
+            <ion-icon [name]="tab.icon" slot="start"></ion-icon>
+            <span class="tab-label">{{ tab.label }}</span>
+          </ion-button>
         </div>
 
-        <!-- Issues Tab -->
-        <div *ngIf="activeTab === 'issues'" class="tab-panel">
-          <app-issues-tab
-            [vanId]="van.docId">
-          </app-issues-tab>
-        </div>
+        <!-- Tab Content -->
+        <ion-card-content class="tab-content">
+          
+          <!-- Notes Tab -->
+          <div *ngIf="activeTab === 'notes'" class="tab-panel">
+            <app-notes-tab
+              [vanId]="van.docId" 
+              [currentNotes]="van.notes">
+            </app-notes-tab>
+          </div>
 
-        <!-- Maintenance Tab -->
-        <div *ngIf="activeTab === 'maintenance'" class="tab-panel">
-          <app-maintenance-tab
-            [vanId]="van.docId">
-          </app-maintenance-tab>
-        </div>
+          <!-- Issues Tab -->
+          <div *ngIf="activeTab === 'issues'" class="tab-panel">
+            <app-issues-tab
+              [vanId]="van.docId">
+            </app-issues-tab>
+          </div>
 
-        <!-- Drivers Tab -->
-        <div *ngIf="activeTab === 'drivers'" class="tab-panel">
-          <app-drivers-tab
-            [vanId]="van.docId">
-          </app-drivers-tab>
-        </div>
+          <!-- Maintenance Tab -->
+          <div *ngIf="activeTab === 'maintenance'" class="tab-panel">
+            <app-maintenance-tab
+              [vanId]="van.docId">
+            </app-maintenance-tab>
+          </div>
 
-      </ion-card-content>
+          <!-- Drivers Tab -->
+          <div *ngIf="activeTab === 'drivers'" class="tab-panel">
+            <app-drivers-tab
+              [vanId]="van.docId">
+            </app-drivers-tab>
+          </div>
+
+        </ion-card-content>
+      </div>
     </ion-card>
 
   </div>

@@ -100,11 +100,20 @@ import { NotesHistoryService, NoteEntry } from '../../../../services/notes-histo
     .notes-tab-content {
       .section-header {
         margin-bottom: 20px;
+        padding: 0 16px;
+        
+        @media (max-width: 768px) {
+          padding: 0 8px;
+        }
+        
+        @media (max-width: 480px) {
+          padding: 0 4px;
+        }
         
         .header-content {
           display: flex;
           justify-content: space-between;
-          align-items: flex-start;
+          align-items: center;
           gap: 16px;
         }
         
@@ -117,12 +126,20 @@ import { NotesHistoryService, NoteEntry } from '../../../../services/notes-histo
           font-weight: 600;
           color: var(--ion-color-dark);
           margin: 0 0 8px 0;
+          
+          @media (max-width: 480px) {
+            font-size: 1rem;
+          }
         }
         
         .section-subtitle {
           font-size: 0.9rem;
           color: var(--ion-color-medium);
           margin: 0;
+          
+          @media (max-width: 480px) {
+            font-size: 0.8rem;
+          }
         }
         
         .add-note-button {
@@ -132,12 +149,28 @@ import { NotesHistoryService, NoteEntry } from '../../../../services/notes-histo
         }
       }
 
+      .notes-list {
+        // Padding removed - using tab-content padding
+      }
+
       .note-editor {
         margin-bottom: 24px;
         padding: 16px;
+        margin-left: 16px;
+        margin-right: 16px;
         background: var(--ion-color-light);
         border-radius: 12px;
         border: 1px solid var(--ion-color-light-shade);
+        
+        @media (max-width: 768px) {
+          margin-left: 8px;
+          margin-right: 8px;
+        }
+        
+        @media (max-width: 480px) {
+          margin-left: 4px;
+          margin-right: 4px;
+        }
 
         .editor-header {
           margin-bottom: 12px;
@@ -182,6 +215,33 @@ import { NotesHistoryService, NoteEntry } from '../../../../services/notes-histo
 
       .note-card {
         margin-bottom: 12px;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        
+        ion-card-content {
+          padding: 16px;
+          
+          @media (max-width: 480px) {
+            padding: 12px;
+          }
+        }
+      }
+      
+      .note-card.md.hydrated {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        
+        ion-card-content {
+          padding: 16px !important;
+          
+          @media (max-width: 480px) {
+            padding: 12px !important;
+          }
+        }
       }
 
       .note-header {

@@ -4,19 +4,21 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { IonicModule, AlertController, ToastController } from '@ionic/angular';
-import { Firestore, doc, getDoc } from '@angular/fire/firestore';
+import { Firestore, doc, getDoc, setDoc } from '@angular/fire/firestore';
+import { Storage, ref, uploadBytes, getDownloadURL } from '@angular/fire/storage';
 import { Van } from '../../../models/van.model';
 import { InspectionService } from '../../../services/inspection.service';
 import { IssuesTabComponent } from "./issues-tab/issues-tab.component";
 import { MaintenanceTabComponent } from "./maintenance-tab/maintenance-tab.component";
 import { NotesTabComponent } from "./notes-tab/notes-tab.component";
 import { DriversTabComponent } from "./drivers-tab/drivers-tab.component";
+import { BreadcrumbItem, BreadcrumbComponent } from '../../../components/breadcrumb/breadcrumb.component';
 
 
 @Component({
   selector: 'app-van-details',
   standalone: true,
-  imports: [CommonModule, FormsModule, IonicModule, RouterModule, IssuesTabComponent, MaintenanceTabComponent, NotesTabComponent, DriversTabComponent],
+  imports: [CommonModule, FormsModule, IonicModule, RouterModule, IssuesTabComponent, MaintenanceTabComponent, NotesTabComponent, DriversTabComponent, BreadcrumbComponent],
   templateUrl: './van-details.page.html',
   styleUrls: ['./van-details.page.scss']
 })
@@ -24,6 +26,7 @@ export class VanDetailsPage implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private firestore = inject(Firestore);
+  private storage = inject(Storage);
   private inspectionService = inject(InspectionService);
   private alertCtrl = inject(AlertController);
   private toastCtrl = inject(ToastController);
@@ -39,6 +42,7 @@ export class VanDetailsPage implements OnInit {
     { id: 'drivers', label: 'Drivers', icon: 'person' }
   ];
   latestInspectionId: string | null = null;
+  breadcrumbItems: BreadcrumbItem[] = [];
   
   // Van type display mapping
   vanTypeLabels: Record<string, string> = {
@@ -61,6 +65,11 @@ export class VanDetailsPage implements OnInit {
       await this.loadVanData(vanId);
       if (this.van) {
         await this.loadLatestInspection();
+        // Set breadcrumb items
+        this.breadcrumbItems = [
+          { label: 'Dashboard', url: '/admin', icon: 'home' },
+          { label: `${this.van.type.toUpperCase()} ${this.van.number}`, icon: 'car' }
+        ];
       }
     } catch (error: any) {
       this.errorMsg = error.message || 'Failed to load van data';
@@ -113,6 +122,128 @@ export class VanDetailsPage implements OnInit {
   viewDocument(imageUrl: string, title: string) {
     // Open document in a new tab/window for full view
     window.open(imageUrl, '_blank');
+  }
+
+  handleRegistrationClick() {
+    if (this.van?.registrationInfo?.imageUrl) {
+      this.viewDocument(this.van.registrationInfo.imageUrl, 'Registration Document');
+    } else {
+      this.addRegistration();
+    }
+  }
+
+  handleInsuranceClick() {
+    if (this.van?.insuranceInfo?.imageUrl) {
+      this.viewDocument(this.van.insuranceInfo.imageUrl, 'Insurance Document');
+    } else {
+      this.addInsurance();
+    }
+  }
+
+  async addRegistration() {
+    if (!this.van) return;
+    
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.pdf,.jpg,.jpeg,.png';
+    input.onchange = async (event: any) => {
+      const file = event.target.files[0];
+      if (file) {
+        await this.uploadDocument(file, 'registration');
+      }
+    };
+    input.click();
+  }
+
+  async addInsurance() {
+    if (!this.van) return;
+    
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.pdf,.jpg,.jpeg,.png';
+    input.onchange = async (event: any) => {
+      const file = event.target.files[0];
+      if (file) {
+        await this.uploadDocument(file, 'insurance');
+      }
+    };
+    input.click();
+  }
+
+  async uploadDocument(file: File, type: 'registration' | 'insurance') {
+    if (!this.van) return;
+
+    const toastLoading = await this.toastCtrl.create({
+      message: 'Uploading document...',
+      duration: 2000,
+      color: 'info'
+    });
+    toastLoading.present();
+
+    try {
+      // Create a unique filename
+      const timestamp = Date.now();
+      const extension = file.name.split('.').pop();
+      const filename = `${this.van.type}_${this.van.number}_${type}_${timestamp}.${extension}`;
+      const filePath = `van-documents/${this.van.docId}/${filename}`;
+
+      // Upload file to Firebase Storage
+      const storageRef = ref(this.storage, filePath);
+      const snapshot = await uploadBytes(storageRef, file);
+      const downloadURL = await getDownloadURL(snapshot.ref);
+
+      // Update Firestore with the document URL
+      const vanDocRef = doc(this.firestore, 'vans', this.van.docId);
+      const updateData: any = {};
+      
+      if (type === 'registration') {
+        updateData['registrationInfo'] = {
+          imageUrl: downloadURL,
+          uploadedAt: new Date()
+        };
+      } else {
+        updateData['insuranceInfo'] = {
+          imageUrl: downloadURL,
+          uploadedAt: new Date()
+        };
+      }
+
+      await setDoc(vanDocRef, updateData, { merge: true });
+
+      // Update local van object
+      if (type === 'registration') {
+        this.van.registrationInfo = { imageUrl: downloadURL };
+      } else {
+        this.van.insuranceInfo = { imageUrl: downloadURL };
+      }
+
+      toastLoading.dismiss();
+
+      const toast = await this.toastCtrl.create({
+        message: `${type === 'registration' ? 'Registration' : 'Insurance'} document uploaded successfully`,
+        duration: 2000,
+        color: 'success'
+      });
+      toast.present();
+
+    } catch (error: any) {
+      console.error('Error uploading document:', error);
+      toastLoading.dismiss();
+
+      const errorMessage = error.message || 'Failed to upload document. Check console for details.';
+      const toast = await this.toastCtrl.create({
+        message: errorMessage,
+        duration: 3000,
+        color: 'danger',
+        buttons: [
+          {
+            text: 'Dismiss',
+            role: 'cancel'
+          }
+        ]
+      });
+      toast.present();
+    }
   }
 
   getVanImage(): string {

@@ -147,11 +147,20 @@ interface IssueRecord {
     .issues-tab-content {
       .section-header {
         margin-bottom: 20px;
+        padding: 0 16px;
+        
+        @media (max-width: 768px) {
+          padding: 0 8px;
+        }
+        
+        @media (max-width: 480px) {
+          padding: 0 4px;
+        }
         
         .header-content {
           display: flex;
           justify-content: space-between;
-          align-items: flex-start;
+          align-items: center;
           gap: 16px;
         }
         
@@ -164,12 +173,20 @@ interface IssueRecord {
           font-weight: 600;
           color: var(--ion-color-dark);
           margin: 0 0 8px 0;
+          
+          @media (max-width: 480px) {
+            font-size: 1rem;
+          }
         }
         
         .section-subtitle {
           font-size: 0.9rem;
           color: var(--ion-color-medium);
           margin: 0;
+          
+          @media (max-width: 480px) {
+            font-size: 0.8rem;
+          }
         }
         
         .add-issue-button {
@@ -192,9 +209,25 @@ interface IssueRecord {
         }
       }
 
+      .issues-list {
+        // Padding removed - using tab-content padding
+      }
+
       .issue-card {
         margin-bottom: 12px;
         border-left: 4px solid transparent;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        
+        ion-card-content {
+          padding: 16px;
+          
+          @media (max-width: 480px) {
+            padding: 12px;
+          }
+        }
 
         &.severity-critical {
           border-left-color: var(--ion-color-danger);
@@ -210,6 +243,21 @@ interface IssueRecord {
 
         &.severity-low {
           border-left-color: var(--ion-color-success);
+        }
+      }
+      
+      .issue-card.md.hydrated {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        
+        ion-card-content {
+          padding: 16px !important;
+          
+          @media (max-width: 480px) {
+            padding: 12px !important;
+          }
         }
       }
 

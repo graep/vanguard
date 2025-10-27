@@ -13,6 +13,14 @@ service firebase.storage {
       return isAuthenticated() && request.auth.token.admin == true;
     }
     
+    function isOwner() {
+      return isAuthenticated() && request.auth.token.owner == true;
+    }
+    
+    function isAdminOrOwner() {
+      return isAdmin() || isOwner();
+    }
+    
     function isValidImageType(contentType) {
       return contentType in ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
     }
@@ -69,16 +77,25 @@ service firebase.storage {
         && request.resource.metadata.ownerUid == request.auth.uid;
     }
     
-    // Van documentation - Admin only
+    // Van documentation - Admin or Owner
     match /vans/{vanId}/docs/{fileName} {
       allow read: if isAuthenticated();
-      allow write: if isAdmin()
+      allow write: if isAdminOrOwner()
         && isValidFileName(fileName)
         && isValidImageType(request.resource.contentType)
         && isValidFileSize(request.resource.size)
         && request.resource.metadata.keys().hasAll(['uploadedBy', 'uploadedAt', 'docType'])
         && request.resource.metadata.uploadedBy == request.auth.uid
         && request.resource.metadata.docType in ['registration', 'insurance', 'inspection', 'other'];
+    }
+    
+    // Van documents - Allow admins and owners to upload registration/insurance docs
+    match /van-documents/{vanId}/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isAdminOrOwner() 
+        && (fileName.matches('.*\\.(pdf|jpg|jpeg|png)$'))
+        && (request.resource.contentType.matches('application/pdf|image/jpeg|image/jpg|image/png') || true)
+        && isValidFileSize(request.resource.size);
     }
     
     // System assets - Admin only

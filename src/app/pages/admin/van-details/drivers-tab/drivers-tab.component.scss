@@ -1,24 +1,70 @@
 .drivers-tab-content {
   .section-header {
     margin-bottom: 20px;
+    padding: 0 16px;
+    
+    @media (max-width: 768px) {
+      padding: 0 8px;
+    }
+    
+    @media (max-width: 480px) {
+      padding: 0 4px;
+    }
     
     h3 {
       font-size: 1.2rem;
       font-weight: 600;
       color: var(--ion-color-dark);
       margin: 0 0 8px 0;
+      
+      @media (max-width: 480px) {
+        font-size: 1rem;
+      }
     }
     
     .section-subtitle {
       font-size: 0.9rem;
       color: var(--ion-color-medium);
       margin: 0;
+      
+      @media (max-width: 480px) {
+        font-size: 0.8rem;
+      }
     }
   }
 
   .drivers-list {
+    // Padding removed - using tab-content padding
+
     .driver-card {
       margin-bottom: 12px;
+      width: 100% !important;
+      max-width: 100% !important;
+      margin-left: 0 !important;
+      margin-right: 0 !important;
+      
+      ion-card-content {
+        padding: 16px;
+        
+        @media (max-width: 480px) {
+          padding: 12px;
+        }
+      }
+    }
+    
+    .driver-card.md.hydrated {
+      width: 100% !important;
+      max-width: 100% !important;
+      margin-left: 0 !important;
+      margin-right: 0 !important;
+      
+      ion-card-content {
+        padding: 16px !important;
+        
+        @media (max-width: 480px) {
+          padding: 12px !important;
+        }
+      }
     }
 
     .driver-row {
