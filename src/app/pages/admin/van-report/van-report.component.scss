@@ -19,39 +19,21 @@
   }
 }
 
-// Admin Portal Page Styles - Consistent with dashboard and van-details
+// Admin Portal Page Styles - per general layout spec
 .content-container {
-  max-width: 1200px; // Set a maximum width for the content
-  width: 100%; // Take full width of available space
-  margin: 0 auto; // Center the container horizontally in available space
-  padding: 1rem;
-  
-  // For large screens (laptop L and 4K), ensure proper centering
-  @media (min-width: 1440px) {
-    max-width: 1200px; // Keep consistent max width
-  }
-  
-  // For medium-large screens, adjust max width slightly
-  @media (max-width: 1439px) and (min-width: 1200px) {
-    max-width: 1000px;
-  }
-  
-  // For smaller desktop screens
-  @media (max-width: 1199px) {
-    max-width: 100%; // Use full available width
-  }
-  
-  // Mobile responsive - full width with proper padding
+  --background: #1e293b;
+  min-height: 100vh;
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 12px;
+
   @media (max-width: 768px) {
-    width: 100% !important;
-    max-width: 100% !important;
-    margin: 0 !important;
-    padding: 16px;
-    box-sizing: border-box;
-  }
-  
-  @media (max-width: 576px) {
-    padding: 12px;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+    max-width: 100%;
+    margin-top: 16px;
   }
 }
 
@@ -69,24 +51,133 @@
   }
 }
 
-// Section Titles - Consistent with dashboard and van-details
+// Section Titles - per typography scale
 .section-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--ion-color-dark);
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #ffffff;
   margin: 2rem 0 1rem 0;
-  text-transform: uppercase;
-  letter-spacing: 2.5px;
+
+  @media (max-width: 768px) {
+    font-size: 1rem;
+    margin: 1.5rem 0 1rem 0;
+  }
+}
+
+// Reports section title - h1, bigger, no margins, aligned with boxes
+h1.section-title.reports-title,
+.section-title.reports-title {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 10px 0 10px 20px !important;
+  padding: 0;
   
   @media (max-width: 768px) {
-    font-size: 1.25rem;
-    margin: 1.5rem 0 1rem 0;
+    font-size: 1.5rem;
+    margin: 10px 0 10px 20px !important;
   }
 }
 
 // Photos Section
 .photos-section {
   margin-bottom: 2rem;
+  
+  @media (min-width: 768px) {
+    ion-grid {
+      padding: 0;
+      margin: 0;
+    }
+    
+    .photos-row {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 0; // Remove gap between columns
+      align-items: start;
+      margin: 0;
+      padding: 0;
+    }
+    
+    // Add gap only between photo cards and arrow, not around arrow
+    .photos-row ion-col:first-child {
+      padding-right: 0.75rem;
+    }
+    
+    .photos-row .arrow-containers-col {
+      padding-left: 0;
+      padding-right: 0;
+    }
+    
+    .photos-row ion-col:last-child {
+      padding-left: 0.75rem;
+    }
+    
+    ion-col {
+      width: 100%;
+      max-width: none;
+      flex: none;
+    }
+  }
+}
+
+// Photos section titles container - matches photos-row layout exactly
+.photos-titles {
+  display: none;
+  
+  @media (min-width: 768px) {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 0;
+    margin-bottom: 0.5rem;
+    margin-left: 0;
+    margin-right: 0;
+    padding: 0;
+    width: 100%;
+    // Must match .photos-row grid layout exactly
+  }
+}
+
+// Spacer for the arrow column - matches arrow-containers-col exactly
+.photos-title-spacer {
+  width: auto;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+  // Matches .photos-row .arrow-containers-col
+}
+
+// Photos section title - smaller
+.photos-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0; // Remove default margin, will be handled by specific classes
+  padding: 0;
+  
+  @media (max-width: 768px) {
+    font-size: 1.25rem;
+  }
+}
+
+// Align left title with first photo card
+// The card starts at the left edge of the first ion-col (which has padding-right: 0.75rem)
+.photos-title-left {
+  padding-left: 0 !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  margin: 8px 0 0 20px !important; // Top margin only, no bottom margin
+  margin-right: 0 !important;
+  padding-right: 0.75rem !important; // Match .photos-row ion-col:first-child padding-right
+}
+
+// Align right title with second photo card  
+// The card starts at the left edge of the last ion-col (which has padding-left: 0.75rem)
+.photos-title-right {
+  padding-right: 0 !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  margin: 8px 0 0 20px !important; // Top margin only, no bottom margin
+  margin-right: 0 !important;
+  padding-left: 0.75rem !important; // Match .photos-row ion-col:last-child padding-left
+  text-align: left;
 }
 
 // Mobile Photos Layout
@@ -140,48 +231,260 @@
   width: 100%;
   height: auto;
   display: block;
-  border: 1px solid #333;
-  border-radius: 8px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
   cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  
-  &:hover {
+
+  &:hover:not(.expanded) {
     transform: scale(1.02);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+    border-color: rgba(255, 255, 255, 0.2);
   }
-  
+
   &.expanded {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 1000;
-    max-width: 90vw;
-    max-height: 90vh;
-    width: auto;
-    height: auto;
-    border: 2px solid #007bff;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
-    border-radius: 8px;
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translateY(-50%) translateX(-50%) !important;
+    z-index: 1001 !important; // Above backdrop
+    max-width: 90vw !important;
+    max-height: 90vh !important;
+    width: auto !important;
+    height: auto !important;
+    object-fit: contain !important; // Maintain aspect ratio
+    border: 2px solid rgba(76, 175, 80, 0.5) !important;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.9) !important;
+    border-radius: 20px !important;
+    cursor: pointer !important;
+    pointer-events: auto !important;
+    margin: 0 !important;
+    // Ensure it's visible and not clipped
+    overflow: visible !important;
   }
 }
 
 .photo-label {
   font-size: 0.875rem;
-  color: var(--ion-color-medium);
+  color: rgba(255, 255, 255, 0.7);
   margin-top: 0.5rem;
   font-weight: 500;
+}
+
+// Arrow containers column between photo columns
+.arrow-containers-col {
+  display: none;
+
+  @media (min-width: 768px) {
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    position: relative;
+    width: auto;
+    max-width: 60px; // Make the column narrower
+    padding: 0 !important; // Remove all padding
+    margin: 0 !important; // Remove all margin
+  }
+}
+
+// Arrow containers wrapper - matches photo-list structure
+.arrow-containers {
+  display: none;
+  width: 100%;
+  height: 100%;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  padding-top: 16px; // Match ion-card-content padding (16px)
+  margin-top: 0; // Ensure no extra margin at top
+  padding-bottom: 16px; // Match ion-card-content padding (16px)
+  position: relative; // Allow absolute positioning of arrow containers
+
+  @media (min-width: 768px) {
+    display: flex;
+  }
+}
+
+// Individual arrow container - positioned at center of each img.photo
+// Position is set programmatically via JavaScript to match exact image center
+.arrow-container {
+  display: flex;
+  align-items: center; // Vertically centers the arrow icon itself
+  justify-content: center; // Horizontally centers the arrow
+  width: 100%;
+  // Position and height will be set programmatically by alignArrowsToImageCenters()
+  // Default styles below are fallback if JS hasn't run yet
+  
+  // Mobile: match img-wrap spacing (fallback)
+  margin-bottom: 1rem;
+  
+  @media (min-width: 768px) {
+    // On desktop, position will be set absolutely by JavaScript
+    // But keep flex display for the icon centering
+    margin-bottom: 0;
+    margin-top: 0;
+  }
+}
+
+.arrow-container .arrow {
+  font-size: 28px;
+  color: rgba(255, 255, 255, 0.85);
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.35));
+  flex-shrink: 0;
+}
+
+// Desktop alignment: equalize row heights so arrows align picture-to-picture
+@media (min-width: 900px) {
+  .photos-section {
+    --photo-height: 220px; // image area height
+    --label-height: 28px;  // label height
+    --row-gap: 32px;       // vertical gap between rows
+  }
+
+  .photo {
+    height: var(--photo-height);
+    object-fit: cover;
+    
+    // Ensure expanded state overrides desktop height
+    &.expanded {
+      height: auto !important;
+      object-fit: contain !important;
+    }
+  }
+
+  .photo-label {
+    height: var(--label-height);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .img-wrap {
+    min-height: calc(var(--photo-height) + var(--label-height));
+    margin-bottom: var(--row-gap);
+    margin-top: 0; // Ensure consistent top spacing
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    
+    // First img-wrap should have no top margin
+    &:first-child {
+      margin-top: 0;
+    }
+  }
+  
+  // Arrow containers match img-wrap spacing exactly at desktop (900px+)
+  .arrow-container {
+    // All arrows should match img-wrap spacing exactly
+    margin-top: 0;
+    margin-bottom: var(--row-gap);
+    
+    // First arrow should match first img-wrap
+    &:first-child {
+      margin-top: 0;
+    }
+  }
+
+  // Ensure arrow containers match img-wrap structure exactly
+  .arrow-containers {
+    // Match the photo-list structure
+    display: flex;
+    flex-direction: column;
+    padding-top: 0; // Match ion-card-content padding
+    padding-bottom: 16px; // Match ion-card-content padding
+  }
 }
 
 .img-wrap {
   text-align: center;
   margin-bottom: 1rem;
+  margin-top: 0; // Consistent top spacing
+  position: relative;
+  overflow: visible; // Allow expanded images to overflow
+  
+  // First img-wrap should have no top margin
+  &:first-child {
+    margin-top: 0;
+  }
+  
+  // Don't clip expanded images
+  .photo.expanded {
+    position: fixed !important;
+    z-index: 1001 !important;
+  }
 }
 
 // Reports Section
 .reports-section {
-  margin-bottom: 2rem;
+  margin-bottom: 0;
+  
+  @media (min-width: 768px) {
+    ion-grid {
+      padding: 0;
+      margin: 0;
+    }
+    
+    .reports-row {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 0; // Remove gap between columns
+      align-items: center; // Center all columns vertically
+      margin: 0;
+      padding: 0;
+      // Ensure same width as photos-row
+      width: 100%;
+    }
+    
+    // Align title with first column of grid (match grid padding which is 0)
+    .reports-title {
+      margin: 0;
+      padding: 0;
+    }
+    
+    // Add gap only between report cards and arrow, not around arrow
+    // Match photos-row spacing exactly
+    .reports-row ion-col:first-child {
+      padding-right: 0.75rem;
+    }
+    
+    .reports-row .report-arrow-containers-col {
+      padding-left: 0;
+      padding-right: 0;
+      // Match arrow-containers-col width to keep reports same width as photos
+      width: auto;
+      max-width: 60px;
+      flex: none;
+    }
+    
+    .reports-row ion-col:last-child {
+      padding-left: 0.75rem;
+    }
+    
+    // Ensure all columns match photos-row exactly - same width behavior
+    .reports-row ion-col {
+      width: 100%;
+      max-width: none;
+      flex: none;
+      box-sizing: border-box;
+    }
+    
+    // Report cards should fill their columns completely - match photo cards
+    .reports-row .report-card {
+      width: 100% !important;
+      margin: 0 !important;
+      box-sizing: border-box;
+      max-width: 100% !important;
+    }
+    
+    // Ensure report cards have same styling as photo cards
+    .reports-row ion-card {
+      width: 100% !important;
+      margin: 0 !important;
+      box-sizing: border-box;
+    }
+  }
 }
 
 .reports-grid {
@@ -194,24 +497,126 @@
   }
 }
 
-.report-card {
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  
+// Report arrow containers column between report cards - EXACT COPY of photo arrows
+.report-arrow-containers-col {
+  display: none;
+
+  @media (min-width: 768px) {
+    display: flex !important;
+    align-items: center !important; // Center vertically
+    justify-content: center !important;
+    position: relative;
+    width: auto;
+    max-width: 60px; // Make the column narrower
+    height: 100%; // Take full height
+    padding: 0 !important; // Remove all padding
+    margin: 0 !important; // Remove all margin
+  }
+}
+
+// Report arrow containers wrapper - Always visible between cards
+.report-arrow-containers {
+  display: none;
+  width: 100%;
+  height: 100%;
+  flex-direction: column;
+  align-items: center; // Center horizontally
+  justify-content: center; // Center vertically
+  min-height: 100%; // Ensure it takes full height
+
+  @media (min-width: 768px) {
+    display: flex !important;
+  }
+}
+
+// Individual report arrow container - Always visible, centered between cards
+.report-arrow-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  position: relative;
+  // Remove min-height and flex to allow natural centering
+}
+
+.report-arrow-container .arrow {
+  font-size: 28px;
+  color: rgba(255, 255, 255, 0.85);
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.35));
+  flex-shrink: 0;
+}
+
+// Force icon to render - EXACT same as photo arrows
+.report-arrow-container ion-icon.arrow {
+  display: inline-block;
+  width: 28px;
+  height: 28px;
+  font-size: 28px;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+// Ensure report items are properly sized
+.report-item {
+  min-height: 72px; // Match arrow container height
+  display: flex;
+  align-items: center;
+}
+
+ion-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  border-radius: 20px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+  overflow: visible !important; // Allow expanded images to overflow
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
   ion-card-header {
-    padding-bottom: 0;
+    padding: 0; // Remove padding when empty
     
     ion-card-title {
-      font-size: 1.1rem;
+      font-size: 1rem;
       font-weight: 600;
-      color: var(--ion-color-dark);
+      color: #ffffff;
       margin-bottom: 0.5rem;
     }
   }
-  
+
   ion-card-content {
-    padding-top: 0;
+    padding: 16px; // Restore original card content padding
+    overflow: visible !important; // Allow expanded images to overflow
   }
+}
+
+// Report card layout - header on top, issues below
+.report-card-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: flex-start;
+  min-height: 200px; // Make report boxes taller
+}
+
+.report-header-section {
+  width: 100%;
+  
+  ion-card-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #ffffff;
+    margin-bottom: 0.5rem;
+  }
+}
+
+.report-items-section {
+  width: 100%;
+  flex: 1;
 }
 
 .report-meta {
@@ -219,11 +624,6 @@
   flex-direction: column;
   gap: 0.5rem;
   margin-top: 0.5rem;
-  
-  @media (min-width: 480px) {
-    flex-direction: row;
-    gap: 1rem;
-  }
 }
 
 .submitter-info,
@@ -254,40 +654,39 @@
 
 .report-name {
   font-weight: 600;
-  color: var(--ion-color-dark);
+  color: #ffffff;
   flex: 1;
 }
 
 .report-details {
-  color: var(--ion-color-medium);
+  color: rgba(255, 255, 255, 0.8);
   margin-bottom: 0.25rem;
 }
 
 .severity-badge {
   padding: 0.25rem 0.5rem;
-  border-radius: 12px;
+  border-radius: 20px;
   font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   flex-shrink: 0;
-  
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+
   &.severity-high {
-    background-color: #ffebee;
-    color: #c62828;
-    border: 1px solid #ffcdd2;
+    background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+    color: #ffffff;
   }
-  
+
   &.severity-medium {
-    background-color: #fff3e0;
-    color: #ef6c00;
-    border: 1px solid #ffcc02;
+    background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
+    color: #ffffff;
   }
-  
+
   &.severity-low {
-    background-color: #e8f5e8;
-    color: #2e7d32;
-    border: 1px solid #c8e6c9;
+    background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+    color: #ffffff;
   }
 }
 
@@ -298,7 +697,7 @@
 }
 
 .muted {
-  color: var(--ion-color-medium);
+  color: rgba(255, 255, 255, 0.7);
   font-weight: normal;
 }
 
@@ -320,14 +719,19 @@
 
 // Image Backdrop
 .image-backdrop {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background-color: rgba(0, 0, 0, 0.8);
-  z-index: 999;
-  cursor: pointer;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background-color: rgba(0, 0, 0, 0.85) !important;
+  z-index: 1000 !important;
+  cursor: pointer !important;
+  backdrop-filter: blur(4px);
+  margin: 0 !important;
+  padding: 0 !important;
+  // Ensure it's above everything except the expanded image
+  display: block !important;
 }
 
 // Unsure Photo Modal
@@ -354,13 +758,15 @@
   
   .modal-content {
     position: relative;
-    background: white;
-    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+    border-radius: 20px;
     max-width: 90vw;
     max-height: 90vh;
     width: 600px;
     overflow: hidden;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
     
     @media (max-width: 768px) {
       width: 95vw;
@@ -373,14 +779,14 @@
     justify-content: space-between;
     align-items: center;
     padding: 1rem 1.5rem;
-    border-bottom: 1px solid var(--ion-color-light);
-    background: var(--ion-color-light-tint);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background: transparent;
     
     h3 {
       margin: 0;
       font-size: 1.25rem;
       font-weight: 600;
-      color: var(--ion-color-dark);
+      color: #ffffff;
     }
     
     ion-button {
@@ -426,12 +832,12 @@
       margin: 0 0 0.75rem 0;
       font-size: 1rem;
       font-weight: 600;
-      color: var(--ion-color-dark);
+      color: #ffffff;
     }
     
     p {
       margin: 0;
-      color: var(--ion-color-medium);
+      color: rgba(255, 255, 255, 0.8);
       line-height: 1.5;
       font-size: 0.95rem;
     }
@@ -444,9 +850,9 @@
   bottom: 0;
   left: 0;
   right: 0;
-  background: linear-gradient(135deg, #1e1e1e 0%, #2d2d2d 100%);
-  border-top: 1px solid var(--ion-color-step-200);
-  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.4);
   z-index: 1000;
   backdrop-filter: blur(10px);
   
