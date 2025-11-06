@@ -1,7 +1,8 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { IonIcon } from '@ionic/angular/standalone';
+import { BreadcrumbService } from '@app/services/breadcrumb.service';
 
 export interface BreadcrumbItem {
   label: string;
@@ -16,9 +17,9 @@ export interface BreadcrumbItem {
   template: `
     <nav class="breadcrumb-nav" *ngIf="items && items.length > 0">
       <ol class="breadcrumb-list">
-        <li *ngFor="let item of items; let last = last" class="breadcrumb-item" [class.active]="last">
+        <li *ngFor="let item of items; let last = last; let i = index" class="breadcrumb-item" [class.active]="last">
           <ng-container *ngIf="item.url && !last; else noLink">
-            <a [routerLink]="item.url" class="breadcrumb-link">
+            <a [routerLink]="item.url" class="breadcrumb-link" (click)="onItemClick(i)">
               <ion-icon *ngIf="item.icon" [name]="item.icon" class="breadcrumb-icon"></ion-icon>
               <span class="breadcrumb-text">{{ item.label }}</span>
             </a>
@@ -36,9 +37,9 @@ export interface BreadcrumbItem {
   `,
   styles: [`
     .breadcrumb-nav {
-      padding: 8px 16px;
-      background: rgba(var(--ion-color-light-rgb), 0.1);
-      border-bottom: 1px solid rgba(var(--ion-color-light-rgb), 0.2);
+      padding: 6px 16px;
+      background: transparent;
+      border-bottom: none;
     }
 
     .breadcrumb-list {
@@ -47,7 +48,7 @@ export interface BreadcrumbItem {
       list-style: none;
       margin: 0;
       padding: 0;
-      font-size: 14px;
+      font-size: 12px;
     }
 
     .breadcrumb-item {
@@ -60,27 +61,27 @@ export interface BreadcrumbItem {
       display: flex;
       align-items: center;
       text-decoration: none;
-      color: var(--ion-color-medium);
+      color: rgba(255, 255, 255, 0.7);
       padding: 4px 8px;
       border-radius: 4px;
       transition: all 0.2s ease;
     }
 
     .breadcrumb-link:hover {
-      color: var(--ion-color-primary);
-      background: rgba(var(--ion-color-primary-rgb), 0.1);
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.1);
     }
 
     .breadcrumb-current {
       display: flex;
       align-items: center;
-      color: var(--ion-color-dark);
+      color: rgba(255, 255, 255, 0.9);
       font-weight: 500;
       padding: 4px 8px;
     }
 
     .breadcrumb-icon {
-      font-size: 16px;
+      font-size: 14px;
       margin-right: 4px;
     }
 
@@ -90,12 +91,16 @@ export interface BreadcrumbItem {
 
     .breadcrumb-separator {
       font-size: 12px;
-      color: var(--ion-color-medium);
+      color: rgba(255, 255, 255, 0.5);
       margin: 0 4px;
     }
 
     .breadcrumb-item.active .breadcrumb-current {
-      color: var(--ion-color-primary);
+      color: #3b82f6;
+      
+      .breadcrumb-icon {
+        color: #3b82f6;
+      }
     }
 
     /* Mobile responsive */
@@ -105,11 +110,11 @@ export interface BreadcrumbItem {
       }
       
       .breadcrumb-list {
-        font-size: 13px;
+        font-size: 11px;
       }
       
       .breadcrumb-icon {
-        font-size: 14px;
+        font-size: 12px;
       }
       
       .breadcrumb-separator {
@@ -121,4 +126,16 @@ export interface BreadcrumbItem {
 })
 export class BreadcrumbComponent {
   @Input() items: BreadcrumbItem[] = [];
+
+  private breadcrumbService = inject(BreadcrumbService);
+
+  onItemClick(index: number): void {
+    // Trim the tail immediately to the clicked item to avoid flicker during navigation
+    // IMPORTANT: Admin layout always prepends the base Dashboard item, so we must
+    // pass ONLY the dynamic tail (exclude the first Dashboard item) back to the service.
+    if (!this.items || index < 0) return;
+    const inclusive = this.items.slice(0, index + 1);
+    const dynamicTail = inclusive.length > 0 ? inclusive.slice(1) : [];
+    this.breadcrumbService.setTail(dynamicTail);
+  }
 }
