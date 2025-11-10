@@ -1,6 +1,4 @@
-<!-- Replace your existing ion-grid section with this: -->
-
-<ion-content class="ion-padding">
+<ion-content>
   <div class="content-container">
   
   <!-- Page Header -->
@@ -8,11 +6,9 @@
     <div class="header-content">
       <div>
         <h1 class="page-title">Users</h1>
-        <p class="page-subtitle">Manage user accounts and permissions</p>
+          <p class="page-subtitle">Welcome, manage user accounts and permissions</p>
       </div>
-      <div class="stats-container" *ngIf="counts$ | async as c">
-        <ion-card class="combined-stat-card">
-          <ion-card-content>
+        <div class="status-bar-container" *ngIf="counts$ | async as c">
             <div class="stats-breakdown">
               <div class="stat-item total-users" 
                    [class.active]="activeFilter === 'all'"
@@ -38,56 +34,63 @@
                 <div class="stat-label">Admins</div>
               </div>
             </div>
-          </ion-card-content>
-        </ion-card>
       </div>
     </div>
   </div>
 
-  <!-- Users list -->
+    <!-- Users Grid -->
+    <div class="users-list">
   <ng-container *ngIf="filteredUsers$ | async as users; else loading">
     <ng-container *ngIf="users.length; else empty">
-      <ion-list class="users-container">
-        <ion-item *ngFor="let user of users; trackBy: trackByUserId" class="user-card">
-          <ion-avatar slot="start">
-            <ion-icon name="person-circle"></ion-icon>
-          </ion-avatar>
-
-          <ion-label>
-            <h2>{{ getDisplayName(user) }}</h2>
-            <p>
-              <ion-icon name="mail"></ion-icon>
-              {{ user.email }}
-              &nbsp;•&nbsp; Created: {{ formatDate(user.createdAt) }}
-              &nbsp;•&nbsp; <span [class.inactive]="!user.isActive">{{ user.isActive ? 'Active' : 'Inactive' }}</span>
-            </p>
-
+          <div class="users-grid">
+            <div class="user-card" 
+                 *ngFor="let user of users; trackBy: trackByUserId"
+                 [class.active]="user.isActive"
+                 [class.inactive]="!user.isActive"
+                 (click)="viewUser(user)">
+              <div class="user-card-content">
+                <div class="user-avatar" [class.owner]="getHighestRole(user) === 'owner'" 
+                     [class.admin]="getHighestRole(user) === 'admin'"
+                     [class.driver]="getHighestRole(user) === 'driver'">
+                  <ion-icon [name]="getAvatarIcon(user)"></ion-icon>
+                </div>
+                <div class="user-details">
+                  <h4 class="user-name">{{ getDisplayName(user) }}</h4>
+                  <div class="user-email">{{ user.email }}</div>
+                  <div class="user-meta">
+                    <span class="user-date">Created: {{ formatDate(user.createdAt) }}</span>
+                    <span class="user-status" [class.inactive]="!user.isActive">
+                      {{ user.isActive ? 'Active' : 'Inactive' }}
+                    </span>
+                  </div>
             <div class="roles">
-              <ion-chip *ngFor="let r of (user.roles ?? []); trackBy: trackByRole"
+                    <ion-chip *ngFor="let r of getSortedRoles(user); trackBy: trackByRole"
                         [class]="r" size="small">
                 <ion-icon [name]="getRoleIcon(r)"></ion-icon>
                 <ion-label>{{ r | titlecase }}</ion-label>
               </ion-chip>
-              <ion-label *ngIf="!(user.roles?.length)">No Roles</ion-label>
+                    <ion-label *ngIf="!(user.roles?.length)" class="no-roles">No Roles</ion-label>
+                  </div>
+                </div>
+              </div>
             </div>
-          </ion-label>
-        </ion-item>
-      </ion-list>
+          </div>
     </ng-container>
   </ng-container>
+    </div>
 
   <ng-template #loading>
-    <ion-item lines="none">
-      <ion-spinner slot="start"></ion-spinner>
-      <ion-label>Loading users…</ion-label>
-    </ion-item>
+      <div class="loading-state">
+        <ion-spinner></ion-spinner>
+        <p>Loading users…</p>
+      </div>
   </ng-template>
 
   <ng-template #empty>
-    <ion-item lines="none">
-      <ion-label>{{ getEmptyStateMessage() }}</ion-label>
-    </ion-item>
+      <div class="empty-state">
+        <ion-icon name="people-outline"></ion-icon>
+        <p>{{ getEmptyStateMessage() }}</p>
+      </div>
   </ng-template>
-
   </div>
 </ion-content>

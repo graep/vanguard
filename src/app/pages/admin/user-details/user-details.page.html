@@ -1,0 +1,462 @@
+<ion-content>
+  <div class="content-container">
+
+  <!-- Error -->
+  <ion-card *ngIf="errorMsg" color="danger">
+    <ion-card-content>
+      <ion-icon name="alert-circle" slot="start"></ion-icon>
+      {{ errorMsg }}
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Main -->
+  <div *ngIf="user" class="user-details-container">
+    <ion-card class="user-header-card" 
+      [style.background]="'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)'"
+      [style.borderRadius]="'10px'"
+      [style.backdropFilter]="'blur(10px)'"
+      [style.border]="'1px solid rgba(255, 255, 255, 0.1)'"
+      [style.boxShadow]="'0 8px 32px rgba(0, 0, 0, 0.3)'"
+      [style.transition]="'all 0.3s ease'">
+      <ion-card-content>
+        <div class="user-header">
+            
+          <!-- LEFT: info, actions -->
+          <div class="user-basic-info">
+            <h1 class="user-title">{{ getDisplayName() }}</h1>
+            <h2 class="user-subtitle">{{ user.email }}</h2>
+
+            <ion-chip [color]="getStatusColor()" class="status-chip">
+              <ion-icon [name]="getStatusIcon()"></ion-icon>
+              <ion-label>{{ getStatusText() }}</ion-label>
+            </ion-chip>
+
+            <!-- Details (vertical list) -->
+            <div class="user-details-list">
+              <!-- User Information -->
+              <div class="detail-item" *ngIf="user.firstName || user.lastName">
+                <ion-icon name="person" class="info-icon"></ion-icon>
+                <div class="info-content">
+                  <h3>Name</h3>
+                  <p>{{ user.firstName }} {{ user.lastName }}</p>
+                </div>
+              </div>
+
+              <div class="detail-item">
+                <ion-icon name="mail" class="info-icon"></ion-icon>
+                <div class="info-content">
+                  <h3>Email</h3>
+                  <p>{{ user.email }}</p>
+                </div>
+              </div>
+
+              <div class="detail-item">
+                <ion-icon name="calendar" class="info-icon"></ion-icon>
+                <div class="info-content">
+                  <h3>Created</h3>
+                  <p>{{ formatDate(user.createdAt) }}</p>
+                </div>
+              </div>
+
+              <div class="detail-item" *ngIf="user.phoneNumber">
+                <ion-icon name="call" class="info-icon"></ion-icon>
+                <div class="info-content">
+                  <h3>Phone</h3>
+                  <p>{{ user.phoneNumber }}</p>
+                </div>
+              </div>
+
+              <div class="detail-item" *ngIf="user.department">
+                <ion-icon name="business" class="info-icon"></ion-icon>
+                <div class="info-content">
+                  <h3>Department</h3>
+                  <p>{{ user.department }}</p>
+                </div>
+              </div>
+
+              <div class="detail-item" *ngIf="user.employeeId">
+                <ion-icon name="card" class="info-icon"></ion-icon>
+                <div class="info-content">
+                  <h3>Employee ID</h3>
+                  <p>{{ user.employeeId }}</p>
+                </div>
+              </div>
+
+              <!-- Roles -->
+              <div class="detail-item">
+                <ion-icon name="shield-checkmark" class="info-icon"></ion-icon>
+                <div class="info-content">
+                  <h3>Roles</h3>
+                  <div class="roles-list">
+                    <ion-chip *ngFor="let role of getSortedRoles()" [class]="role" size="small">
+                      <ion-icon [name]="getRoleIcon(role)"></ion-icon>
+                      <ion-label>{{ role | titlecase }}</ion-label>
+                    </ion-chip>
+                    <ion-label *ngIf="!(user.roles?.length)" class="no-roles">No Roles</ion-label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ACTIONS: side-by-side, small -->
+            <div class="action-buttons">
+                <ion-button
+                  fill="outline"
+                  color="secondary"
+                  (click)="sendMessage()"
+                  class="action-button">
+                  <ion-icon name="mail" slot="start"></ion-icon>
+                  Message
+                </ion-button>
+              </div>
+          </div>
+
+          <!-- RIGHT: avatar + toggle -->
+          <div class="user-actions-section">
+            <div class="user-avatar-section">
+              <div class="user-avatar-large" 
+                   [class.owner]="getHighestRole() === 'owner'" 
+                   [class.admin]="getHighestRole() === 'admin'"
+                   [class.driver]="getHighestRole() === 'driver'">
+                <ion-icon [name]="getAvatarIcon()"></ion-icon>
+              </div>
+
+              <ion-button
+                fill="solid"
+                color="primary"
+                (click)="toggleActiveStatus()"
+                class="toggle-button">
+                <ion-icon [name]="user.isActive ? 'close-circle' : 'checkmark-circle'" slot="start"></ion-icon>
+                {{ user.isActive ? 'Deactivate User' : 'Activate User' }}
+              </ion-button>
+
+            </div>
+          </div>
+
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Tabbed History Section -->
+    <ion-card class="history-card"
+      [style.background]="'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)'"
+      [style.borderRadius]="'10px'"
+      [style.backdropFilter]="'blur(10px)'"
+      [style.border]="'1px solid rgba(255, 255, 255, 0.1)'"
+      [style.boxShadow]="'0 8px 32px rgba(0, 0, 0, 0.3)'"
+      [style.transition]="'all 0.3s ease'"
+      [style.marginTop]="'20px'">
+      <div class="history-container">
+        <ion-card-header>
+          <ion-card-title>User Information</ion-card-title>
+        </ion-card-header>
+        
+        <!-- Tab Navigation -->
+        <div class="tab-navigation">
+          <ion-button 
+            *ngFor="let tab of tabs" 
+            (click)="selectTab(tab.id)"
+            [class.tab-button-selected]="activeTab === tab.id"
+            class="tab-button">
+            <ion-icon [name]="tab.icon" slot="start"></ion-icon>
+            <span class="tab-label">{{ tab.label }}</span>
+          </ion-button>
+        </div>
+
+        <!-- Tab Content -->
+        <ion-card-content class="tab-content">
+          
+          <!-- Overview Tab -->
+          <div *ngIf="activeTab === 'overview'" class="tab-panel">
+            <div class="overview-content">
+              <!-- Summary Stats -->
+              <div class="stats-grid">
+                <div class="stat-card">
+                  <div class="stat-icon">
+                    <ion-icon name="document-text"></ion-icon>
+                  </div>
+                  <div class="stat-info">
+                    <div class="stat-value">{{ overviewStats.totalInspections }}</div>
+                    <div class="stat-label">Total Inspections</div>
+                  </div>
+                </div>
+                
+                <div class="stat-card">
+                  <div class="stat-icon">
+                    <ion-icon name="calendar"></ion-icon>
+                  </div>
+                  <div class="stat-info">
+                    <div class="stat-value">{{ overviewStats.inspectionsThisMonth }}</div>
+                    <div class="stat-label">This Month</div>
+                  </div>
+                </div>
+                
+                <div class="stat-card">
+                  <div class="stat-icon">
+                    <ion-icon name="car"></ion-icon>
+                  </div>
+                  <div class="stat-info">
+                    <div class="stat-value">{{ overviewStats.vansAssigned }}</div>
+                    <div class="stat-label">Vans Assigned</div>
+                  </div>
+                </div>
+                
+                <div class="stat-card">
+                  <div class="stat-icon">
+                    <ion-icon name="warning"></ion-icon>
+                  </div>
+                  <div class="stat-info">
+                    <div class="stat-value">{{ overviewStats.issuesReported }}</div>
+                    <div class="stat-label">Issues Reported</div>
+                  </div>
+                </div>
+                
+                <div class="stat-card">
+                  <div class="stat-icon">
+                    <ion-icon name="document"></ion-icon>
+                  </div>
+                  <div class="stat-info">
+                    <div class="stat-value">{{ overviewStats.notesAdded }}</div>
+                    <div class="stat-label">Notes Added</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Recent Activity Feed -->
+              <div class="recent-activity-section">
+                <h3>Recent Activity</h3>
+                <div class="activity-feed" *ngIf="recentActivity.length > 0; else noActivity">
+                  <div class="activity-item" *ngFor="let activity of recentActivity">
+                    <div class="activity-icon">
+                      <ion-icon [name]="activity.icon"></ion-icon>
+                    </div>
+                    <div class="activity-content">
+                      <div class="activity-description">{{ activity.description }}</div>
+                      <div class="activity-time">{{ activity.timestamp }}</div>
+                    </div>
+                  </div>
+                </div>
+                <ng-template #noActivity>
+                  <div class="empty-state-small">
+                    <p>No recent activity to display</p>
+                  </div>
+                </ng-template>
+              </div>
+            </div>
+          </div>
+
+          <!-- Activity Tab -->
+          <div *ngIf="activeTab === 'activity'" class="tab-panel">
+            <div class="activity-content">
+              <!-- Activity Timeline -->
+              <div class="activity-timeline-section">
+                <h3>Activity Timeline</h3>
+                <div class="filter-controls">
+                  <ion-button fill="outline" size="small" [class.active]="true">
+                    All
+                  </ion-button>
+                  <ion-button fill="outline" size="small">
+                    Inspections
+                  </ion-button>
+                  <ion-button fill="outline" size="small">
+                    Notes
+                  </ion-button>
+                  <ion-button fill="outline" size="small">
+                    Issues
+                  </ion-button>
+                  <ion-button fill="outline" size="small">
+                    Login
+                  </ion-button>
+                </div>
+                <div class="timeline" *ngIf="recentActivity.length > 0; else noTimeline">
+                  <div class="timeline-item" *ngFor="let activity of recentActivity">
+                    <div class="timeline-marker"></div>
+                    <div class="timeline-content">
+                      <div class="timeline-header">
+                        <span class="timeline-title">{{ activity.title }}</span>
+                        <span class="timeline-date">{{ activity.timestamp }}</span>
+                      </div>
+                      <div class="timeline-description">{{ activity.description }}</div>
+                    </div>
+                  </div>
+                </div>
+                <ng-template #noTimeline>
+                  <div class="empty-state-small">
+                    <p>No activity timeline available</p>
+                  </div>
+                </ng-template>
+              </div>
+
+              <!-- Inspection History -->
+              <div class="inspection-history-section">
+                <h3>Inspection History</h3>
+                <div class="inspection-list" *ngIf="inspectionHistory.length > 0; else noInspections">
+                  <div class="inspection-item" *ngFor="let inspection of inspectionHistory">
+                    <div class="inspection-icon">
+                      <ion-icon name="camera"></ion-icon>
+                    </div>
+                    <div class="inspection-details">
+                      <div class="inspection-van">{{ inspection.vanType }} {{ inspection.vanNumber }}</div>
+                      <div class="inspection-meta">
+                        <span class="inspection-status" [class]="inspection.status">{{ inspection.status }}</span>
+                        <span class="inspection-date">{{ inspection.date }}</span>
+                      </div>
+                    </div>
+                    <ion-button fill="clear" size="small" *ngIf="inspection.reportId">
+                      <ion-icon name="document-text"></ion-icon>
+                    </ion-button>
+                  </div>
+                </div>
+                <ng-template #noInspections>
+                  <div class="empty-state-small">
+                    <p>No inspection history available</p>
+                  </div>
+                </ng-template>
+              </div>
+
+              <!-- Login History -->
+              <div class="login-history-section">
+                <h3>Login History</h3>
+                <div class="login-list" *ngIf="loginHistory.length > 0; else noLogins">
+                  <div class="login-item" *ngFor="let login of loginHistory">
+                    <div class="login-icon">
+                      <ion-icon name="log-in"></ion-icon>
+                    </div>
+                    <div class="login-details">
+                      <div class="login-time">{{ login.timestamp }}</div>
+                      <div class="login-meta">
+                        <span *ngIf="login.ipAddress">IP: {{ login.ipAddress }}</span>
+                        <span *ngIf="login.device">{{ login.device }}</span>
+                      </div>
+                    </div>
+                    <div class="login-duration" *ngIf="login.duration">
+                      {{ login.duration }}
+                    </div>
+                  </div>
+                </div>
+                <ng-template #noLogins>
+                  <div class="empty-state-small">
+                    <p>No login history available</p>
+                  </div>
+                </ng-template>
+              </div>
+            </div>
+          </div>
+
+          <!-- Permissions Tab -->
+          <div *ngIf="activeTab === 'permissions'" class="tab-panel">
+            <div class="permissions-content">
+              <!-- Current Roles -->
+              <div class="roles-section">
+                <h3>Current Roles</h3>
+                <div class="roles-display">
+                  <div class="role-card" *ngFor="let role of getSortedRoles()" [class]="role">
+                    <div class="role-icon">
+                      <ion-icon [name]="getRoleIcon(role)"></ion-icon>
+                    </div>
+                    <div class="role-info">
+                      <div class="role-name">{{ role | titlecase }}</div>
+                      <div class="role-description">{{ getRoleDescription(role) }}</div>
+                    </div>
+                  </div>
+                  <div class="no-roles-message" *ngIf="!(user?.roles?.length)">
+                    <p>No roles assigned</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Permissions Summary -->
+              <div class="permissions-summary-section">
+                <h3>Effective Permissions</h3>
+                <div class="permissions-list">
+                  <div class="permission-item" *ngFor="let permission of getEffectivePermissions()">
+                    <ion-icon name="checkmark-circle" class="permission-icon"></ion-icon>
+                    <span class="permission-text">{{ permission }}</span>
+                  </div>
+                  <div class="no-permissions" *ngIf="getEffectivePermissions().length === 0">
+                    <p>No permissions available</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Access Control -->
+              <div class="access-control-section">
+                <h3>Access Control</h3>
+                <div class="access-list">
+                  <div class="access-item">
+                    <ion-icon name="car"></ion-icon>
+                    <div class="access-info">
+                      <div class="access-label">Van Access</div>
+                      <div class="access-value">All vans</div>
+                    </div>
+                  </div>
+                  
+                  <div class="access-item">
+                    <ion-icon name="document"></ion-icon>
+                    <div class="access-info">
+                      <div class="access-label">Reports Access</div>
+                      <div class="access-value">View all reports</div>
+                    </div>
+                  </div>
+                  
+                  <div class="access-item">
+                    <ion-icon name="people"></ion-icon>
+                    <div class="access-info">
+                      <div class="access-label">User Management</div>
+                      <div class="access-value">{{ hasUserManagementAccess() ? 'Full access' : 'No access' }}</div>
+                    </div>
+                  </div>
+                  
+                  <div class="access-item">
+                    <ion-icon name="settings"></ion-icon>
+                    <div class="access-info">
+                      <div class="access-label">System Settings</div>
+                      <div class="access-value">{{ hasSystemSettingsAccess() ? 'Full access' : 'No access' }}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Role Management (Admin Only) -->
+              <div class="role-management-section" *ngIf="canManageRoles()">
+                <h3>Role Management</h3>
+                <div class="role-management-actions">
+                  <ion-button fill="outline" color="primary">
+                    <ion-icon name="add" slot="start"></ion-icon>
+                    Add Role
+                  </ion-button>
+                  <ion-button fill="outline" color="danger">
+                    <ion-icon name="remove" slot="start"></ion-icon>
+                    Remove Role
+                  </ion-button>
+                </div>
+                <div class="role-change-history">
+                  <h4>Role Change History</h4>
+                  <div class="history-list" *ngIf="getRoleChangeHistory().length > 0; else noHistory">
+                    <div class="history-item" *ngFor="let change of getRoleChangeHistory()">
+                      <div class="history-action">{{ change.action }}</div>
+                      <div class="history-details">
+                        <span class="history-role">{{ change.role }}</span>
+                        <span class="history-date">{{ change.date }}</span>
+                        <span class="history-by" *ngIf="change.changedBy">by {{ change.changedBy }}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <ng-template #noHistory>
+                    <div class="empty-state-small">
+                      <p>No role change history</p>
+                    </div>
+                  </ng-template>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </ion-card-content>
+      </div>
+    </ion-card>
+
+  </div>
+  </div>
+</ion-content>
+

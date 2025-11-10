@@ -93,7 +93,8 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
     // Map of route prefixes to their parent sidebar route (for nested routes)
     const nestedRoutePrefixes: Record<string, { label: string; icon?: string; url?: string }> = {
       '/admin/van/': { label: 'Fleet', icon: 'car', url: '/admin/fleet' },
-      '/admin/van-report/': { label: 'Fleet', icon: 'car', url: '/admin/fleet' }
+      '/admin/van-report/': { label: 'Fleet', icon: 'car', url: '/admin/fleet' },
+      '/admin/user/': { label: 'Users', icon: 'people', url: '/admin/users' }
     };
 
     // Find matching route (check exact match first, then check if URL starts with route)
