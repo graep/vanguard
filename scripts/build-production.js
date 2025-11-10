@@ -106,9 +106,9 @@ try {
   process.exit(1);
 }
 
-// Create production manifest
-console.log('\n📄 Creating production manifest...');
-const manifest = {
+// Create production build info (separate from PWA manifest)
+console.log('\n📄 Creating production build info...');
+const buildInfo = {
   buildTime: new Date().toISOString(),
   version: envVars.APP_VERSION,
   environment: 'production',
@@ -123,9 +123,9 @@ const manifest = {
   }
 };
 
-const manifestPath = path.join(__dirname, '../www/manifest.json');
-fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
-console.log('✅ Production manifest created');
+const buildInfoPath = path.join(__dirname, '../www/build-info.json');
+fs.writeFileSync(buildInfoPath, JSON.stringify(buildInfo, null, 2));
+console.log('✅ Production build info created');
 
 // Validate the build
 console.log('\n🔍 Validating production build...');

@@ -1,5 +1,16 @@
 # Cursor AI Assistant Rules for Vanguard Project
 
+ignore:
+  - node_modules/**
+  - dist/**                      # or build/**
+  - .git/**
+  - .angular/**
+  - .next/**                     # if present
+  - coverage/**
+  - **/*.min.js
+  - **/*.map
+  - functions/lib/**             # if you have Firebase functions compiled
+
 ## CRITICAL: Git Operations
 - NEVER commit changes to Git/GitHub without explicit user approval
 - NEVER push changes to remote repositories without explicit user instruction

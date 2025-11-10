@@ -1,7 +1,8 @@
 <app-header 
   class="ion-text-center" 
   title="Create Account" 
-  [showLogout]="false">
+  [showLogout]="false"
+  class="signup-header">
 </app-header>
 
 <ion-content [fullscreen]="true">
@@ -11,10 +12,7 @@
         
         <div class="logo-container">
           <img src="assets/Vanguard-Logo.png" alt="Vanguard Logo" />
-        </div>
-
-        <div class="form-header">
-          <h2>Create Driver Account</h2>
+          <h2 class="page-title">Create Account</h2>
         </div>
 
         <!-- Full Name -->
@@ -77,8 +75,11 @@
           Passwords do not match
         </ion-note>
 
-        <!-- Optional Fields -->
-        <div class="section-divider">
+        <!-- Divider -->
+        <div class="form-divider"></div>
+        
+        <!-- Optional Information -->
+        <div class="optional-label">
           <h3>Optional Information</h3>
         </div>
 
@@ -100,24 +101,21 @@
           </ion-input>
         </ion-item>
 
-        <!-- Submit Button -->
-        <ion-button 
-          expand="block" 
-          type="submit" 
-          [disabled]="!canSubmit"
-          class="signup-button">
-          <ion-icon name="person-add" slot="start"></ion-icon>
-          Create Account
-        </ion-button>
+        <!-- Buttons -->
+        <div class="button-section">
+          <ion-button 
+            expand="block" 
+            type="submit" 
+            [disabled]="!canSubmit"
+            class="signup-button">
+            <ion-icon name="person-add" slot="start"></ion-icon>
+            Create Account
+          </ion-button>
 
-        <!-- Back to Login -->
-        <div class="form-footer">
-          <p>Already have an account?</p>
           <ion-button 
             fill="clear" 
             (click)="goToLogin()" 
             class="login-link">
-            <ion-icon name="log-in" slot="start"></ion-icon>
             Sign In
           </ion-button>
         </div>

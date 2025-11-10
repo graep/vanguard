@@ -30,7 +30,7 @@ service firebase.storage {
     }
     
     function isValidVanType(vanType) {
-      return vanType in ['EDV', 'CDV', 'LMR'];
+      return vanType in ['EDV', 'CDV', 'Rental'];
     }
     
     function isValidVanNumber(vanNumber) {

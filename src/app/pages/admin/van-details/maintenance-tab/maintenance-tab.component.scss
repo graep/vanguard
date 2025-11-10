@@ -40,7 +40,7 @@
   ion-card {
     background: linear-gradient(135deg, var(--ion-color-primary-tint), var(--ion-color-primary));
     color: white;
-    border-radius: 16px;
+    border-radius: 10px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     width: 100% !important;
     max-width: 100% !important;
@@ -118,6 +118,7 @@
     max-width: 100% !important;
     margin-left: 0 !important;
     margin-right: 0 !important;
+    transform: none !important;
     
     ion-card-content {
       padding: 16px;
@@ -229,7 +230,7 @@
     align-items: flex-start;
     gap: 8px;
     background: var(--ion-color-light);
-    border-radius: 8px;
+    border-radius: 10px;
     padding: 10px;
     font-size: 0.9rem;
     color: var(--ion-color-dark-tint);
@@ -266,7 +267,15 @@
     }
 
     .add-maintenance-btn {
-      --border-radius: 20px;
+      --border-radius: 10px;
+      
+      &:hover {
+        transform: translateY(-2px);
+      }
+      
+      &:active {
+        transform: translateY(1px);
+      }
     }
   }
 }

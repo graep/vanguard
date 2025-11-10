@@ -42,7 +42,7 @@ bootstrapApplication(AppComponent, {
     provideFirestore(() => getFirestore()),
     provideServiceWorker('ngsw-worker.js', {
       enabled: !isDevMode(),
-      registrationStrategy: 'registerWhenStable:30000'
+      registrationStrategy: 'registerImmediately'
     }),
     // App Check will be configured later when we have the site key
     // provideAppCheck(() =>

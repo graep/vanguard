@@ -1,15 +1,8 @@
 <ion-content>
-  <!-- Breadcrumb Navigation -->
-  <app-breadcrumb [items]="breadcrumbItems" *ngIf="breadcrumbItems.length > 0"></app-breadcrumb>
-  
   <div class="content-container">
-  <div *ngIf="loading" class="loading-container">
-    <ion-spinner name="crescent"></ion-spinner>
-    <p>Loading van details...</p>
-  </div>
 
   <!-- Error -->
-  <ion-card *ngIf="errorMsg && !loading" color="danger">
+  <ion-card *ngIf="errorMsg" color="danger">
     <ion-card-content>
       <ion-icon name="alert-circle" slot="start"></ion-icon>
       {{ errorMsg }}
@@ -17,8 +10,14 @@
   </ion-card>
 
   <!-- Main -->
-  <div *ngIf="van && !loading" class="van-details-container">
-    <ion-card class="van-header-card">
+  <div *ngIf="van" class="van-details-container">
+    <ion-card class="van-header-card" 
+      [style.background]="'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)'"
+      [style.borderRadius]="'10px'"
+      [style.backdropFilter]="'blur(10px)'"
+      [style.border]="'1px solid rgba(255, 255, 255, 0.1)'"
+      [style.boxShadow]="'0 8px 32px rgba(0, 0, 0, 0.3)'"
+      [style.transition]="'all 0.3s ease'">
       <ion-card-content>
         <div class="van-header">
             
@@ -157,7 +156,14 @@
     </ion-card>
 
     <!-- NEW: Tabbed History Section -->
-    <ion-card class="history-card">
+    <ion-card class="history-card"
+      [style.background]="'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)'"
+      [style.borderRadius]="'10px'"
+      [style.backdropFilter]="'blur(10px)'"
+      [style.border]="'1px solid rgba(255, 255, 255, 0.1)'"
+      [style.boxShadow]="'0 8px 32px rgba(0, 0, 0, 0.3)'"
+      [style.transition]="'all 0.3s ease'"
+      [style.marginTop]="'20px'">
       <div class="history-container">
         <ion-card-header>
           <ion-card-title>Van History</ion-card-title>

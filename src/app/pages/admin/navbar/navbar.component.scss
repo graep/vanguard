@@ -51,18 +51,19 @@
 .sidebar-header {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   padding: 20px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   min-height: 80px;
   position: relative;
+  cursor: pointer;
   
-  // Prevent dragging of header elements
+  // Prevent dragging of header elements but allow clicks
   user-select: none;
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
-  touch-action: none;
+  touch-action: manipulation; // Allow clicks but prevent zoom/pan
   -webkit-touch-callout: none;
   -webkit-user-drag: none;
   -khtml-user-drag: none;
@@ -81,51 +82,134 @@
     justify-content: center;
     color: var(--sidebar-text);
     flex-shrink: 0;
-    transition: transform 0.08s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    transition: 
+      opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+      transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+      background 0.2s ease,
+      visibility 0.4s;
+    visibility: visible;
     
     ion-icon {
       font-size: 24px;
     }
+    
+    &.hidden {
+      opacity: 0;
+      transform: scale(0.8);
+      pointer-events: none;
+      visibility: hidden;
+    }
   }
 
   .brand-name {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
     margin-left: 15px;
     color: var(--sidebar-text);
     font-size: 20px;
     font-weight: 600;
-    transition: opacity 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94), margin-left 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94), max-width 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     white-space: nowrap;
     overflow: hidden;
-    max-width: 200px; /* Set a reasonable max width */
+    max-width: 200px;
+    transition: 
+      opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.1s,
+      transform 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.1s,
+      margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+      max-width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+      width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+      left 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+      top 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.1s;
+    transform: translateY(0);
+    position: relative;
+    
+    .shield-icon {
+      font-size: 24px;
+      color: var(--ion-color-secondary);
+      flex-shrink: 0;
+      transition: 
+        transform 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.15s,
+        opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.1s;
+      transform: scale(0.9);
+    }
+    
+    .brand-text {
+      flex-shrink: 0;
+    }
     
     &.hidden {
       opacity: 0;
+      transform: translateY(-20px);
       pointer-events: none;
+      
+      .shield-icon {
+        opacity: 0;
+        transform: scale(0.9);
+      }
     }
   }
 
-
+  // Hover effect to indicate clickability
+  &:hover {
+    background: rgba(255, 255, 255, 0.05);
+    
+    .logo:not(.hidden) {
+      background: rgba(255, 255, 255, 0.3);
+    }
+  }
 
 }
 
-/* When sidebar is collapsed, center just the logo */
+/* When sidebar is collapsed, center the hamburger menu */
 .sidebar.collapsed .sidebar-header {
   justify-content: center;
   
   .brand-name {
     opacity: 0;
+    transform: translate(-50%, -70%);
     margin-left: 0;
     max-width: 0;
     pointer-events: none;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+  }
+  
+  .logo {
+    opacity: 1;
+    transform: scale(1) translateZ(0);
+    visibility: visible;
   }
 }
 
-/* When sidebar is expanded, logo and text are centered together */
+/* When sidebar is expanded, center the brand name and hide hamburger */
 .sidebar:not(.collapsed) .sidebar-header {
+  justify-content: center;
+  position: relative;
+  
   .brand-name {
     opacity: 1;
-    margin-left: 15px;
-    max-width: 200px;
+    margin-left: 0;
+    margin-right: 0;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: auto;
+    max-width: none;
+    justify-content: center;
+    
+    .shield-icon {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+  
+  .logo {
+    opacity: 0;
+    transform: scale(0.8) translateZ(0);
+    visibility: hidden;
   }
 }
 
@@ -239,18 +323,16 @@
   padding: 20px 0;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   
-  .date-display {
+  .user-display {
     display: flex;
     align-items: center;
     padding: 10px 20px;
     color: var(--sidebar-text-secondary);
-    cursor: pointer;
     transition: var(--transition);
     margin-bottom: 10px;
     position: relative;
-    border-left: 3px solid transparent;
     
-    // Prevent dragging of date display
+    // Prevent dragging of user display
     user-select: none;
     -webkit-user-select: none;
     -moz-user-select: none;
@@ -262,12 +344,6 @@
     -moz-user-drag: none;
     -o-user-drag: none;
     user-drag: none;
-    
-    &:hover {
-      background: rgba(255, 255, 255, 0.1);
-      color: var(--sidebar-text);
-      border-left-color: var(--ion-color-secondary);
-    }
     
     ion-icon {
       font-size: 16px;
@@ -416,7 +492,16 @@
   left: 20px;
   z-index: 1001;
   --border-radius: 8px;
+  --padding-start: 12px;
+  --padding-end: 12px;
+  --padding-top: 8px;
+  --padding-bottom: 8px;
+  --color: var(--ion-color-primary);
   display: none;
+  
+  ion-icon {
+    font-size: 24px;
+  }
 }
 
 .mobile-overlay {
@@ -494,6 +579,10 @@
   
   .mobile-menu-btn {
     display: block;
+    
+    ion-icon {
+      font-size: 24px;
+    }
   }
   
   .sidebar {
@@ -502,8 +591,7 @@
     
     &.mobile-open {
       transform: translateX(0);
-    }
-  }
+    }  }
   
   // Content wrapper styles removed - let admin-layout handle mobile responsiveness
 }
@@ -511,11 +599,11 @@
 @media (min-width: 769px) {
   .mobile-only {
     display: none !important;
-  }
-  
+  }  
   .desktop-only {
     display: block !important;
   }
   
   // Desktop behavior handled by admin-layout component
 }
+

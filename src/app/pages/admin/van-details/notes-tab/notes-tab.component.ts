@@ -146,6 +146,14 @@ import { NotesHistoryService, NoteEntry } from '../../../../services/notes-histo
           --height: 36px;
           font-size: 0.85rem;
           white-space: nowrap;
+          
+          &:hover {
+            transform: translateY(-2px);
+          }
+          
+          &:active {
+            transform: translateY(1px);
+          }
         }
       }
 
@@ -159,7 +167,7 @@ import { NotesHistoryService, NoteEntry } from '../../../../services/notes-histo
         margin-left: 16px;
         margin-right: 16px;
         background: var(--ion-color-light);
-        border-radius: 12px;
+        border-radius: 10px;
         border: 1px solid var(--ion-color-light-shade);
         
         @media (max-width: 768px) {
@@ -186,7 +194,7 @@ import { NotesHistoryService, NoteEntry } from '../../../../services/notes-histo
         .notes-textarea {
           margin-bottom: 16px;
           --background: var(--ion-color-light);
-          --border-radius: 8px;
+          --border-radius: 10px;
           --padding-start: 12px;
           --padding-end: 12px;
           --padding-top: 12px;
@@ -203,12 +211,28 @@ import { NotesHistoryService, NoteEntry } from '../../../../services/notes-histo
             --padding-end: 16px;
             height: 40px;
             font-weight: 600;
+            
+            &:hover {
+              transform: translateY(-2px);
+            }
+            
+            &:active {
+              transform: translateY(0);
+            }
           }
 
           .cancel-button {
             --padding-start: 16px;
             --padding-end: 16px;
             height: 40px;
+            
+            &:hover {
+              transform: translateY(-2px);
+            }
+            
+            &:active {
+              transform: translateY(0);
+            }
           }
         }
       }
@@ -219,6 +243,7 @@ import { NotesHistoryService, NoteEntry } from '../../../../services/notes-histo
         max-width: 100% !important;
         margin-left: 0 !important;
         margin-right: 0 !important;
+        transform: none !important;
         
         ion-card-content {
           padding: 16px;
@@ -283,6 +308,12 @@ import { NotesHistoryService, NoteEntry } from '../../../../services/notes-histo
 
           &:hover {
             opacity: 1;
+            transform: translateY(-2px);
+          }
+          
+          &:active {
+            transform: translateY(1px);
+            opacity: 0.9;
           }
 
           ion-icon {
@@ -293,7 +324,7 @@ import { NotesHistoryService, NoteEntry } from '../../../../services/notes-histo
 
       .note-content {
         background: var(--ion-color-light);
-        border-radius: 8px;
+        border-radius: 10px;
         padding: 12px;
         font-size: 0.95rem;
         line-height: 1.4;

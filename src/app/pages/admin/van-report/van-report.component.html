@@ -200,6 +200,12 @@
        (click)="toggleImageExpansion(expandedImage || '')">
   </div>
 
+  <!-- Expanded Image - Separate element to break out of parent containers -->
+  <img *ngIf="expandedImage" 
+       class="expanded-photo" 
+       [src]="expandedImage"
+       (click)="toggleImageExpansion(expandedImage || '')" />
+
   <!-- Unsure Photo Modal -->
   <div class="unsure-photo-modal" *ngIf="unsurePhotoModal">
     <div class="modal-backdrop" (click)="closeUnsurePhotoModal()"></div>

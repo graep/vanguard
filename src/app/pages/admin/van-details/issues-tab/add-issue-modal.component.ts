@@ -134,6 +134,14 @@ interface NewIssue {
         ion-button {
           --color: var(--ion-color-dark);
           --color-hover: var(--ion-color-medium);
+          
+          &:hover {
+            transform: translateY(-2px);
+          }
+          
+          &:active {
+            transform: translateY(1px);
+          }
         }
       }
     }
@@ -146,7 +154,7 @@ interface NewIssue {
       padding: 32px;
       background: #1e1e1e;
       margin: 20px;
-      border-radius: 16px;
+      border-radius: 10px;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
 
@@ -170,13 +178,13 @@ interface NewIssue {
 
     ion-item {
       --background: transparent;
-      --border-radius: 12px;
+      --border-radius: 10px;
       --padding-start: 20px;
       --padding-end: 20px;
       --inner-padding-end: 0;
       margin-bottom: 20px;
       border: 1px solid rgba(255, 255, 255, 0.15);
-      border-radius: 12px;
+      border-radius: 10px;
       transition: all 0.2s ease;
 
       &:hover {
@@ -218,7 +226,7 @@ interface NewIssue {
       gap: 12px;
       padding: 12px 16px;
       background: rgba(255, 255, 255, 0.08);
-      border-radius: 12px;
+      border-radius: 10px;
       border: 1px solid rgba(255, 255, 255, 0.2);
     }
 
@@ -238,7 +246,7 @@ interface NewIssue {
 
     .save-button {
       --height: 52px;
-      --border-radius: 12px;
+      --border-radius: 10px;
       font-weight: 600;
       font-size: 1rem;
       text-transform: none;
@@ -246,20 +254,30 @@ interface NewIssue {
       transition: all 0.2s ease;
 
       &:hover {
-        transform: translateY(-1px);
         box-shadow: 0 6px 16px rgba(var(--ion-color-primary-rgb), 0.4);
+        transform: translateY(-2px);
+      }
+      
+      &:active {
+        transform: translateY(1px);
+        box-shadow: 0 2px 8px rgba(var(--ion-color-primary-rgb), 0.2);
       }
     }
 
     .cancel-button {
       --height: 44px;
-      --border-radius: 12px;
+      --border-radius: 10px;
       font-weight: 500;
       text-transform: none;
       transition: all 0.2s ease;
 
       &:hover {
         --background: var(--ion-color-light-shade);
+        transform: translateY(-2px);
+      }
+      
+      &:active {
+        transform: translateY(1px);
       }
     }
 

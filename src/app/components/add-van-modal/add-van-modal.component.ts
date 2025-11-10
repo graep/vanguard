@@ -33,7 +33,7 @@ import { VanService } from '../../services/van.service';
               required>
               <ion-select-option value="EDV">EDV</ion-select-option>
               <ion-select-option value="CDV">CDV</ion-select-option>
-              <ion-select-option value="LMR">LMR</ion-select-option>
+              <ion-select-option value="Rental">Rental</ion-select-option>
             </ion-select>
           </ion-item>
 

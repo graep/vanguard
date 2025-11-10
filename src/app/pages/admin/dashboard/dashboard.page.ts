@@ -7,23 +7,40 @@ import {
   collectionData,
   CollectionReference,
 } from '@angular/fire/firestore';
-import { IonicModule, LoadingController, ToastController, ModalController } from '@ionic/angular';
+import {
+  IonContent,
+  IonGrid,
+  IonRow,
+  IonCol,
+  IonIcon,
+  IonButton,
+  LoadingController,
+  ToastController,
+  ModalController
+} from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Van } from 'src/app/models/van.model';
 import { StatusCountBarComponent, StatusDataSource } from '@app/components/status-count-bar/status-count-bar.component';
+import { BreadcrumbItem } from '@app/components/breadcrumb/breadcrumb.component';
 import { NavService } from '@app/services/nav.service';
 import { VanService } from '@app/services/van.service';
 import { AddVanModalComponent } from '@app/components/add-van-modal/add-van-modal.component';
+import { BreadcrumbService } from '@app/services/breadcrumb.service';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
   imports: [
     CommonModule, 
-    IonicModule, 
-    FormsModule, 
+    FormsModule,
+    IonContent,
+    IonGrid,
+    IonRow,
+    IonCol,
+    IonIcon,
+    IonButton,
     StatusCountBarComponent
   ],
   templateUrl: './dashboard.page.html',
@@ -35,7 +52,7 @@ export class DashboardPage implements OnInit {
   filteredVans: Van[] = [];
   filteredCdvs: Van[] = [];
   filteredEdvs: Van[] = [];
-  filteredLmrs: Van[] = [];
+  filteredRentals: Van[] = [];
 
   // Filter state tracking
   hasActiveFilters = false;
@@ -66,14 +83,17 @@ export class DashboardPage implements OnInit {
     filterValue: 'EDV'
   };
 
-  lmrDataSource: StatusDataSource = {
+  rentalDataSource: StatusDataSource = {
     items: [],
     statusField: 'isGrounded',
     activeValue: false,
     searchFields: ['docId', 'VIN', 'number'],
     filterField: 'type',
-    filterValue: 'LMR'
+    filterValue: 'Rental'
   };
+
+  // Breadcrumb
+  breadcrumbItems: BreadcrumbItem[] = [];
 
   // Inject only what we need
   private route = inject(ActivatedRoute);
@@ -86,8 +106,15 @@ export class DashboardPage implements OnInit {
   private loadingCtrl = inject(LoadingController);
   private toastCtrl = inject(ToastController);
   private modalCtrl = inject(ModalController);
+  private breadcrumbService = inject(BreadcrumbService);
 
   ngOnInit() {
+    // Ensure no residual tail remains when landing on Dashboard
+    this.breadcrumbService.clearTail();
+    // Set breadcrumb to mirror van-details header style
+    this.breadcrumbItems = [
+      { label: 'Dashboard', icon: 'home' }
+    ];
     this.loadVans();
   }
 
@@ -125,22 +152,28 @@ export class DashboardPage implements OnInit {
     this.filteredVans = data;
     this.filteredCdvs = data.filter((v) => (v.type || '').toUpperCase() === 'CDV');
     this.filteredEdvs = data.filter((v) => (v.type || '').toUpperCase() === 'EDV');
-    this.filteredLmrs = data.filter((v) => (v.type || '').toUpperCase() === 'LMR');
+    this.filteredRentals = data.filter((v) => (v.type || '').toUpperCase() === 'RENTAL');
   }
 
   // Handle filtered data from overall status bar
   onOverallFilteredData(filteredData: Van[]): void {
     this.filteredVans = filteredData;
-    // Update CDV, EDV, and LMR lists based on overall filter
+    // Update CDV, EDV, and Rental lists based on overall filter
     this.filteredCdvs = filteredData.filter((v) => (v.type || '').toUpperCase() === 'CDV');
     this.filteredEdvs = filteredData.filter((v) => (v.type || '').toUpperCase() === 'EDV');
-    this.filteredLmrs = filteredData.filter((v) => (v.type || '').toUpperCase() === 'LMR');
+    this.filteredRentals = filteredData.filter((v) => (v.type || '').toUpperCase() === 'RENTAL');
     
     // Check if any filters are active (filtered data is different from original data)
     this.hasActiveFilters = filteredData.length !== this.vans.length;
   }
 
   viewVan(van: Van): void {
+    // Prime breadcrumb so it shows immediately on navigation
+    if (van && van.type && van.number != null) {
+      this.breadcrumbService.setTail([
+        { label: `${(van.type || '').toUpperCase()} ${van.number}`, icon: 'car' }
+      ]);
+    }
     // Navigate to the dynamic van detail page using the van's docId
     this.router.navigate(['van', van.docId], { relativeTo: this.route });
   }
@@ -197,23 +230,23 @@ export class DashboardPage implements OnInit {
   }
 
   /**
-   * Get the appropriate LMR image based on the van's make
+   * Get the appropriate Rental image based on the van's make
    * @param van The van object
-   * @returns The path to the appropriate LMR image
+   * @returns The path to the appropriate Rental image
    */
-  getLmrImage(van: Van): string {
+  getRentalImage(van: Van): string {
     if (!van.make) {
-      return 'assets/LMR.jpg'; // Default fallback
+      return 'assets/Rental.jpg'; // Default fallback
     }
     
     const make = van.make.toLowerCase().trim();
     
     if (make === 'ford') {
-      return 'assets/LMR_ford.png';
+      return 'assets/Rental_ford.png';
     } else if (make === 'dodge') {
-      return 'assets/LMR_dodge.png';
+      return 'assets/Rental_dodge.png';
     }
     
-    return 'assets/LMR.jpg'; // Default fallback for other makes
+    return 'assets/Rental.jpg'; // Default fallback for other makes
   }
 }

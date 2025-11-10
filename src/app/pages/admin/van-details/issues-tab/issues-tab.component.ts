@@ -193,6 +193,14 @@ interface IssueRecord {
           --height: 36px;
           font-size: 0.85rem;
           white-space: nowrap;
+          
+          &:hover {
+            transform: translateY(-2px);
+          }
+          
+          &:active {
+            transform: translateY(1px);
+          }
         }
       }
 
@@ -206,6 +214,14 @@ interface IssueRecord {
           --height: 40px;
           font-size: 0.9rem;
           font-weight: 600;
+          
+          &:hover {
+            transform: translateY(-2px);
+          }
+          
+          &:active {
+            transform: translateY(1px);
+          }
         }
       }
 
@@ -220,6 +236,7 @@ interface IssueRecord {
         max-width: 100% !important;
         margin-left: 0 !important;
         margin-right: 0 !important;
+        transform: none !important;
         
         ion-card-content {
           padding: 16px;
@@ -345,13 +362,21 @@ interface IssueRecord {
             --height: 32px;
             font-size: 0.8rem;
             font-weight: 600;
+            
+            &:hover {
+              transform: translateY(-2px);
+            }
+            
+            &:active {
+              transform: translateY(0);
+            }
           }
         }
       }
 
       .issue-description {
         background: var(--ion-color-light);
-        border-radius: 8px;
+        border-radius: 10px;
         padding: 12px;
         font-size: 0.9rem;
         line-height: 1.4;

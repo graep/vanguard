@@ -1,9 +1,21 @@
 // src/app/pages/van-detail/van-detail.page.ts
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { IonicModule, AlertController, ToastController } from '@ionic/angular';
+import {
+  IonContent,
+  IonCard,
+  IonCardContent,
+  IonCardHeader,
+  IonCardTitle,
+  IonButton,
+  IonIcon,
+  IonChip,
+  IonLabel,
+  AlertController,
+  ToastController
+} from '@ionic/angular/standalone';
 import { Firestore, doc, getDoc, setDoc } from '@angular/fire/firestore';
 import { Storage, ref, uploadBytes, getDownloadURL } from '@angular/fire/storage';
 import { Van } from '../../../models/van.model';
@@ -12,15 +24,34 @@ import { IssuesTabComponent } from "./issues-tab/issues-tab.component";
 import { MaintenanceTabComponent } from "./maintenance-tab/maintenance-tab.component";
 import { NotesTabComponent } from "./notes-tab/notes-tab.component";
 import { DriversTabComponent } from "./drivers-tab/drivers-tab.component";
-import { BreadcrumbItem, BreadcrumbComponent } from '../../../components/breadcrumb/breadcrumb.component';
+import { BreadcrumbItem } from '../../../components/breadcrumb/breadcrumb.component';
+import { BreadcrumbService } from '@app/services/breadcrumb.service';
 
 
 @Component({
   selector: 'app-van-details',
   standalone: true,
-  imports: [CommonModule, FormsModule, IonicModule, RouterModule, IssuesTabComponent, MaintenanceTabComponent, NotesTabComponent, DriversTabComponent, BreadcrumbComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterModule,
+    IonContent,
+    IonCard,
+    IonCardContent,
+    IonCardHeader,
+    IonCardTitle,
+    IonButton,
+    IonIcon,
+    IonChip,
+    IonLabel,
+    IssuesTabComponent,
+    MaintenanceTabComponent,
+    NotesTabComponent,
+    DriversTabComponent
+  ],
   templateUrl: './van-details.page.html',
-  styleUrls: ['./van-details.page.scss']
+  styleUrls: ['./van-details.page.scss'],
+  encapsulation: ViewEncapsulation.None
 })
 export class VanDetailsPage implements OnInit {
   private route = inject(ActivatedRoute);
@@ -30,6 +61,7 @@ export class VanDetailsPage implements OnInit {
   private inspectionService = inject(InspectionService);
   private alertCtrl = inject(AlertController);
   private toastCtrl = inject(ToastController);
+  private breadcrumbService = inject(BreadcrumbService);
 
   van: Van | null = null;
   loading = true;
@@ -48,11 +80,17 @@ export class VanDetailsPage implements OnInit {
   vanTypeLabels: Record<string, string> = {
     'EDV': 'Electric Delivery Van',
     'CDV': 'Cargo Delivery Van',
-    'LMR': 'Large Mail Route'
+    'Rental': 'Rental Vehicle'
   };
 
   async ngOnInit() {
     this.loading = true;
+    // Only set a placeholder if no tail was primed by the previous page
+    if (!this.breadcrumbService.getTail()?.length) {
+      this.breadcrumbService.setTail([
+        { label: 'Van Details', icon: 'car' }
+      ]);
+    }
     
     const vanId = this.route.snapshot.paramMap.get('id');
     if (!vanId) {
@@ -65,17 +103,21 @@ export class VanDetailsPage implements OnInit {
       await this.loadVanData(vanId);
       if (this.van) {
         await this.loadLatestInspection();
-        // Set breadcrumb items
-        this.breadcrumbItems = [
-          { label: 'Dashboard', url: '/admin', icon: 'home' },
+        // Set layout-level breadcrumb tail with specific van label
+        this.breadcrumbService.setTail([
           { label: `${this.van.type.toUpperCase()} ${this.van.number}`, icon: 'car' }
-        ];
+        ]);
       }
     } catch (error: any) {
       this.errorMsg = error.message || 'Failed to load van data';
     } finally {
       this.loading = false;
     }
+  }
+
+  ngOnDestroy(): void {
+    // Intentionally do not clear breadcrumb here to avoid flicker when navigating
+    // into child pages like Van Report, which build on top of the existing tail.
   }
 
   private async loadVanData(vanId: string) {
@@ -254,9 +296,9 @@ export class VanDetailsPage implements OnInit {
       return this.van.imageUrl;
     }
     
-    // For LMR vans, use dynamic image based on make
-    if (this.van.type.toUpperCase() === 'LMR') {
-      return this.getLmrImage(this.van);
+    // For Rental vans, use dynamic image based on make
+    if (this.van.type.toUpperCase() === 'RENTAL') {
+      return this.getRentalImage(this.van);
     }
     
     // Default images based on van type for EDV and CDV
@@ -265,24 +307,24 @@ export class VanDetailsPage implements OnInit {
   }
 
   /**
-   * Get the appropriate LMR image based on the van's make
+   * Get the appropriate Rental image based on the van's make
    * @param van The van object
-   * @returns The path to the appropriate LMR image
+   * @returns The path to the appropriate Rental image
    */
-  getLmrImage(van: Van): string {
+  getRentalImage(van: Van): string {
     if (!van.make) {
-      return 'assets/LMR.jpg'; // Default fallback
+      return 'assets/Rental.jpg'; // Default fallback
     }
     
     const make = van.make.toLowerCase().trim();
     
     if (make === 'ford') {
-      return 'assets/LMR_ford.png';
+      return 'assets/Rental_ford.png';
     } else if (make === 'dodge') {
-      return 'assets/LMR_dodge.png';
+      return 'assets/Rental_dodge.png';
     }
     
-    return 'assets/LMR.jpg'; // Default fallback for other makes
+    return 'assets/Rental.jpg'; // Default fallback for other makes
   }
 
   getStatusColor(): string {
@@ -308,6 +350,13 @@ export class VanDetailsPage implements OnInit {
       return;
     }
 
+    // Prime breadcrumb for Van Report with clickable van node
+    if (this.van) {
+      this.breadcrumbService.setTail([
+        { label: `${this.van.type.toUpperCase()} ${this.van.number}`, icon: 'car', url: `/admin/van/${this.van.docId}` },
+        { label: 'Van Report' }
+      ]);
+    }
     this.router.navigate(['/van-report', this.latestInspectionId]);
   }
 

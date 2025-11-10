@@ -21,7 +21,7 @@ export interface StatusDataSource {
 export interface VanTypeTotals {
   EDV: number;
   CDV: number;
-  LMR: number;
+  Rental: number;
 }
 
 @Component({
@@ -138,7 +138,7 @@ export class StatusCountBarComponent implements OnInit, OnChanges, OnDestroy {
   computedStatusData: StatusItem[] = [];
   selectedStatusFilter: string | null = null;
   selectedVanTypeFilter: string | null = null;
-  vanTypeTotals: VanTypeTotals = { EDV: 0, CDV: 0, LMR: 0 };
+  vanTypeTotals: VanTypeTotals = { EDV: 0, CDV: 0, Rental: 0 };
   private searchDebounceTimer: any;
 
   ngOnInit(): void {
@@ -170,8 +170,8 @@ export class StatusCountBarComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   get orderedVanTypeTotals(): { key: string; value: number }[] {
-    // Order: EDV first, then CDV, then LMR
-    const order = ['EDV', 'CDV', 'LMR'];
+    // Order: EDV first, then CDV, then Rental
+    const order = ['EDV', 'CDV', 'Rental'];
     return order.map(key => ({ key, value: this.vanTypeTotals[key as keyof VanTypeTotals] }));
   }
 
@@ -184,7 +184,7 @@ export class StatusCountBarComponent implements OnInit, OnChanges, OnDestroy {
 
   private updateVanTypeTotals(): void {
     if (!this.dataSource?.items) {
-      this.vanTypeTotals = { EDV: 0, CDV: 0, LMR: 0 };
+      this.vanTypeTotals = { EDV: 0, CDV: 0, Rental: 0 };
       return;
     }
 
@@ -213,7 +213,7 @@ export class StatusCountBarComponent implements OnInit, OnChanges, OnDestroy {
     this.vanTypeTotals = {
       EDV: items.filter(item => (item.type || '').toUpperCase() === 'EDV').length,
       CDV: items.filter(item => (item.type || '').toUpperCase() === 'CDV').length,
-      LMR: items.filter(item => (item.type || '').toUpperCase() === 'LMR').length
+      Rental: items.filter(item => (item.type || '').toUpperCase() === 'RENTAL').length
     };
   }
 

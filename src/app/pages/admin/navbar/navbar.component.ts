@@ -10,10 +10,12 @@ import { Auth } from '@angular/fire/auth';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 
 import { Subscription } from 'rxjs';
+import { NavbarStateService } from '@app/services/navbar-state.service';
 
 import { RecentSubmissionsModalComponent } from '@app/components/recent-submissions/recent-submissions-modal.component';
 import { InspectionService } from '@app/services/inspection.service';
 import { NavService } from '@app/services/nav.service';
+import { AuthService } from '@app/services/auth.service';
 
 @Component({
   selector: 'app-admin-navbar',
@@ -31,19 +33,23 @@ export class NavbarComponent implements OnInit, OnDestroy {
   // notifications
   hasNewSubmissions = true;
 
+  // User info
+  userDisplayName: string = 'User';
+
   private subs: Subscription[] = [];
 
   // Menu config (no manual 'active' flags; routing decides)
   menuItems = [
     { title: 'Dashboard', icon: 'home-outline', route: '/admin' },
     { title: 'Users', icon: 'people-outline', route: '/admin/users' },
+    { title: 'Planning', icon: 'calendar-outline', route: '/admin/planning' },
     {
       title: 'Pending Submissions',
       icon: 'document-outline',
       action: () => this.openPendingModal(),
       hasNotification: () => this.hasNewSubmissions
     },
-    { title: 'Analytics', icon: 'analytics-outline' },
+    { title: 'Analytics', icon: 'analytics-outline', route: '/admin/statistics' },
     { title: 'Projects', icon: 'folder-outline' },
     { title: 'Messages', icon: 'chatbubbles-outline' },
     { title: 'Settings', icon: 'settings-outline' }
@@ -54,12 +60,34 @@ export class NavbarComponent implements OnInit, OnDestroy {
     private router: Router,
     private modalCtrl: ModalController,
     private inspectionService: InspectionService,
-    private navService: NavService
+    private navService: NavService,
+    private navbarState: NavbarStateService,
+    private authService: AuthService
   ) {}
 
   // ---------- Lifecycle ----------
   ngOnInit() {
     this.checkForNewSubmissions();
+    this.loadUserInfo();
+    
+    // Subscribe to mobile menu state from service
+    const mobileSub = this.navbarState.isMobileOpen$.subscribe(isOpen => {
+      this.isMobileMenuOpen = isOpen;
+    });
+    this.subs.push(mobileSub);
+    
+    // Subscribe to collapsed state from service
+    const collapsedSub = this.navbarState.isCollapsed$.subscribe(isCollapsed => {
+      this.isCollapsed = isCollapsed;
+    });
+    this.subs.push(collapsedSub);
+  }
+
+  loadUserInfo() {
+    const sub = this.authService.currentUserProfile$.subscribe(profile => {
+      this.userDisplayName = profile?.displayName || 'User';
+    });
+    this.subs.push(sub);
   }
 
   ngOnDestroy() {
@@ -94,15 +122,50 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
   // ---------- Sidebar interactions ----------
   toggleSidebar() {
-    this.isCollapsed = !this.isCollapsed;
+    // Only toggle on desktop (not mobile)
+    const isMobile = window.innerWidth <= 768;
+    if (!isMobile) {
+      this.isCollapsed = !this.isCollapsed;
+      this.navbarState.setCollapsed(this.isCollapsed);
+    }
   }
 
   toggleMobileMenu() { 
     this.isMobileMenuOpen = !this.isMobileMenuOpen; 
+    this.navbarState.setMobileOpen(this.isMobileMenuOpen);
   }
   
   closeMobileMenu() { 
     this.isMobileMenuOpen = false; 
+    this.navbarState.setMobileOpen(false);
+  }
+
+  onSidebarClick(event: Event) {
+    // On mobile, clicking anywhere on the sidebar (except menu items) closes it
+    const isMobile = window.innerWidth <= 768;
+    if (isMobile && this.isMobileMenuOpen) {
+      const target = event.target as HTMLElement;
+      // Don't close if clicking on a menu item (they handle their own clicks and close the menu)
+      const isMenuItem = target.closest('.menu-item');
+      const isLogo = target.closest('.logo');
+      
+      // Close if clicking on sidebar background, header (except logo), or empty areas
+      if (!isMenuItem && !isLogo) {
+        this.closeMobileMenu();
+      }
+    }
+  }
+
+  onSidebarHeaderClick(event: Event) {
+    event.stopPropagation(); // Prevent sidebar click from firing
+    const isMobile = window.innerWidth <= 768;
+    if (isMobile && this.isMobileMenuOpen) {
+      // On mobile, clicking header closes the menu
+      this.closeMobileMenu();
+    } else {
+      // On desktop, toggle collapsed state
+      this.toggleSidebar();
+    }
   }
 
   onSidebarAreaClick(event: Event) {
@@ -113,53 +176,42 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
   // Prevent dragging behavior on touch devices
   onTouchStart(event: TouchEvent) {
-    // Only prevent default for dragging, not for clicks
-    // Don't prevent default to allow normal touch interactions
+    // Don't prevent default - let clicks work normally
+    // CSS touch-action: manipulation already handles preventing unwanted gestures
   }
 
   onTouchMove(event: TouchEvent) {
-    // Only prevent default for dragging, not for clicks
-    // Don't prevent default to allow normal touch interactions
+    // Don't prevent default - let clicks work normally
+    // CSS touch-action: manipulation already handles preventing unwanted gestures
   }
 
   onMouseDown(event: MouseEvent) {
-    // Only prevent default for dragging, not for clicks
-    // Don't prevent default to allow normal mouse interactions
+    // Prevent default mouse behavior if needed
+    // This can be used to prevent text selection or other unwanted behaviors
   }
 
-  onDateClick() { 
-    /* noop or open date picker */ 
+  handleItemClick(item: any, index: number, event: Event) {
+    // Stop propagation to prevent sidebar area click from firing
+    event.stopPropagation();
+    
+    // Close mobile menu when item is clicked
+    if (this.isMobileMenuOpen) {
+      this.closeMobileMenu();
+    }
+
+    // If item has an action, execute it
+    if (item.action) {
+      item.action();
+    }
+    // If item has a route, RouterLink will handle navigation
   }
 
   async logout() {
-    await this.auth.signOut();
-    this.navService.enhancedLogout(); // Clear both app and browser history
-    this.router.navigate(['/login'], { replaceUrl: true });
-  }
-
-  // ---------- Menu item clicks ----------
-  /** Used by the template. Router handles navigation for items with a route.
-   *  For action-only items (like the modal), run the action and keep the current route active.
-   *  For items with no route or action, prevent navigation. */
-  handleItemClick(item: any, _index: number, ev: MouseEvent) {
-    // If item has no route and no action, prevent navigation
-    if (!item.route && !item.action) {
-      ev.preventDefault();
-      ev.stopPropagation();
-      return;
+    try {
+      await this.authService.logout();
+      this.router.navigate(['/login'], { replaceUrl: true });
+    } catch (error) {
+      console.error('Logout error:', error);
     }
-    
-    // For action-only items, run the action
-    if (!item.route && item.action) {
-      ev.stopPropagation();
-      item.action();
-    }
-
-    this.closeMobileMenu();
-  }
-
-  /** Back-compat if your template still calls onMenuItemClick */
-  onMenuItemClick(item: any, ev: Event) {
-    this.handleItemClick(item, -1, ev as MouseEvent);
   }
 }

@@ -46,13 +46,23 @@ ion-content {
 
 .logo-container {
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   margin-top: 15px;
+  margin-bottom: 10px;
   
   img {
     max-width: 200px;
     height: auto;
+  }
+
+  .page-title {
+    color: white;
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-top: 10px;
+    margin-bottom: 0;
   }
 }
 
@@ -76,15 +86,24 @@ ion-content {
 /* Form Fields - Same as login */
 .form-field {
   margin-bottom: 8px;
-  border-radius: 8px;
+  border-radius: 12px;
   overflow: hidden;
   --padding-start: 12px;
-  --inner-border-radius: 8px;
+  --inner-border-radius: 12px;
   --background: rgba(255, 255, 255, 0.28);
   --color: var(--ion-text-color);
   position: relative;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   --border-width: 2px;
+
+   .item-native {
+     border-radius: 12px !important;
+
+     &::after {
+       border: none !important;
+       height: 0 !important;
+     }
+   }
 
   &.optional {
     --background: rgba(255, 255, 255, 0.15);
@@ -119,6 +138,23 @@ ion-note {
   margin-bottom: 4px;
 }
 
+.form-divider {
+  margin: 16px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.optional-label {
+  text-align: center;
+  margin: 12px 0 8px;
+
+  h3 {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.9);
+    margin: 0;
+    font-weight: 500;
+  }
+}
+
 .section-divider {
   margin: 20px 0 12px;
   padding-top: 16px;
@@ -139,9 +175,29 @@ ion-note {
   --padding-bottom: 16px;
   font-weight: 600;
   margin-top: 16px;
+  width: 60%;
 
   &:disabled {
     opacity: 0.6;
+  }
+}
+
+.button-section {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  text-align: center;
+  width: 100%;
+}
+
+.login-link {
+  align-self: center;
+  margin-top: 10px;
+  --color: rgba(255, 255, 255, 0.9);
+  
+  &.hidden {
+    visibility: hidden;
+    pointer-events: none;
   }
 }
 
@@ -208,5 +264,168 @@ ion-note {
   
   .logo-container img {
     max-width: 140px;
+  }
+}
+
+/* Override global background for mobile */
+@media (max-width: 426px) {
+  ion-content {
+    --background: transparent !important;
+    --ion-background-color: transparent !important;
+  }
+}
+
+/* Mobile full-screen adjustments (426px and below) */
+@media (max-width: 426px) {
+  ion-content {
+    --padding-start: 0 !important;
+    --padding-end: 0 !important;
+    --padding-top: 0 !important;
+    --padding-bottom: 0 !important;
+  }
+  
+  .wrapper {
+    min-height: 100vh !important;
+    padding: 0 !important;
+    justify-content: flex-start !important;
+    padding-top: 20px !important;
+    margin: 0 !important;
+  }
+  
+  .signup-form-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    border-radius: 0 !important;
+    background-color: transparent !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  
+  .signup-form {
+    padding: 30px 20px !important;
+    gap: 12px !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    background: transparent !important;
+    min-height: calc(100vh - 40px) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    margin: 0 !important;
+    width: 100% !important;
+  }
+  
+  /* Style input fields with proper background and borders */
+  .form-field {
+    --background: rgba(255, 255, 255, 0.15) !important;
+    --color: #ffffff !important;
+    background: rgba(255, 255, 255, 0.15) !important;
+    border: none !important;
+    border-radius: 12px !important;
+    margin-bottom: 12px !important;
+
+    .item-native {
+      border-radius: 12px !important;
+
+      &::after {
+        border: none !important;
+        height: 0 !important;
+      }
+    }
+  }
+  
+  .form-field:focus-within {
+    --background: rgba(255, 255, 255, 0.25) !important;
+    background: rgba(255, 255, 255, 0.25) !important;
+    border: none !important;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.2) !important;
+  }
+  
+  /* Style buttons with blue backgrounds and rounded corners */
+  .signup-button {
+    --background: #2196F3 !important;
+    --color: #ffffff !important;
+    --border-color: #2196F3 !important;
+    --border-radius: 25px !important;
+    background: #2196F3 !important;
+    border: 2px solid #2196F3 !important;
+    border-radius: 25px !important;
+    box-shadow: 0 4px 16px rgba(33, 150, 243, 0.4) !important;
+    font-weight: 600 !important;
+    opacity: 1 !important;
+    width: 60% !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+  
+  .signup-button:hover {
+    --background: #1976D2 !important;
+    background: #1976D2 !important;
+    box-shadow: 0 6px 20px rgba(33, 150, 243, 0.5) !important;
+    border-color: #1976D2 !important;
+  }
+  
+  .button-section {
+    display: flex !important;
+    align-items: center !important;
+    flex-direction: column !important;
+    text-align: center !important;
+    width: 100% !important;
+  }
+
+  .login-link {
+    align-self: center !important;
+    margin-top: 10px !important;
+    --color: rgba(255, 255, 255, 0.9) !important;
+    
+    &.hidden {
+      visibility: hidden;
+      pointer-events: none;
+    }
+  }
+  
+  .logo-container img {
+    max-width: 180px !important;
+  }
+
+  .logo-container .page-title {
+    font-size: 1.3rem !important;
+    margin-top: 8px !important;
+  }
+  
+  .signup-button,
+  .login-link {
+    --padding-top: 14px !important;
+    --padding-bottom: 14px !important;
+  }
+
+  .form-header {
+    display: none !important;
+  }
+
+  .section-divider {
+    display: none !important;
+  }
+
+  .form-divider {
+    margin: 12px 0 !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.4) !important;
+  }
+
+  .optional-label h3 {
+    font-size: 0.85rem !important;
+    color: rgba(255, 255, 255, 0.85) !important;
+  }
+
+  .form-footer {
+    border-top: none !important;
+    padding-top: 10px !important;
+  }
+
+  /* Hide header on mobile */
+  app-header.signup-header {
+    display: none !important;
   }
 }

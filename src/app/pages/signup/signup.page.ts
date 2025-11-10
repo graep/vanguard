@@ -3,11 +3,17 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AppHeaderComponent } from '@app/components/app-header/app-header.component';
-import { 
-  IonicModule,
+import {
+  IonContent,
+  IonItem,
+  IonLabel,
+  IonInput,
+  IonButton,
+  IonIcon,
+  IonNote,
   ToastController,
   LoadingController
-} from '@ionic/angular';
+} from '@ionic/angular/standalone';
 import { AuthService, UserProfile } from '../../services/auth.service';
 
 @Component({
@@ -18,7 +24,13 @@ import { AuthService, UserProfile } from '../../services/auth.service';
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    IonicModule,
+    IonContent,
+    IonItem,
+    IonLabel,
+    IonInput,
+    IonButton,
+    IonIcon,
+    IonNote,
     AppHeaderComponent
   ]
 })

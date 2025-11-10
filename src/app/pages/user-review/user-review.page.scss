@@ -72,12 +72,19 @@
   }
 }
 
+/* Top Cards Container */
+.top-cards-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
 /* No Issues Card */
 .no-issues-card {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
   border-radius: 16px;
   padding: 20px;
-  margin-bottom: 20px;
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
@@ -97,6 +104,40 @@
     transform: translateY(0);
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
   }
+}
+
+/* Unsure Card */
+.unsure-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  border-radius: 16px;
+  padding: 20px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  
+  .unsure-icon {
+    background: linear-gradient(135deg, #9C27B0 0%, #7B1FA2 100%);
+    box-shadow: 0 4px 16px rgba(156, 39, 176, 0.3);
+  }
+}
+
+/* Unsure Details */
+.unsure-details {
+  margin-bottom: 20px;
+}
+
+.unsure-details-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  border-radius: 16px;
+  padding: 20px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
 }
 
 .card-header {
@@ -201,11 +242,6 @@
   &:active {
     transform: translateY(0);
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-  }
-  
-  &.selected {
-    border-color: rgba(255, 152, 0, 0.5);
-    background: linear-gradient(135deg, rgba(255, 152, 0, 0.1) 0%, rgba(255, 152, 0, 0.05) 100%);
   }
 }
 
@@ -332,6 +368,112 @@
   min-height: 80px;
 }
 
+/* Photo Capture Section */
+.photo-capture-section {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: center;
+}
+
+.photo-capture-button {
+  --background: rgba(255, 255, 255, 0.1);
+  --color: white;
+  --border-color: rgba(255, 255, 255, 0.3);
+  --border-radius: 8px;
+  --padding-start: 16px;
+  --padding-end: 16px;
+  --padding-top: 12px;
+  --padding-bottom: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  display: inline-block;
+  
+  &:hover {
+    --background: rgba(255, 255, 255, 0.2);
+    --border-color: rgba(255, 255, 255, 0.5);
+    transform: translateY(-1px);
+  }
+  
+  ion-icon {
+    margin-right: 8px;
+  }
+}
+
+/* Photo Display Area */
+.photo-display-area {
+  margin-top: 12px;
+}
+
+.photo-container {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.issue-photo {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: cover;
+  min-height: 200px;
+  max-height: 300px;
+}
+
+.photo-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.retake-button {
+  --background: rgba(33, 150, 243, 0.9);
+  --color: white;
+  --border-radius: 8px;
+  --padding-start: 12px;
+  --padding-end: 12px;
+  --padding-top: 8px;
+  --padding-bottom: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  backdrop-filter: blur(10px);
+  
+  ion-icon {
+    margin-right: 6px;
+    font-size: 16px;
+  }
+}
+
+.delete-button {
+  --background: rgba(244, 67, 54, 0.9);
+  --color: white;
+  --border-radius: 8px;
+  --padding-start: 12px;
+  --padding-end: 12px;
+  --padding-top: 8px;
+  --padding-bottom: 8px;
+  min-width: 44px;
+  backdrop-filter: blur(10px);
+  
+  ion-icon {
+    font-size: 18px;
+  }
+}
+
 /* Submit Section */
 .submit-section {
   margin-top: 12px;
@@ -384,9 +526,15 @@
     font-size: 0.85rem;
   }
   
-  .no-issues-card {
-    padding: 16px;
+  .top-cards-container {
+    grid-template-columns: 1fr;
+    gap: 12px;
     margin-bottom: 16px;
+  }
+  
+  .no-issues-card,
+  .unsure-card {
+    padding: 16px;
   }
   
   .card-icon {
@@ -425,6 +573,36 @@
   
   .category-title {
     font-size: 0.95rem;
+  }
+  
+  .photo-container {
+    max-width: 100%;
+  }
+  
+  .issue-photo {
+    min-height: 150px;
+    max-height: 250px;
+  }
+  
+  .photo-overlay {
+    padding: 12px;
+    gap: 8px;
+  }
+  
+  .retake-button {
+    --padding-start: 10px;
+    --padding-end: 10px;
+    --padding-top: 6px;
+    --padding-bottom: 6px;
+    font-size: 0.8rem;
+  }
+  
+  .delete-button {
+    --padding-start: 10px;
+    --padding-end: 10px;
+    --padding-top: 6px;
+    --padding-bottom: 6px;
+    min-width: 40px;
   }
   
   .submit-button {
@@ -480,6 +658,36 @@
   
   .form-label {
     font-size: 0.85rem;
+  }
+  
+  .photo-container {
+    max-width: 100%;
+  }
+  
+  .issue-photo {
+    min-height: 120px;
+    max-height: 200px;
+  }
+  
+  .photo-overlay {
+    padding: 10px;
+    gap: 6px;
+  }
+  
+  .retake-button {
+    --padding-start: 8px;
+    --padding-end: 8px;
+    --padding-top: 4px;
+    --padding-bottom: 4px;
+    font-size: 0.75rem;
+  }
+  
+  .delete-button {
+    --padding-start: 8px;
+    --padding-end: 8px;
+    --padding-top: 4px;
+    --padding-bottom: 4px;
+    min-width: 36px;
   }
 }
 

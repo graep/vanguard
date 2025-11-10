@@ -20,7 +20,7 @@ service cloud.firestore {
     }
     
     function isValidVanType(vanType) {
-      return vanType in ['EDV', 'CDV', 'LMR'];
+      return vanType in ['EDV', 'CDV', 'Rental'];
     }
     
     function isValidStatus(status) {
@@ -93,6 +93,32 @@ service cloud.firestore {
              isValidVanType(request.resource.data.type))
         && (!('number' in request.resource.data.diff(resource.data).affectedKeys()) || 
              (request.resource.data.number is int && request.resource.data.number > 0 && request.resource.data.number <= 9999));
+    }
+
+    // Daily plans collection - Enhanced security
+    match /dailyPlans/{planId} {
+      // All signed-in users can read daily plans
+      allow read: if signedIn();
+      
+      // Helper to check if user has admin role in their profile
+      function hasAdminRole() {
+        return signedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid)) 
+          && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.roles.hasAny(['admin', 'owner']);
+      }
+      
+      // Only admins can create and update daily plans
+      allow create, update: if hasAdminRole()
+        && request.resource.data.keys().hasAll(['id', 'date', 'assignments', 'createdAt', 'updatedAt'])
+        && request.resource.data.id is string
+        && request.resource.data.id.size() > 0
+        && request.resource.data.date is string
+        && request.resource.data.date.matches('^\\d{4}-\\d{2}-\\d{2}$')
+        && request.resource.data.assignments is list
+        && request.resource.data.createdAt is timestamp
+        && request.resource.data.updatedAt is timestamp;
+      
+      // Only admins can delete daily plans
+      allow delete: if hasAdminRole();
     }
 
     // Inspections collection - Enhanced security

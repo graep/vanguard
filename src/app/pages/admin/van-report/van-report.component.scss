@@ -16,6 +16,10 @@
   ion-content {
     position: static !important;
     height: auto !important;
+    // Ensure expanded images can break out
+    overflow: visible !important;
+    // Don't create stacking context that could trap fixed elements
+    isolation: auto !important;
   }
 }
 
@@ -81,11 +85,19 @@ h1.section-title.reports-title,
 // Photos Section
 .photos-section {
   margin-bottom: 2rem;
+  // Don't create containing block for fixed elements
+  transform: none !important;
+  perspective: none !important;
+  filter: none !important;
   
   @media (min-width: 768px) {
     ion-grid {
       padding: 0;
       margin: 0;
+      // Don't create containing block for fixed elements
+      transform: none !important;
+      perspective: none !important;
+      filter: none !important;
     }
     
     .photos-row {
@@ -234,7 +246,7 @@ h1.section-title.reports-title,
   border-radius: 20px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease, opacity 0.3s ease;
   cursor: pointer;
 
   &:hover:not(.expanded) {
@@ -243,25 +255,13 @@ h1.section-title.reports-title,
     border-color: rgba(255, 255, 255, 0.2);
   }
 
+  // Note: Expanded state is now handled by separate .expanded-photo element
+  // Keeping this class for backward compatibility but it shouldn't be used
   &.expanded {
-    position: fixed !important;
-    top: 50% !important;
-    left: 50% !important;
-    transform: translateY(-50%) translateX(-50%) !important;
-    z-index: 1001 !important; // Above backdrop
-    max-width: 90vw !important;
-    max-height: 90vh !important;
-    width: auto !important;
-    height: auto !important;
-    object-fit: contain !important; // Maintain aspect ratio
-    border: 2px solid rgba(76, 175, 80, 0.5) !important;
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.9) !important;
-    border-radius: 20px !important;
-    cursor: pointer !important;
-    pointer-events: auto !important;
-    margin: 0 !important;
-    // Ensure it's visible and not clipped
-    overflow: visible !important;
+    // When expanded, the original image should become semi-transparent or hidden
+    // The actual expanded view is shown via .expanded-photo element
+    opacity: 0.3 !important;
+    pointer-events: none !important;
   }
 }
 
@@ -397,23 +397,31 @@ h1.section-title.reports-title,
   }
 }
 
+// Photo list container
+.photo-list {
+  overflow: visible !important;
+  // Don't create containing block for fixed elements
+  transform: none !important;
+  perspective: none !important;
+  filter: none !important;
+}
+
 .img-wrap {
   text-align: center;
   margin-bottom: 1rem;
   margin-top: 0; // Consistent top spacing
   position: relative;
   overflow: visible; // Allow expanded images to overflow
+  // Don't create containing block for fixed elements
+  // Note: position: relative is needed for arrow positioning, but shouldn't affect fixed children
   
   // First img-wrap should have no top margin
   &:first-child {
     margin-top: 0;
   }
   
-  // Don't clip expanded images
-  .photo.expanded {
-    position: fixed !important;
-    z-index: 1001 !important;
-  }
+  // Expanded images are now handled by separate .expanded-photo element
+  // No special handling needed here anymore
 }
 
 // Reports Section
@@ -570,8 +578,12 @@ ion-card {
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   transition: all 0.3s ease;
   overflow: visible !important; // Allow expanded images to overflow
+  // Don't create containing block for fixed elements
+  transform: none !important;
+  perspective: none !important;
+  filter: none !important;
 
-  &:hover {
+  &:hover:not(:has(.photo.expanded)) {
     transform: translateY(-2px);
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
     border-color: rgba(255, 255, 255, 0.2);
@@ -591,6 +603,10 @@ ion-card {
   ion-card-content {
     padding: 16px; // Restore original card content padding
     overflow: visible !important; // Allow expanded images to overflow
+    // Don't create containing block for fixed elements
+    transform: none !important;
+    perspective: none !important;
+    filter: none !important;
   }
 }
 
@@ -725,13 +741,45 @@ ion-card {
   width: 100vw !important;
   height: 100vh !important;
   background-color: rgba(0, 0, 0, 0.85) !important;
-  z-index: 1000 !important;
+  z-index: 9999 !important; // Below expanded image
   cursor: pointer !important;
   backdrop-filter: blur(4px);
   margin: 0 !important;
   padding: 0 !important;
   // Ensure it's above everything except the expanded image
   display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+// Expanded Photo - Separate element at root level, outside all containers
+.expanded-photo {
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  z-index: 10000 !important; // Above backdrop and all content
+  max-width: 90vw !important;
+  max-height: 90vh !important;
+  width: auto !important;
+  height: auto !important;
+  object-fit: contain !important; // Maintain aspect ratio
+  border: 2px solid rgba(76, 175, 80, 0.5) !important;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.9) !important;
+  border-radius: 20px !important;
+  cursor: pointer !important;
+  pointer-events: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  // Ensure it's visible and not clipped
+  overflow: visible !important;
+  // Ensure it's rendered
+  visibility: visible !important;
+  opacity: 1 !important;
+  // Force display to ensure visibility
+  display: block !important;
+  // Smooth transition
+  transition: transform 0.3s ease, opacity 0.3s ease !important;
 }
 
 // Unsure Photo Modal

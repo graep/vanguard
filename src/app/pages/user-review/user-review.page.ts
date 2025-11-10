@@ -68,7 +68,7 @@ export class UserReviewPage implements OnInit {
   // Breadcrumb items
   breadcrumbItems: BreadcrumbItem[] = [];
 
-  // CDV/LMR Categories (Conventional Delivery Vehicles & Last Mile Robots)
+  // CDV/Rental Categories (Conventional Delivery Vehicles & Rental Vehicles)
   cdvLmrCategories: IssueCategory[] = [
     {
       name: 'Safety & Security',

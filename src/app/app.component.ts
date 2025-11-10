@@ -1,21 +1,73 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { IonApp, IonRouterOutlet } from '@ionic/angular/standalone';
 import { NavService } from './services/nav.service';
 import { PwaBackButtonService } from './services/pwa-back-button.service';
+import { AuthService } from './services/auth.service';
+import { SwUpdate, VersionReadyEvent } from '@angular/service-worker';
+import { filter } from 'rxjs';
+import { isDevMode } from '@angular/core';
 
 @Component({
   selector: 'app-root',
   templateUrl: 'app.component.html',
   imports: [IonApp, IonRouterOutlet],
 })
-export class AppComponent {
-  constructor(
-    private navService: NavService,
-    private pwaBackButtonService: PwaBackButtonService
-  ) {
+export class AppComponent implements OnInit, OnDestroy {
+  private swUpdate = inject(SwUpdate);
+  private navService = inject(NavService);
+  private pwaBackButtonService = inject(PwaBackButtonService);
+  private authService = inject(AuthService);
+
+  constructor() {
     // NavService constructor will automatically setup Android back button handling
     
     // Initialize PWA back button handling
     this.pwaBackButtonService.initialize();
+    
+    // Expose auth helper to window for debugging
+    (window as any).checkAuth = () => {
+      const user = this.authService.currentUser$.value;
+      const profile = this.authService.currentUserProfile$.value;
+      console.log('=== AUTH DEBUG INFO ===');
+      console.log('Firebase Auth User:', user ? {
+        uid: user.uid,
+        email: user.email,
+        displayName: user.displayName
+      } : 'Not logged in');
+      console.log('Firestore Profile:', profile);
+      console.log('Is Admin:', this.authService.isAdmin);
+      console.log('Is Owner:', this.authService.isOwner);
+      console.log('Roles:', profile?.roles || []);
+      return { user, profile };
+    };
+    if (isDevMode() || window.location.hostname === 'localhost') {
+      console.log('💡 Tip: Run checkAuth() in console to see current user info');
+    }
+  }
+
+  ngOnInit() {
+    // Check for service worker updates
+    if (this.swUpdate.isEnabled && !isDevMode()) {
+      // Check for updates immediately
+      this.swUpdate.checkForUpdate();
+      
+      // Check for updates every 6 hours
+      setInterval(() => {
+        this.swUpdate.checkForUpdate();
+      }, 6 * 60 * 60 * 1000);
+
+      // Listen for version ready events
+      this.swUpdate.versionUpdates
+        .pipe(filter((evt): evt is VersionReadyEvent => evt.type === 'VERSION_READY'))
+        .subscribe(() => {
+          // Force immediate update when new version is ready
+          console.log('New version available, reloading...');
+          window.location.reload();
+        });
+    }
+  }
+
+  ngOnDestroy() {
+    // Cleanup if needed
   }
 }

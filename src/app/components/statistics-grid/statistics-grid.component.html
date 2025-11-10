@@ -1,0 +1,500 @@
+<div class="stats-grid-container" 
+     [class.edit-mode]="isEditMode"
+     (click)="onClickOutside()">
+  
+  <div *ngFor="let card of cards; trackBy: trackByCardId" 
+       class="grid-tile"
+       [class.grid-tile-1x1]="card.size === '1x1'"
+       [class.grid-tile-2x1]="card.size === '2x1'"
+       [class.grid-tile-2x2]="card.size === '2x2'"
+       [class.selected]="isCardSelected(card.id)">
+    
+    <!-- Regular Card -->
+    <ion-card *ngIf="card.type === 'card' && card.valueType !== 'custom'" 
+              class="stat-card"
+              [class]="card.cardClass || ''"
+              [class.edit-mode]="isEditMode"
+              [class.selected]="isCardSelected(card.id)"
+              [attr.data-card-id]="card.id"
+              [style.--custom-bg-color]="getCardColor(card)"
+              (click)="onCardClick(card, $event)">
+      
+      <!-- Directional Arrows (shown when card is selected in edit mode) -->
+      <div class="direction-arrows" *ngIf="isEditMode && isCardSelected(card.id)">
+        <ion-button class="arrow-btn arrow-up" (click)="onArrowClick('up', $event)" fill="clear" size="small">
+          <ion-icon name="chevron-up-outline"></ion-icon>
+        </ion-button>
+        <ion-button class="arrow-btn arrow-left" (click)="onArrowClick('left', $event)" fill="clear" size="small">
+          <ion-icon name="chevron-back-outline"></ion-icon>
+        </ion-button>
+        <ion-button class="arrow-btn arrow-right" (click)="onArrowClick('right', $event)" fill="clear" size="small">
+          <ion-icon name="chevron-forward-outline"></ion-icon>
+        </ion-button>
+        <ion-button class="arrow-btn arrow-down" (click)="onArrowClick('down', $event)" fill="clear" size="small">
+          <ion-icon name="chevron-down-outline"></ion-icon>
+        </ion-button>
+        <ion-button class="arrow-btn color-btn" (click)="onColorButtonClick(card, $event)" fill="clear" size="small">
+          <ion-icon name="color-palette-outline"></ion-icon>
+        </ion-button>
+      </div>
+      
+      <!-- Color Picker (shown when color button is clicked) -->
+      <div class="color-picker" *ngIf="isEditMode && showColorPicker && colorPickerCardId === card.id">
+        <div class="color-picker-header">
+          <span>Choose Color</span>
+          <ion-button fill="clear" size="small" (click)="showColorPicker = false; colorPickerCardId = null">
+            <ion-icon name="close-outline"></ion-icon>
+          </ion-button>
+        </div>
+        <div class="color-options">
+          <button 
+            *ngFor="let colorOption of colorOptions" 
+            class="color-option"
+            [class.active]="card.customColor === colorOption.value"
+            [style.background-color]="colorOption.value || 'transparent'"
+            [title]="colorOption.name"
+            (click)="onColorSelect(card, colorOption.value)">
+            <ion-icon *ngIf="!colorOption.value" name="close-outline"></ion-icon>
+            <ion-icon *ngIf="card.customColor === colorOption.value" name="checkmark-outline"></ion-icon>
+          </button>
+        </div>
+      </div>
+      
+      <ion-card-header>
+        <ion-card-title>
+          <ion-icon *ngIf="card.icon" [name]="card.icon" [class]="card.iconClass || ''"></ion-icon>
+          {{ card.title }}
+        </ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <div class="stat-value">{{ getCardValue(card) }}</div>
+        <div class="stat-label">{{ card.label }}</div>
+      </ion-card-content>
+    </ion-card>
+    
+    <!-- Compact Card -->
+    <ion-card *ngIf="card.type === 'compact'" 
+              class="stat-card compact"
+              [class.edit-mode]="isEditMode"
+              [class.selected]="isCardSelected(card.id)"
+              [attr.data-card-id]="card.id"
+              [style.--custom-bg-color]="getCardColor(card)"
+              (click)="onCardClick(card, $event)">
+      
+      <!-- Directional Arrows -->
+      <div class="direction-arrows" *ngIf="isEditMode && isCardSelected(card.id)">
+        <ion-button class="arrow-btn arrow-up" (click)="onArrowClick('up', $event)" fill="clear" size="small">
+          <ion-icon name="chevron-up-outline"></ion-icon>
+        </ion-button>
+        <ion-button class="arrow-btn arrow-left" (click)="onArrowClick('left', $event)" fill="clear" size="small">
+          <ion-icon name="chevron-back-outline"></ion-icon>
+        </ion-button>
+        <ion-button class="arrow-btn arrow-right" (click)="onArrowClick('right', $event)" fill="clear" size="small">
+          <ion-icon name="chevron-forward-outline"></ion-icon>
+        </ion-button>
+        <ion-button class="arrow-btn arrow-down" (click)="onArrowClick('down', $event)" fill="clear" size="small">
+          <ion-icon name="chevron-down-outline"></ion-icon>
+        </ion-button>
+        <ion-button class="arrow-btn color-btn" (click)="onColorButtonClick(card, $event)" fill="clear" size="small">
+          <ion-icon name="color-palette-outline"></ion-icon>
+        </ion-button>
+      </div>
+      
+      <!-- Color Picker -->
+      <div class="color-picker" *ngIf="isEditMode && showColorPicker && colorPickerCardId === card.id">
+        <div class="color-picker-header">
+          <span>Choose Color</span>
+          <ion-button fill="clear" size="small" (click)="showColorPicker = false; colorPickerCardId = null">
+            <ion-icon name="close-outline"></ion-icon>
+          </ion-button>
+        </div>
+        <div class="color-options">
+          <button 
+            *ngFor="let colorOption of colorOptions" 
+            class="color-option"
+            [class.active]="card.customColor === colorOption.value"
+            [style.background-color]="colorOption.value || 'transparent'"
+            [title]="colorOption.name"
+            (click)="onColorSelect(card, colorOption.value)">
+            <ion-icon *ngIf="!colorOption.value" name="close-outline"></ion-icon>
+            <ion-icon *ngIf="card.customColor === colorOption.value" name="checkmark-outline"></ion-icon>
+          </button>
+        </div>
+      </div>
+      
+      <ion-card-content>
+        <div class="stat-value-small">{{ getCardValue(card) }}</div>
+        <div class="stat-label">{{ card.label }}</div>
+      </ion-card-content>
+    </ion-card>
+    
+    <!-- Custom Cards -->
+    <!-- Active Vans Card (with Grounded) -->
+    <ion-card *ngIf="card.id === 'vans-active'" 
+              class="stat-card"
+              [class.edit-mode]="isEditMode"
+              [class.selected]="isCardSelected(card.id)"
+              [attr.data-card-id]="card.id"
+              [style.--custom-bg-color]="getCardColor(card)"
+              (click)="onCardClick(card, $event)">
+      
+      <!-- Directional Arrows -->
+      <div class="direction-arrows" *ngIf="isEditMode && isCardSelected(card.id)">
+        <ion-button class="arrow-btn arrow-up" (click)="onArrowClick('up', $event)" fill="clear" size="small">
+          <ion-icon name="chevron-up-outline"></ion-icon>
+        </ion-button>
+        <ion-button class="arrow-btn arrow-left" (click)="onArrowClick('left', $event)" fill="clear" size="small">
+          <ion-icon name="chevron-back-outline"></ion-icon>
+        </ion-button>
+        <ion-button class="arrow-btn arrow-right" (click)="onArrowClick('right', $event)" fill="clear" size="small">
+          <ion-icon name="chevron-forward-outline"></ion-icon>
+        </ion-button>
+        <ion-button class="arrow-btn arrow-down" (click)="onArrowClick('down', $event)" fill="clear" size="small">
+          <ion-icon name="chevron-down-outline"></ion-icon>
+        </ion-button>
+        <ion-button class="arrow-btn color-btn" (click)="onColorButtonClick(card, $event)" fill="clear" size="small">
+          <ion-icon name="color-palette-outline"></ion-icon>
+        </ion-button>
+      </div>
+      
+      <!-- Color Picker -->
+      <div class="color-picker" *ngIf="isEditMode && showColorPicker && colorPickerCardId === card.id">
+        <div class="color-picker-header">
+          <span>Choose Color</span>
+          <ion-button fill="clear" size="small" (click)="showColorPicker = false; colorPickerCardId = null">
+            <ion-icon name="close-outline"></ion-icon>
+          </ion-button>
+        </div>
+        <div class="color-options">
+          <button 
+            *ngFor="let colorOption of colorOptions" 
+            class="color-option"
+            [class.active]="card.customColor === colorOption.value"
+            [style.background-color]="colorOption.value || 'transparent'"
+            [title]="colorOption.name"
+            (click)="onColorSelect(card, colorOption.value)">
+            <ion-icon *ngIf="!colorOption.value" name="close-outline"></ion-icon>
+            <ion-icon *ngIf="card.customColor === colorOption.value" name="checkmark-outline"></ion-icon>
+          </button>
+        </div>
+      </div>
+      
+      <ion-card-header>
+        <ion-card-title>
+          <ion-icon [name]="card.icon" [class]="card.iconClass || ''"></ion-icon>
+          {{ card.title }}
+        </ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <div class="active-grounded-breakdown">
+          <div class="active-grounded-item">
+            <span class="active-grounded-value">{{ formatNumber(vanStats.active) }}</span>
+            <span class="active-grounded-label">Active</span>
+          </div>
+          <div class="active-grounded-item">
+            <span class="active-grounded-value grounded">{{ formatNumber(vanStats.grounded) }}</span>
+            <span class="active-grounded-label">Grounded</span>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+    
+    <!-- Vans by Type Card -->
+    <ion-card *ngIf="card.id === 'vans-by-type'" 
+              class="stat-card"
+              [class.edit-mode]="isEditMode"
+              [class.selected]="isCardSelected(card.id)"
+              [attr.data-card-id]="card.id"
+              [style.--custom-bg-color]="getCardColor(card)"
+              (click)="onCardClick(card, $event)">
+      
+      <!-- Directional Arrows -->
+      <div class="direction-arrows" *ngIf="isEditMode && isCardSelected(card.id)">
+        <ion-button class="arrow-btn arrow-up" (click)="onArrowClick('up', $event)" fill="clear" size="small">
+          <ion-icon name="chevron-up-outline"></ion-icon>
+        </ion-button>
+        <ion-button class="arrow-btn arrow-left" (click)="onArrowClick('left', $event)" fill="clear" size="small">
+          <ion-icon name="chevron-back-outline"></ion-icon>
+        </ion-button>
+        <ion-button class="arrow-btn arrow-right" (click)="onArrowClick('right', $event)" fill="clear" size="small">
+          <ion-icon name="chevron-forward-outline"></ion-icon>
+        </ion-button>
+        <ion-button class="arrow-btn arrow-down" (click)="onArrowClick('down', $event)" fill="clear" size="small">
+          <ion-icon name="chevron-down-outline"></ion-icon>
+        </ion-button>
+        <ion-button class="arrow-btn color-btn" (click)="onColorButtonClick(card, $event)" fill="clear" size="small">
+          <ion-icon name="color-palette-outline"></ion-icon>
+        </ion-button>
+      </div>
+      
+      <!-- Color Picker -->
+      <div class="color-picker" *ngIf="isEditMode && showColorPicker && colorPickerCardId === card.id">
+        <div class="color-picker-header">
+          <span>Choose Color</span>
+          <ion-button fill="clear" size="small" (click)="showColorPicker = false; colorPickerCardId = null">
+            <ion-icon name="close-outline"></ion-icon>
+          </ion-button>
+        </div>
+        <div class="color-options">
+          <button 
+            *ngFor="let colorOption of colorOptions" 
+            class="color-option"
+            [class.active]="card.customColor === colorOption.value"
+            [style.background-color]="colorOption.value || 'transparent'"
+            [title]="colorOption.name"
+            (click)="onColorSelect(card, colorOption.value)">
+            <ion-icon *ngIf="!colorOption.value" name="close-outline"></ion-icon>
+            <ion-icon *ngIf="card.customColor === colorOption.value" name="checkmark-outline"></ion-icon>
+          </button>
+        </div>
+      </div>
+      
+      <ion-card-header>
+        <ion-card-title>
+          <ion-icon [name]="card.icon"></ion-icon>
+          {{ card.title }}
+        </ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <div class="van-types-breakdown">
+          <div class="van-type-item total">
+            <span class="van-type-value total-value">{{ formatNumber(vanStats.byType.CDV + vanStats.byType.EDV + vanStats.byType.Rental) }}</span>
+            <span class="van-type-label">Total</span>
+          </div>
+          <div class="van-type-item">
+            <span class="van-type-value">{{ formatNumber(vanStats.byType.CDV) }}</span>
+            <span class="van-type-label">CDV</span>
+          </div>
+          <div class="van-type-item">
+            <span class="van-type-value">{{ formatNumber(vanStats.byType.EDV) }}</span>
+            <span class="van-type-label">EDV</span>
+          </div>
+          <div class="van-type-item">
+            <span class="van-type-value">{{ formatNumber(vanStats.byType.Rental) }}</span>
+            <span class="van-type-label">Rental</span>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+    
+    <!-- Issue Severity Card -->
+    <ion-card *ngIf="card.id === 'insp-severity'" 
+              class="stat-card"
+              [class.edit-mode]="isEditMode"
+              [class.selected]="isCardSelected(card.id)"
+              [attr.data-card-id]="card.id"
+              [style.--custom-bg-color]="getCardColor(card)"
+              (click)="onCardClick(card, $event)">
+      
+      <!-- Directional Arrows -->
+      <div class="direction-arrows" *ngIf="isEditMode && isCardSelected(card.id)">
+        <ion-button class="arrow-btn arrow-up" (click)="onArrowClick('up', $event)" fill="clear" size="small">
+          <ion-icon name="chevron-up-outline"></ion-icon>
+        </ion-button>
+        <ion-button class="arrow-btn arrow-left" (click)="onArrowClick('left', $event)" fill="clear" size="small">
+          <ion-icon name="chevron-back-outline"></ion-icon>
+        </ion-button>
+        <ion-button class="arrow-btn arrow-right" (click)="onArrowClick('right', $event)" fill="clear" size="small">
+          <ion-icon name="chevron-forward-outline"></ion-icon>
+        </ion-button>
+        <ion-button class="arrow-btn arrow-down" (click)="onArrowClick('down', $event)" fill="clear" size="small">
+          <ion-icon name="chevron-down-outline"></ion-icon>
+        </ion-button>
+        <ion-button class="arrow-btn color-btn" (click)="onColorButtonClick(card, $event)" fill="clear" size="small">
+          <ion-icon name="color-palette-outline"></ion-icon>
+        </ion-button>
+      </div>
+      
+      <!-- Color Picker -->
+      <div class="color-picker" *ngIf="isEditMode && showColorPicker && colorPickerCardId === card.id">
+        <div class="color-picker-header">
+          <span>Choose Color</span>
+          <ion-button fill="clear" size="small" (click)="showColorPicker = false; colorPickerCardId = null">
+            <ion-icon name="close-outline"></ion-icon>
+          </ion-button>
+        </div>
+        <div class="color-options">
+          <button 
+            *ngFor="let colorOption of colorOptions" 
+            class="color-option"
+            [class.active]="card.customColor === colorOption.value"
+            [style.background-color]="colorOption.value || 'transparent'"
+            [title]="colorOption.name"
+            (click)="onColorSelect(card, colorOption.value)">
+            <ion-icon *ngIf="!colorOption.value" name="close-outline"></ion-icon>
+            <ion-icon *ngIf="card.customColor === colorOption.value" name="checkmark-outline"></ion-icon>
+          </button>
+        </div>
+      </div>
+      
+      <ion-card-header>
+        <ion-card-title>
+          <ion-icon [name]="card.icon"></ion-icon>
+          {{ card.title }}
+        </ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <div class="severity-breakdown">
+          <div class="severity-item">
+            <span class="severity-badge high">{{ formatNumber(inspectionStats.highSeverityIssues) }}</span>
+            <span class="severity-label">High</span>
+          </div>
+          <div class="severity-item">
+            <span class="severity-badge medium">{{ formatNumber(inspectionStats.mediumSeverityIssues) }}</span>
+            <span class="severity-label">Medium</span>
+          </div>
+          <div class="severity-item">
+            <span class="severity-badge low">{{ formatNumber(inspectionStats.lowSeverityIssues) }}</span>
+            <span class="severity-label">Low</span>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+    
+    <!-- Coverage by Type Card -->
+    <ion-card *ngIf="card.id === 'driver-coverage'" 
+              class="stat-card"
+              [class.edit-mode]="isEditMode"
+              [class.selected]="isCardSelected(card.id)"
+              [attr.data-card-id]="card.id"
+              [style.--custom-bg-color]="getCardColor(card)"
+              (click)="onCardClick(card, $event)">
+      
+      <!-- Directional Arrows -->
+      <div class="direction-arrows" *ngIf="isEditMode && isCardSelected(card.id)">
+        <ion-button class="arrow-btn arrow-up" (click)="onArrowClick('up', $event)" fill="clear" size="small">
+          <ion-icon name="chevron-up-outline"></ion-icon>
+        </ion-button>
+        <ion-button class="arrow-btn arrow-left" (click)="onArrowClick('left', $event)" fill="clear" size="small">
+          <ion-icon name="chevron-back-outline"></ion-icon>
+        </ion-button>
+        <ion-button class="arrow-btn arrow-right" (click)="onArrowClick('right', $event)" fill="clear" size="small">
+          <ion-icon name="chevron-forward-outline"></ion-icon>
+        </ion-button>
+        <ion-button class="arrow-btn arrow-down" (click)="onArrowClick('down', $event)" fill="clear" size="small">
+          <ion-icon name="chevron-down-outline"></ion-icon>
+        </ion-button>
+        <ion-button class="arrow-btn color-btn" (click)="onColorButtonClick(card, $event)" fill="clear" size="small">
+          <ion-icon name="color-palette-outline"></ion-icon>
+        </ion-button>
+      </div>
+      
+      <!-- Color Picker -->
+      <div class="color-picker" *ngIf="isEditMode && showColorPicker && colorPickerCardId === card.id">
+        <div class="color-picker-header">
+          <span>Choose Color</span>
+          <ion-button fill="clear" size="small" (click)="showColorPicker = false; colorPickerCardId = null">
+            <ion-icon name="close-outline"></ion-icon>
+          </ion-button>
+        </div>
+        <div class="color-options">
+          <button 
+            *ngFor="let colorOption of colorOptions" 
+            class="color-option"
+            [class.active]="card.customColor === colorOption.value"
+            [style.background-color]="colorOption.value || 'transparent'"
+            [title]="colorOption.name"
+            (click)="onColorSelect(card, colorOption.value)">
+            <ion-icon *ngIf="!colorOption.value" name="close-outline"></ion-icon>
+            <ion-icon *ngIf="card.customColor === colorOption.value" name="checkmark-outline"></ion-icon>
+          </button>
+        </div>
+      </div>
+      
+      <ion-card-header>
+        <ion-card-title>
+          <ion-icon [name]="card.icon"></ion-icon>
+          {{ card.title }}
+        </ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <div class="coverage-breakdown">
+          <div class="coverage-item">
+            <span class="coverage-label">CDV:</span>
+            <span class="coverage-value">{{ formatPercentage(driverStats.coverageByType.CDV) }}</span>
+          </div>
+          <div class="coverage-item">
+            <span class="coverage-label">EDV:</span>
+            <span class="coverage-value">{{ formatPercentage(driverStats.coverageByType.EDV) }}</span>
+          </div>
+          <div class="coverage-item">
+            <span class="coverage-label">Rental:</span>
+            <span class="coverage-value">{{ formatPercentage(driverStats.coverageByType.Rental) }}</span>
+          </div>
+          <div class="coverage-item">
+            <span class="coverage-label">Budget:</span>
+            <span class="coverage-value">{{ formatPercentage(driverStats.coverageByType.BUDGET) }}</span>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+    
+    <!-- Most Assigned Drivers Card -->
+    <ion-card *ngIf="card.id === 'driver-top' && driverStats.mostAssigned.length > 0" 
+              class="stat-card"
+              [class.edit-mode]="isEditMode"
+              [class.selected]="isCardSelected(card.id)"
+              [attr.data-card-id]="card.id"
+              [style.--custom-bg-color]="getCardColor(card)"
+              (click)="onCardClick(card, $event)">
+      
+      <!-- Directional Arrows -->
+      <div class="direction-arrows" *ngIf="isEditMode && isCardSelected(card.id)">
+        <ion-button class="arrow-btn arrow-up" (click)="onArrowClick('up', $event)" fill="clear" size="small">
+          <ion-icon name="chevron-up-outline"></ion-icon>
+        </ion-button>
+        <ion-button class="arrow-btn arrow-left" (click)="onArrowClick('left', $event)" fill="clear" size="small">
+          <ion-icon name="chevron-back-outline"></ion-icon>
+        </ion-button>
+        <ion-button class="arrow-btn arrow-right" (click)="onArrowClick('right', $event)" fill="clear" size="small">
+          <ion-icon name="chevron-forward-outline"></ion-icon>
+        </ion-button>
+        <ion-button class="arrow-btn arrow-down" (click)="onArrowClick('down', $event)" fill="clear" size="small">
+          <ion-icon name="chevron-down-outline"></ion-icon>
+        </ion-button>
+        <ion-button class="arrow-btn color-btn" (click)="onColorButtonClick(card, $event)" fill="clear" size="small">
+          <ion-icon name="color-palette-outline"></ion-icon>
+        </ion-button>
+      </div>
+      
+      <!-- Color Picker -->
+      <div class="color-picker" *ngIf="isEditMode && showColorPicker && colorPickerCardId === card.id">
+        <div class="color-picker-header">
+          <span>Choose Color</span>
+          <ion-button fill="clear" size="small" (click)="showColorPicker = false; colorPickerCardId = null">
+            <ion-icon name="close-outline"></ion-icon>
+          </ion-button>
+        </div>
+        <div class="color-options">
+          <button 
+            *ngFor="let colorOption of colorOptions" 
+            class="color-option"
+            [class.active]="card.customColor === colorOption.value"
+            [style.background-color]="colorOption.value || 'transparent'"
+            [title]="colorOption.name"
+            (click)="onColorSelect(card, colorOption.value)">
+            <ion-icon *ngIf="!colorOption.value" name="close-outline"></ion-icon>
+            <ion-icon *ngIf="card.customColor === colorOption.value" name="checkmark-outline"></ion-icon>
+          </button>
+        </div>
+      </div>
+      
+      <ion-card-header>
+        <ion-card-title>
+          <ion-icon [name]="card.icon" [class]="card.iconClass || ''"></ion-icon>
+          {{ card.title }}
+        </ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <div class="active-grounded-breakdown">
+          <div class="driver-item" *ngFor="let driver of driverStats.mostAssigned">
+            <span class="driver-name">{{ driver.name }}</span>
+            <span class="driver-count">{{ formatNumber(driver.count) }} assignments</span>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+    
+  </div>
+</div>
+

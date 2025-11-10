@@ -59,6 +59,16 @@ export const routes: Routes = [
           import('./pages/admin/users/users.page').then(m => m.UsersPage),
       },
       {
+        path: 'planning',
+        loadComponent: () =>
+          import('./pages/admin/planning/planning.page').then(m => m.PlanningPage),
+      },
+      {
+        path: 'statistics',
+        loadComponent: () =>
+          import('./pages/admin/statistics/statistics.page').then(m => m.StatisticsPage),
+      },
+      {
         path: 'van-report/:id',
         loadComponent: () =>
           import('./pages/admin/van-report/van-report.component').then(m => m.VanReportComponent),

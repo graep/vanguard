@@ -34,7 +34,7 @@
             Login
           </ion-button>
 
-          <ion-button *ngIf="isDriverMode" fill="clear" size="small" class="signup-link" (click)="goToSignup()">
+          <ion-button fill="clear" size="small" class="signup-link" [class.hidden]="!isDriverMode" (click)="goToSignup()">
             Create account
           </ion-button>
         </div>

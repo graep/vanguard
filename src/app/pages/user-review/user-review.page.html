@@ -18,22 +18,96 @@
       </div>
     </div>
 
-    <!-- No Issues Card -->
-    <div class="no-issues-card" (click)="toggleNoIssues()">
-      <div class="card-header">
-        <div class="card-icon">
-          <ion-icon name="checkmark-circle"></ion-icon>
+    <!-- No Issues and Unsure Cards -->
+    <div class="top-cards-container">
+      <!-- No Issues Card -->
+      <div class="no-issues-card" (click)="toggleNoIssues()">
+        <div class="card-header">
+          <div class="card-icon">
+            <ion-icon name="checkmark-circle"></ion-icon>
+          </div>
+          <div class="card-content">
+            <h3 class="card-title">No Issues Found</h3>
+            <p class="card-description">Check this if no issues were found during inspection</p>
+          </div>
         </div>
-        <div class="card-content">
-          <h3 class="card-title">No Issues Found</h3>
-          <p class="card-description">Check this if no issues were found during inspection</p>
+        <ion-checkbox
+          [(ngModel)]="noIssues"
+          class="main-checkbox"
+          (click)="$event.stopPropagation()">
+        </ion-checkbox>
+      </div>
+
+      <!-- Unsure Issues Card -->
+      <div class="unsure-card" (click)="toggleUnsureIssue()">
+        <div class="card-header">
+          <div class="card-icon unsure-icon">
+            <ion-icon name="help-circle"></ion-icon>
+          </div>
+          <div class="card-content">
+            <h3 class="card-title">Unsure About Something?</h3>
+            <p class="card-description">Report something you're uncertain about</p>
+          </div>
+        </div>
+        <ion-checkbox
+          [(ngModel)]="unsureIssue.hasIssue"
+          class="main-checkbox"
+          (click)="$event.stopPropagation()">
+        </ion-checkbox>
+      </div>
+    </div>
+
+    <!-- Unsure Issue Details -->
+    <div class="unsure-details" *ngIf="unsureIssue.hasIssue && !noIssues">
+      <div class="unsure-details-card">
+        <div class="details-section">
+          <label class="form-label">Describe what you observed</label>
+          <ion-textarea
+            [(ngModel)]="unsureIssue.details"
+            placeholder="Describe what you observed or are concerned about"
+            auto-grow="true"
+            class="details-textarea">
+          </ion-textarea>
+        </div>
+
+        <!-- Photo Capture Section -->
+        <div class="photo-capture-section">
+          <label class="form-label">Take a photo (optional)</label>
+          
+          <!-- Photo Display Area -->
+          <div class="photo-display-area" *ngIf="unsureIssue.capturedPhoto; else noPhotoTemplate">
+            <div class="photo-container">
+              <img [src]="unsureIssue.capturedPhoto" alt="Captured issue photo" class="issue-photo">
+              <div class="photo-overlay">
+                <ion-button
+                  fill="solid"
+                  class="retake-button"
+                  (click)="capturePhoto()">
+                  <ion-icon name="camera" slot="start"></ion-icon>
+                  Retake
+                </ion-button>
+                <ion-button
+                  fill="clear"
+                  class="delete-button"
+                  (click)="removePhoto()">
+                  <ion-icon name="trash"></ion-icon>
+                </ion-button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- No Photo Template -->
+          <ng-template #noPhotoTemplate>
+            <ion-button
+              fill="outline"
+              class="photo-capture-button"
+              (click)="capturePhoto()">
+              <ion-icon name="camera" slot="start"></ion-icon>
+              Take Photo
+            </ion-button>
+          </ng-template>
         </div>
       </div>
-      <ion-checkbox
-        [(ngModel)]="noIssues"
-        class="main-checkbox"
-        (click)="$event.stopPropagation()">
-      </ion-checkbox>
     </div>
 
     <!-- Issue Categories Section -->
@@ -71,7 +145,8 @@
               <ion-select
                 [(ngModel)]="cat.selectedSubcategory"
                 placeholder="Select specific area"
-                class="subcategory-select">
+                class="subcategory-select"
+                (click)="$event.stopPropagation()">
                 <ion-select-option
                   *ngFor="let sub of cat.subcategories"
                   [value]="sub">
@@ -87,7 +162,8 @@
                 [(ngModel)]="cat.details"
                 [placeholder]="'Describe issues with ' + (cat.selectedSubcategory || cat.name)"
                 auto-grow="true"
-                class="details-textarea">
+                class="details-textarea"
+                (click)="$event.stopPropagation()">
               </ion-textarea>
             </div>
           </div>

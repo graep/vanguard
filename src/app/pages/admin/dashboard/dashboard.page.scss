@@ -1,5 +1,32 @@
 /* Modern Dashboard Page Styles */
 
+ion-content {
+  --background: #1e293b;
+  --padding-start: 0;
+  --padding-end: 0;
+  --padding-top: 0;
+  --padding-bottom: 0;
+}
+
+/* Breadcrumb Styles (match van-details) */
+app-breadcrumb {
+  display: block;
+  
+  ::ng-deep .breadcrumb-nav {
+    background: var(--ion-color-light);
+    border-bottom: 1px solid rgba(var(--ion-color-medium-rgb), 0.2);
+    padding: 8px 16px;
+    
+    @media (max-width: 768px) {
+      padding: 6px 12px;
+    }
+    
+    @media (max-width: 480px) {
+      padding: 6px 8px;
+    }
+  }
+}
+
 .content-container {
   --background: #1e293b;
   min-height: 100vh;
@@ -31,16 +58,16 @@
 }
 
 .status-bar-container {
-  margin-bottom: 2rem;
+  margin-bottom: 1.3rem;
   
   @media (max-width: 768px) {
-    margin-bottom: 1.5rem;
+    margin-bottom: 0.5rem;
     margin-left: 16px;
     margin-right: 16px;
   }
   
   @media (max-width: 480px) {
-    margin-bottom: 1rem;
+    margin-bottom: 0.4rem;
     margin-left: 12px;
     margin-right: 12px;
   }
@@ -116,7 +143,7 @@
     }
     
     @media (max-width: 480px) {
-      padding: 2px;
+      padding: 3px;
     }
   }
 }
@@ -125,7 +152,7 @@
 .van-section-container {
   border-radius: 10px;
   padding: 1.5rem;
-  margin-bottom: 2rem;
+  margin-bottom: 1.3rem;
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -197,14 +224,14 @@
   }
   
   ion-col {
-    padding: 12px;
+    padding: 6px;
     
     @media (max-width: 768px) {
-      padding: 8px;
+      padding: 4px;
     }
     
     @media (max-width: 480px) {
-      padding: 6px;
+      padding: 3px;
     }
   }
 }

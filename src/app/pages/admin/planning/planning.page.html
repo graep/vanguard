@@ -1,0 +1,335 @@
+<ion-content class="planning-content">
+  <div class="content-container">
+    
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="loading-container">
+      <ion-spinner color="success"></ion-spinner>
+      <p>Loading daily plan...</p>
+    </div>
+    
+    <!-- Main Content -->
+    <div *ngIf="!isLoading && dailyPlan" class="planning-container">
+      
+      <!-- Header Section -->
+      <ion-card class="planning-header">
+        <ion-card-content>
+          <!-- Title and Date Row -->
+          <div class="header-title-row">
+            <div class="title-group">
+              <h1 class="page-title">Daily Planning</h1>
+              <p class="page-subtitle">{{ getFormattedDate() }}</p>
+            </div>
+            <div class="header-stats">
+              <ion-button
+                fill="outline"
+                size="small"
+                color="primary"
+                (click)="printPlan()"
+                class="print-button">
+                <ion-icon name="print-outline" slot="start"></ion-icon>
+                Print
+              </ion-button>
+              <ion-chip [color]="stats.totalUnassigned > 0 ? 'danger' : 'success'">
+                <ion-icon [name]="stats.totalUnassigned > 0 ? 'alert-circle' : 'checkmark-circle'"></ion-icon>
+                <ion-label>
+                  {{ stats.totalAssigned }}/{{ stats.totalAssigned + stats.totalUnassigned }} Assigned
+                </ion-label>
+              </ion-chip>
+            </div>
+          </div>
+          
+          <!-- Controls Row -->
+          <div class="header-controls-row">
+            <div class="control-group date-group">
+              <label class="control-label">Date</label>
+              <div class="date-controls">
+                <div class="date-input-wrapper" (click)="openDatePicker()">
+                  <input 
+                    type="date" 
+                    #dateInput
+                    [value]="selectedDate"
+                    (change)="onDateChange($event)"
+                    (click)="$event.stopPropagation()"
+                    class="date-input"
+                  />
+                </div>
+                <div class="date-buttons">
+                  <ion-button 
+                    fill="outline" 
+                    size="small"
+                    [class.selected]="isTodaySelected()"
+                    (click)="selectToday()">
+                    Today
+                  </ion-button>
+                  <ion-button 
+                    fill="outline" 
+                    size="small"
+                    [class.selected]="isTomorrowSelected()"
+                    (click)="selectTomorrow()">
+                    Tomorrow
+                  </ion-button>
+                </div>
+              </div>
+            </div>
+            
+            <div class="control-group routes-group">
+              <div class="route-controls">
+                <ion-button 
+                  *ngIf="hasCheckedAssignments()"
+                  fill="solid" 
+                  color="success"
+                  size="small"
+                  [disabled]="isSaving"
+                  (click)="submitCheckedAssignments()">
+                  <ion-icon name="save" slot="start"></ion-icon>
+                  Save {{ getCheckedCount() }}
+                </ion-button>
+                <ion-button
+                  fill="solid"
+                  color="primary"
+                  size="small"
+                  [disabled]="isSaving || !numberOfRoutes || numberOfRoutes <= 0"
+                  (click)="generateRoutes()">
+                  <ion-icon name="add-circle-outline" slot="start"></ion-icon>
+                  Generate
+                </ion-button>
+                <div class="input-with-label">
+                  <label class="control-label">Generate Routes</label>
+                  <ion-input
+                    type="number"
+                    [(ngModel)]="numberOfRoutes"
+                    placeholder="# of routes"
+                    min="1">
+                  </ion-input>
+                </div>
+              </div>
+            </div>
+          </div>
+        </ion-card-content>
+      </ion-card>
+      
+      <!-- Planning Spreadsheet -->
+      <ion-card class="planning-card">
+        <ion-card-header>
+          <div class="card-header-content">
+            <ion-card-title>
+              <ion-icon name="grid-outline"></ion-icon>
+              Daily Assignments ({{ dailyPlan.assignments.length }} Routes)
+            </ion-card-title>
+            <ion-button 
+              *ngIf="hasMultipleWavesAssigned()"
+              fill="outline"
+              size="small"
+              color="primary"
+              (click)="toggleWaveGrouping()">
+              <ion-icon [name]="isGroupedByWave ? 'eye-off-outline' : 'layers-outline'" slot="start"></ion-icon>
+              {{ isGroupedByWave ? 'Ungroup' : 'Group' }}
+            </ion-button>
+          </div>
+        </ion-card-header>
+        <ion-card-content>
+          <div class="assignment-table">
+            <div class="table-header">
+              <div class="col-checkbox">
+                <ion-checkbox 
+                  [checked]="isAllCompletedChecked()"
+                  [indeterminate]="isSomeCompletedChecked() && !isAllCompletedChecked()"
+                  (ionChange)="toggleAllCompleted($event.detail.checked)">
+                </ion-checkbox>
+              </div>
+              <div class="col-van">Van</div>
+              <div class="col-driver">Driver</div>
+              <div class="col-route">Route</div>
+              <div class="col-staging">Stage</div>
+              <div class="col-wave">Wave</div>
+              <div class="col-pad">Pad</div>
+              <div class="col-notes">Notes</div>
+              <div class="col-clear"></div>
+            </div>
+            <div class="table-body" [class.dropdown-active]="isDropdownActive()">
+              <ng-container *ngFor="let group of getGroupedAssignmentsByWave(); let groupIndex = index; trackBy: trackByGroupIndex">
+                <!-- Wave Group Separator (for all groups) -->
+                <div *ngIf="isGroupedByWave && group.wave !== null" class="wave-group-separator">
+                  <div class="separator-label">Wave {{ group.wave }}</div>
+                </div>
+                
+                <!-- Assignments in this wave group -->
+                <div 
+                  class="table-row" 
+                  *ngFor="let assignment of group.assignments; let i = index; trackBy: trackByAssignmentId"
+                [class.unassigned]="isUnassigned(assignment) && !isAssignmentEditing(assignment.id || '')"
+                [class.editing]="isAssignmentEditing(assignment.id || '') && !isUnassigned(assignment)"
+                [class.has-van]="assignment.vanId && assignment.vanId.trim() !== ''"
+                [class.completed]="isCompleted(assignment) || (isAssignmentEditing(assignment.id || '') && isUnassigned(assignment))"
+                [class.clickable]="!isAssignmentEditing(assignment.id || '')"
+                [class.wave-1]="getWaveNumber(assignment) === 1"
+                [class.wave-2]="getWaveNumber(assignment) === 2"
+                [class.wave-3]="getWaveNumber(assignment) === 3"
+                (click)="handleRowClick(assignment)">
+                
+                <!-- Checkbox - Only show when route is unassigned (no driver) -->
+                <div class="col-checkbox" (click)="$event.stopPropagation()">
+                  <ion-checkbox 
+                    *ngIf="hasAllInformation(assignment) && isUnassigned(assignment)"
+                    [checked]="isChecked(assignment.id || '')"
+                    (ionChange)="toggleChecked(assignment.id || '', $event.detail.checked)">
+                  </ion-checkbox>
+                </div>
+                
+                <!-- Van (read-only) -->
+                <div class="col-van">
+                  <span [class.has-value]="assignment.vanId && assignment.vanId.trim() !== ''">
+                    {{ assignment.vanId && assignment.vanId.trim() !== '' ? (assignment.vanType + ' ' + assignment.vanNumber) : '+ Add Van' }}
+                  </span>
+                </div>
+                
+                <!-- Driver (editable) -->
+                <div class="col-driver" (click)="isAssignmentEditing(assignment.id || '') && $event.stopPropagation()">
+                  <div *ngIf="isAssignmentEditing(assignment.id || '')" class="driver-autocomplete" (click)="$event.stopPropagation()">
+                    <ion-input 
+                      #driverInput
+                      [value]="getEditingValue(assignment.id || '', 'driverName')"
+                      (ionInput)="filterDriverName(assignment.id || '', $any($event).detail.value)"
+                      (keydown)="handleDriverKeydown(assignment.id || '', $event)"
+                      (ionFocus)="positionDropdown($event.target, assignment.id || '')"
+                      placeholder="Search driver"
+                      (click)="$event.stopPropagation()">
+                    </ion-input>
+                  </div>
+                  <span *ngIf="!isAssignmentEditing(assignment.id || '')" 
+                        [class.empty]="isUnassigned(assignment)">
+                    {{ assignment.driverName || 'Unassigned' }}
+                  </span>
+                </div>
+                
+                <!-- Route -->
+                <div class="col-route" (click)="isAssignmentEditing(assignment.id || '') && $event.stopPropagation()">
+                  <ion-input 
+                    *ngIf="isAssignmentEditing(assignment.id || '')"
+                    [value]="getEditingValue(assignment.id || '', 'routeNumber')"
+                    (ionInput)="updateEditingValue(assignment.id || '', 'routeNumber', $event.detail.value)"
+                    placeholder="CX...">
+                  </ion-input>
+                  <span *ngIf="!isAssignmentEditing(assignment.id || '')">
+                    {{ assignment.routeNumber || '-' }}
+                  </span>
+                </div>
+                
+                <!-- Staging -->
+                <div class="col-staging" (click)="isAssignmentEditing(assignment.id || '') && $event.stopPropagation()">
+                  <ion-input 
+                    *ngIf="isAssignmentEditing(assignment.id || '')"
+                    [value]="getEditingValue(assignment.id || '', 'staging')"
+                    (ionInput)="updateEditingValue(assignment.id || '', 'staging', $event.detail.value)"
+                    (ionBlur)="formatStaging(assignment.id || '')"
+                    placeholder="E.1">
+                  </ion-input>
+                  <span *ngIf="!isAssignmentEditing(assignment.id || '')">
+                    {{ assignment.staging || '-' }}
+                  </span>
+                </div>
+                
+                <!-- Wave -->
+                <div class="col-wave" (click)="isAssignmentEditing(assignment.id || '') && $event.stopPropagation()">
+                  <ion-input 
+                    *ngIf="isAssignmentEditing(assignment.id || '')"
+                    type="number"
+                    [value]="getEditingValue(assignment.id || '', 'wave')"
+                    (ionInput)="updateEditingValue(assignment.id || '', 'wave', $event.detail.value)"
+                    (ionBlur)="validateWave(assignment.id || '')"
+                    placeholder="Wave"
+                    min="1"
+                    max="3"
+                    (click)="$event.stopPropagation()">
+                  </ion-input>
+                  <span *ngIf="!isAssignmentEditing(assignment.id || '')">
+                    {{ assignment.wave || '-' }}
+                  </span>
+                </div>
+                
+                <!-- Pad -->
+                <div class="col-pad" (click)="isAssignmentEditing(assignment.id || '') && $event.stopPropagation()">
+                  <ion-input 
+                    *ngIf="isAssignmentEditing(assignment.id || '')"
+                    type="number"
+                    [value]="getEditingValue(assignment.id || '', 'pad')"
+                    (ionInput)="updateEditingValue(assignment.id || '', 'pad', $event.detail.value)"
+                    (ionBlur)="validatePad(assignment.id || '')"
+                    placeholder="Pad"
+                    min="1"
+                    max="3"
+                    (click)="$event.stopPropagation()">
+                  </ion-input>
+                  <span *ngIf="!isAssignmentEditing(assignment.id || '')">
+                    {{ assignment.pad || '-' }}
+                  </span>
+                </div>
+                
+                <!-- Notes -->
+                <div class="col-notes" (click)="isAssignmentEditing(assignment.id || '') && $event.stopPropagation()">
+                  <ion-input 
+                    *ngIf="isAssignmentEditing(assignment.id || '') && isNotesEditing(assignment.id || '')"
+                    [value]="getEditingValue(assignment.id || '', 'notes')"
+                    (ionInput)="updateEditingValue(assignment.id || '', 'notes', $any($event).detail.value)"
+                    (ionBlur)="cancelEditingNotes(assignment.id || '')"
+                    (keydown)="handleNotesKeydown(assignment.id || '', $event, i)"
+                    placeholder="Notes">
+                  </ion-input>
+                  <ion-button 
+                    *ngIf="isAssignmentEditing(assignment.id || '') && !isNotesEditing(assignment.id || '') && !assignment.notes"
+                    fill="clear"
+                    size="small"
+                    color="medium"
+                    (click)="startEditingNotes(assignment.id || '')"
+                    (keydown)="handleAddNotesButtonKeydown(assignment.id || '', $event, i)"
+                    tabindex="0"
+                    title="Add notes">
+                    <ion-icon name="add"></ion-icon>
+                  </ion-button>
+                  <span *ngIf="!isAssignmentEditing(assignment.id || '') || (!isNotesEditing(assignment.id || '') && assignment.notes)">
+                    {{ assignment.notes || '-' }}
+                  </span>
+                </div>
+                
+                <!-- Clear/Save Buttons -->
+                <div class="col-clear" (click)="$event.stopPropagation()">
+                  <!-- Save and Cancel buttons when editing -->
+                  <div *ngIf="isAssignmentEditing(assignment.id || '')" class="edit-actions">
+                    <ion-button
+                      fill="clear"
+                      size="small"
+                      color="success"
+                      (click)="$event.stopPropagation(); saveAssignment(assignment.id || '')"
+                      title="Save changes">
+                      <ion-icon name="checkmark"></ion-icon>
+                    </ion-button>
+                    <ion-button
+                      fill="clear"
+                      size="small"
+                      color="medium"
+                      (click)="$event.stopPropagation(); cancelEditing(assignment.id || '')"
+                      title="Cancel editing">
+                      <ion-icon name="close"></ion-icon>
+                    </ion-button>
+                  </div>
+                  <!-- Clear button when not editing -->
+                  <ion-button
+                    *ngIf="!isAssignmentEditing(assignment.id || '')"
+                    fill="clear"
+                    size="small"
+                    color="danger"
+                    (click)="$event.stopPropagation(); clearAssignmentData(assignment.id || '')"
+                    title="Clear assignment">
+                    <ion-icon name="close"></ion-icon>
+                  </ion-button>
+                </div>
+                </div>
+              </ng-container>
+            </div>
+          </div>
+        </ion-card-content>
+      </ion-card>
+      
+    </div>
+  </div>
+</ion-content>

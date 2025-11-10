@@ -1,4 +1,4 @@
-export type VanType = 'EDV' | 'CDV' | 'LMR';
+export type VanType = 'EDV' | 'CDV' | 'Rental';
 
 export interface Van {
   docId: string;

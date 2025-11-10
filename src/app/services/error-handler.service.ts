@@ -67,6 +67,13 @@ export class GlobalErrorHandlerService implements ErrorHandler {
   }
 
   private handleSpecificErrors(error: any, router: Router): void {
+    // Handle IndexedDB corruption errors
+    if (error?.message?.includes('refusing to open IndexedDB database') || 
+        error?.message?.includes('corruption of the IndexedDB database')) {
+      this.handleIndexedDBCorruption(error);
+      return;
+    }
+
     // Handle Firebase authentication errors
     if (error?.code?.startsWith('auth/')) {
       this.handleAuthError(error, router);
@@ -159,6 +166,112 @@ export class GlobalErrorHandlerService implements ErrorHandler {
 
     // Redirect to a safe page
     router.navigate(['/van-selection'], { replaceUrl: true });
+  }
+
+  private handleIndexedDBCorruption(error: any): void {
+    const loggingService = this.injector.get(LoggingService);
+    
+    loggingService.error('IndexedDB corruption detected', 'INDEXEDDB', {
+      message: error.message,
+      stack: error.stack
+    });
+
+    // Attempt to recover by clearing IndexedDB and reloading
+    this.recoverFromIndexedDBCorruption();
+  }
+
+  private recoverFromIndexedDBCorruption(): void {
+    const loggingService = this.injector.get(LoggingService);
+    
+    loggingService.warn('Attempting to recover from IndexedDB corruption', 'INDEXEDDB_RECOVERY', {
+      action: 'Clearing corrupted databases'
+    });
+
+    // Clear all IndexedDB databases
+    this.clearAllIndexedDB().then(() => {
+      loggingService.info('IndexedDB databases cleared, reloading page', 'INDEXEDDB_RECOVERY');
+      
+      // Unregister service worker to force fresh start
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(registrations => {
+          registrations.forEach(registration => {
+            registration.unregister().catch(err => {
+              loggingService.warn('Failed to unregister service worker', 'INDEXEDDB_RECOVERY', { error: err });
+            });
+          });
+          
+          // Reload page after a short delay to allow cleanup
+          setTimeout(() => {
+            window.location.reload();
+          }, 1000);
+        });
+      } else {
+        // If no service worker, just reload
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+      }
+    }).catch(err => {
+      loggingService.error('Failed to clear IndexedDB', 'INDEXEDDB_RECOVERY', { error: err });
+      
+      // Still try to reload - browser might handle it
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+    });
+  }
+
+  private clearAllIndexedDB(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      if (!window.indexedDB) {
+        resolve();
+        return;
+      }
+
+      // Common database names used by Angular Service Worker and Firebase
+      const knownDatabases = [
+        'ngsw:db:control',
+        'ngsw:db:assets',
+        'ngsw:db:metadata',
+        'firebaseLocalStorageDb',
+        'firestore',
+        'firebase-heartbeat-database',
+        'firebaseInstallations'
+      ];
+
+      // Try to delete known databases
+      const deletePromises = knownDatabases.map(dbName => {
+        return new Promise<void>((resolveDelete) => {
+          try {
+            const deleteRequest = indexedDB.deleteDatabase(dbName);
+            
+            deleteRequest.onsuccess = () => {
+              console.log(`Deleted IndexedDB: ${dbName}`);
+              resolveDelete();
+            };
+            
+            deleteRequest.onerror = () => {
+              console.warn(`Failed to delete IndexedDB: ${dbName}`);
+              resolveDelete(); // Continue even if one fails
+            };
+            
+            deleteRequest.onblocked = () => {
+              console.warn(`Blocked deleting IndexedDB: ${dbName}`);
+              resolveDelete(); // Continue even if blocked
+            };
+          } catch (err) {
+            console.warn(`Error deleting IndexedDB: ${dbName}`, err);
+            resolveDelete(); // Continue even if error
+          }
+        });
+      });
+
+      Promise.all(deletePromises).then(() => {
+        resolve();
+      }).catch(err => {
+        reject(err);
+      });
+    });
   }
 
   private handleGenericError(error: any): void {
