@@ -34,7 +34,9 @@ export type Role = 'driver' | 'admin' | 'owner';
 export interface UserProfile {
   uid: string;
   email: string;
-  displayName: string;
+  firstName: string;
+  lastName: string;
+  displayName?: string;  // Optional for backward compatibility, computed from firstName + lastName
   roles: Role[];          // <-- array of roles
   createdAt: Date;
   isActive: boolean;
@@ -126,10 +128,18 @@ export class AuthService {
               // Continue with default driver role
             }
             
+            // For legacy users, try to parse displayName into firstName/lastName
+            const legacyDisplayName = user.displayName ?? 'User';
+            const nameParts = legacyDisplayName.trim().split(/\s+/);
+            const firstName = nameParts[0] || 'User';
+            const lastName = nameParts.slice(1).join(' ') || '';
+            
             const fallback: UserProfile = {
               uid: user.uid,
               email: user.email ?? '',
-              displayName: user.displayName ?? 'User',
+              firstName: firstName,
+              lastName: lastName,
+              displayName: legacyDisplayName, // Keep for backward compatibility
               roles: roles,
               isActive: true,
               createdAt: new Date(),
@@ -220,5 +230,44 @@ export class AuthService {
       console.error('[AuthService] getUserProfile failed:', e);
       return null;
     }
+  }
+
+  /**
+   * Get display name from user profile.
+   * Uses firstName + lastName if available, falls back to displayName, then email username.
+   */
+  getDisplayName(profile: UserProfile | null | undefined): string {
+    if (!profile) return 'User';
+    if (profile.firstName && profile.lastName) {
+      return `${profile.firstName} ${profile.lastName}`.trim();
+    }
+    if (profile.firstName) {
+      return profile.firstName;
+    }
+    if (profile.displayName) {
+      return profile.displayName;
+    }
+    if (profile.email) {
+      return profile.email.split('@')[0];
+    }
+    return 'User';
+  }
+
+  /**
+   * Get first name from user profile.
+   * Uses firstName if available, falls back to first word of displayName, then email username.
+   */
+  getFirstName(profile: UserProfile | null | undefined): string {
+    if (!profile) return 'User';
+    if (profile.firstName) {
+      return profile.firstName;
+    }
+    if (profile.displayName) {
+      return profile.displayName.split(' ')[0] || 'User';
+    }
+    if (profile.email) {
+      return profile.email.split('@')[0];
+    }
+    return 'User';
   }
 }

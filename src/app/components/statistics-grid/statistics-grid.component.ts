@@ -46,6 +46,7 @@ export class StatisticsGridComponent {
   @Input() vanStats: any;
   @Input() inspectionStats: any;
   @Input() driverStats: any;
+  @Input() operationalHealth: any;
   @Output() cardMoved = new EventEmitter<{ cardId: string; direction: 'up' | 'down' | 'left' | 'right' }>();
   @Output() cardColorChanged = new EventEmitter<{ cardId: string; color: string }>();
   

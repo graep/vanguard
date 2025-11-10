@@ -3,43 +3,45 @@
 <ion-content class="ion-padding">
   <div class="content-container">
   
-  <!-- Interactive Stats Cards as Tabs -->
-  <div class="stats-container" *ngIf="counts$ | async as c">
-    <ion-card class="stat-card total-users" 
-              [class.active]="activeFilter === 'all'"
-              (click)="setFilter('all')">
-      <ion-card-content>
-        <div class="stat-value">{{ c.total }}</div>
-        <div class="stat-label">Total Users</div>
-        <div class="stat-icon">
-          <ion-icon name="people"></ion-icon>
-        </div>
-      </ion-card-content>
-    </ion-card>
-
-    <ion-card class="stat-card drivers" 
-              [class.active]="activeFilter === 'drivers'"
-              (click)="setFilter('drivers')">
-      <ion-card-content>
-        <div class="stat-value">{{ c.drivers }}</div>
-        <div class="stat-label">Drivers</div>
-        <div class="stat-icon">
-          <ion-icon name="car"></ion-icon>
-        </div>
-      </ion-card-content>
-    </ion-card>
-
-    <ion-card class="stat-card admins" 
-              [class.active]="activeFilter === 'admins'"
-              (click)="setFilter('admins')">
-      <ion-card-content>
-        <div class="stat-value">{{ c.admins }}</div>
-        <div class="stat-label">Admins</div>
-        <div class="stat-icon">
-          <ion-icon name="shield-checkmark"></ion-icon>
-        </div>
-      </ion-card-content>
-    </ion-card>
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <div>
+        <h1 class="page-title">Users</h1>
+        <p class="page-subtitle">Manage user accounts and permissions</p>
+      </div>
+      <div class="stats-container" *ngIf="counts$ | async as c">
+        <ion-card class="combined-stat-card">
+          <ion-card-content>
+            <div class="stats-breakdown">
+              <div class="stat-item total-users" 
+                   [class.active]="activeFilter === 'all'"
+                   (click)="setFilter('all')">
+                <ion-icon name="people" class="stat-icon"></ion-icon>
+                <div class="stat-value">{{ c.total }}</div>
+                <div class="stat-label">Total Users</div>
+              </div>
+              
+              <div class="stat-item drivers" 
+                   [class.active]="activeFilter === 'drivers'"
+                   (click)="setFilter('drivers')">
+                <ion-icon name="car" class="stat-icon"></ion-icon>
+                <div class="stat-value">{{ c.drivers }}</div>
+                <div class="stat-label">Drivers</div>
+              </div>
+              
+              <div class="stat-item admins" 
+                   [class.active]="activeFilter === 'admins'"
+                   (click)="setFilter('admins')">
+                <ion-icon name="shield-checkmark" class="stat-icon"></ion-icon>
+                <div class="stat-value">{{ c.admins }}</div>
+                <div class="stat-label">Admins</div>
+              </div>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      </div>
+    </div>
   </div>
 
   <!-- Users list -->
@@ -52,7 +54,7 @@
           </ion-avatar>
 
           <ion-label>
-            <h2>{{ user.displayName || 'Unnamed User' }}</h2>
+            <h2>{{ getDisplayName(user) }}</h2>
             <p>
               <ion-icon name="mail"></ion-icon>
               {{ user.email }}

@@ -51,7 +51,8 @@ export class SignupPage implements OnInit {
 
   private createForm(): FormGroup {
     return this.fb.group({
-      displayName: ['', [Validators.required, Validators.minLength(2)]],
+      firstName: ['', [Validators.required, Validators.minLength(1)]],
+      lastName: ['', [Validators.required, Validators.minLength(1)]],
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],
       confirmPassword: ['', [Validators.required]],
@@ -92,9 +93,13 @@ export class SignupPage implements OnInit {
     try {
       const formValue = this.signupForm.value;
       
-      const profileData: Omit<UserProfile, 'uid' | 'createdAt'> = {
-        email: formValue.email,
-        displayName: formValue.displayName,
+      // Compute displayName from firstName and lastName for backward compatibility
+      const displayName = `${formValue.firstName} ${formValue.lastName}`.trim();
+      
+      const profileData: Omit<UserProfile, 'uid' | 'createdAt' | 'email'> = {
+        firstName: formValue.firstName,
+        lastName: formValue.lastName,
+        displayName: displayName, // Keep for backward compatibility
         roles: ['driver'], // SECURITY FIX: Only assign driver role by default
         isActive: true,
         phoneNumber: formValue.phoneNumber,

@@ -1,111 +1,58 @@
-
 <ion-content>
   <div class="content-container">
-
-    <!-- Main Fleet Status Bar - handles search and filtering automatically -->
-    <div class="status-bar-container">
-      <app-status-count-bar
-        [dataSource]="overallDataSource"
-        [showProgress]="true"
-        [clickable]="true"
-        [searchPlaceholder]="'Search by #, VIN or Type'"
-        (filteredData)="onOverallFilteredData($event)"
-        variant="default">
-      </app-status-count-bar>
+    
+    <!-- Loading State -->
+    <div class="loading-state" *ngIf="isLoading">
+      <ion-spinner></ion-spinner>
+      <p>Loading statistics...</p>
     </div>
-
-    <!-- Van List -->
-    <div class="van-list">
-      <!-- EDV Section -->
-      <div class="van-section-container">
-        <div class="section-header">
-          <h3 class="section-title">EDV</h3>
+    
+    <!-- Statistics Content -->
+    <div class="statistics-content" *ngIf="!isLoading">
+      
+      <!-- Page Header -->
+      <div class="page-header">
+        <div class="header-content">
+          <div>
+            <h1 class="page-title">Dashboard</h1>
+            <p class="page-subtitle">Welcome, {{ userDisplayName }}!</p>
+          </div>
+          <div class="header-actions-container">
+            <div class="header-actions">
+              <ion-button fill="outline" size="small" (click)="toggleEditMode()" 
+                          [class.edit-mode-active]="isEditMode" class="edit-mode-button">
+                <ion-icon [name]="isEditMode ? 'lock-open-outline' : 'lock-closed-outline'" slot="start"></ion-icon>
+                {{ isEditMode ? 'Exit Edit Mode' : 'Edit Layout' }}
+              </ion-button>
+              <ion-button fill="outline" size="small" (click)="resetLayout()" class="reset-button" [disabled]="!isEditMode">
+                <ion-icon name="refresh-outline" slot="start"></ion-icon>
+                Reset Layout
+              </ion-button>
+              <ion-button fill="outline" size="small" (click)="resetAllTileColors()" class="reset-colors-button" [disabled]="!isEditMode">
+                <ion-icon name="color-palette-outline" slot="start"></ion-icon>
+                Reset Colors
+              </ion-button>
+            </div>
+          </div>
         </div>
-
-        <ion-grid>
-          <ion-row>
-            <ion-col size="12" size-md="6" size-lg="4" *ngFor="let van of filteredEdvs" (click)="viewVan(van)">
-              <div class="van-card" [class.active]="!van.isGrounded" [class.grounded]="van.isGrounded">
-                <div class="van-card-content">
-                  <img [src]="'assets/EDV.jpg'" alt="EDV" class="van-image"/>
-                  <div class="van-details">
-                    <h4 class="van-id">{{ van.number || 'Unknown' }}</h4>
-                    <div class="van-vin">{{ van.VIN || 'No VIN Available' }}</div>
-                  </div>
-                </div>
-              </div>
-            </ion-col>
-          </ion-row>
-        </ion-grid>
-      </div>
-
-      <!-- CDV Section -->
-      <div class="van-section-container">
-        <div class="section-header">
-          <h3 class="section-title">CDV</h3>
+        <div class="edit-mode-indicator" *ngIf="isEditMode">
+          <ion-icon name="create-outline"></ion-icon>
+          <span>Edit Mode Active - Drag tiles to rearrange</span>
         </div>
-
-        <ion-grid>
-          <ion-row>
-            <ion-col size="12" size-md="6" size-lg="4" *ngFor="let van of filteredCdvs" (click)="viewVan(van)">
-              <div class="van-card" [class.active]="!van.isGrounded" [class.grounded]="van.isGrounded">
-                <div class="van-card-content">
-                  <img [src]="'assets/CDV.jpg'" alt="CDV" class="van-image"/>
-                  <div class="van-details">
-                    <h4 class="van-id">{{ van.number || 'Unknown' }}</h4>
-                    <div class="van-vin">{{ van.VIN || 'No VIN Available' }}</div>
-                  </div>
-                </div>
-              </div>
-            </ion-col>
-          </ion-row>
-        </ion-grid>
-      </div>
-
-      <!-- Rental Section -->
-      <div class="van-section-container">
-        <div class="section-header">
-          <h3 class="section-title">Rental</h3>
-        </div>
-
-        <ion-grid>
-          <ion-row>
-            <!-- Rental Van Cards -->
-            <ion-col size="12" size-md="6" size-lg="4" *ngFor="let van of filteredRentals" (click)="viewVan(van)">
-              <div class="van-card" [class.active]="!van.isGrounded" [class.grounded]="van.isGrounded">
-                <div class="van-card-content">
-                  <img [src]="getRentalImage(van)" alt="Rental" class="van-image"/>
-                  <div class="van-details">
-                    <h4 class="van-id">{{ van.number || 'Unknown' }}</h4>
-                    <div class="van-vin">{{ van.VIN || 'No VIN Available' }}</div>
-                  </div>
-                  <div class="van-actions">
-                    <ion-button fill="clear" size="small" color="danger" (click)="deleteVan(van); $event.stopPropagation()">
-                      <ion-icon name="trash-outline"></ion-icon>
-                    </ion-button>
-                  </div>
-                </div>
-              </div>
-            </ion-col>
-            
-            <!-- ADD VAN Card -->
-            <ion-col size="12" size-md="6" size-lg="4" *ngIf="!hasActiveFilters">
-              <div class="van-card add-van-card" (click)="addVan()">
-                <div class="van-card-content">
-                  <div class="add-van-icon">
-                    <ion-icon name="add-circle-outline"></ion-icon>
-                  </div>
-                </div>
-              </div>
-            </ion-col>
-          </ion-row>
-        </ion-grid>
       </div>
       
-      <div class="empty-state" *ngIf="filteredEdvs.length === 0 && filteredCdvs.length === 0 && filteredRentals.length === 0">
-        <ion-icon name="car-outline"></ion-icon>
-        <p>No vans found matching your search criteria</p>
-      </div>
+      <!-- Unified Statistics Grid -->
+      <app-statistics-grid
+        [cards]="allCards"
+        [isEditMode]="isEditMode"
+        [vanStats]="vanStats"
+        [inspectionStats]="inspectionStats"
+        [driverStats]="driverStats"
+        [operationalHealth]="operationalHealth"
+        (cardMoved)="moveCard($event)"
+        (cardColorChanged)="onCardColorChanged($event)">
+      </app-statistics-grid>
+      
     </div>
   </div>
 </ion-content>

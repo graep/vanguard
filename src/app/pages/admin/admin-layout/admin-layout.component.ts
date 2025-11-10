@@ -79,32 +79,85 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
   }
 
   private buildBreadcrumbs(tail: BreadcrumbItem[] = []): void {
-    // Base breadcrumb
-    const items: BreadcrumbItem[] = [{ label: 'Dashboard', url: '/admin', icon: 'home' }];
+    // Get current URL to determine route
+    const currentUrl = this.router.url;
+    
+    // Map of all sidebar routes that are their own home pages
+    const sidebarRoutes: Record<string, { label: string; icon?: string; url?: string }> = {
+      '/admin': { label: 'Dashboard', icon: 'home', url: '/admin' },
+      '/admin/users': { label: 'Users', icon: 'people', url: '/admin/users' },
+      '/admin/planning': { label: 'Planning', icon: 'calendar', url: '/admin/planning' },
+      '/admin/fleet': { label: 'Fleet', icon: 'car', url: '/admin/fleet' }
+    };
 
-    // Walk child route to determine current page
-    let child = this.route.firstChild;
-    while (child && child.firstChild) {
-      child = child.firstChild;
-    }
+    // Map of route prefixes to their parent sidebar route (for nested routes)
+    const nestedRoutePrefixes: Record<string, { label: string; icon?: string; url?: string }> = {
+      '/admin/van/': { label: 'Fleet', icon: 'car', url: '/admin/fleet' },
+      '/admin/van-report/': { label: 'Fleet', icon: 'car', url: '/admin/fleet' }
+    };
 
-    const path = child?.routeConfig?.path || '';
-    // If a dynamic tail is provided (e.g., van number), prefer it regardless of path detection timing
-    if (tail && tail.length > 0) {
-      items.push(...tail);
+    // Find matching route (check exact match first, then check if URL starts with route)
+    let routeInfo: { label: string; icon?: string; url?: string } | undefined;
+    let matchedRoute = '';
+    
+    // First try exact match
+    if (sidebarRoutes[currentUrl]) {
+      routeInfo = sidebarRoutes[currentUrl];
+      matchedRoute = currentUrl;
     } else {
-      // Map path to breadcrumb label
-      const pathMap: Record<string, string> = {
-        'users': 'Users',
-        'planning': 'Planning',
-        'analytics': 'Analytics'
-      };
-
-      if (path && pathMap[path]) {
-        items.push({ label: pathMap[path], url: `/admin/${path}` });
+      // Check if URL matches a nested route prefix (e.g., /admin/van/:id)
+      for (const [prefix, info] of Object.entries(nestedRoutePrefixes)) {
+        if (currentUrl.startsWith(prefix)) {
+          routeInfo = info;
+          matchedRoute = prefix.slice(0, -1); // Remove trailing slash for matching
+          break;
+        }
+      }
+      
+      // If no nested route match, try to find route that URL starts with
+      if (!routeInfo) {
+        for (const [routePath, info] of Object.entries(sidebarRoutes)) {
+          if (currentUrl.startsWith(routePath + '/') || currentUrl === routePath) {
+            routeInfo = info;
+            matchedRoute = routePath;
+            break;
+          }
+        }
       }
     }
-
-    this.breadcrumbItems = items;
+    
+    if (routeInfo) {
+      // We're on a sidebar route or nested route - start breadcrumb with this route, NEVER show Dashboard
+      if (tail && tail.length > 0) {
+        // Check if tail already starts with this route (to avoid duplication)
+        const firstTailItem = tail[0];
+        if (firstTailItem.label === routeInfo.label) {
+          // Tail already starts with the route, use it as-is
+          this.breadcrumbItems = tail;
+        } else {
+          // Prepend the route to the tail (with URL for clickability)
+          this.breadcrumbItems = [
+            { label: routeInfo.label, icon: routeInfo.icon, url: routeInfo.url },
+            ...tail
+          ];
+        }
+      } else {
+        // No tail, just show the route itself (no URL since we're already there for exact matches)
+        const isExactMatch = currentUrl === matchedRoute || sidebarRoutes[currentUrl];
+        this.breadcrumbItems = [
+          { label: routeInfo.label, icon: routeInfo.icon, url: isExactMatch ? undefined : routeInfo.url }
+        ];
+      }
+    } else {
+      // Not a recognized route - fallback to Dashboard
+      if (tail && tail.length > 0) {
+        this.breadcrumbItems = [
+          { label: 'Dashboard', url: '/admin', icon: 'home' },
+          ...tail
+        ];
+      } else {
+        this.breadcrumbItems = [{ label: 'Dashboard', url: '/admin', icon: 'home' }];
+      }
+    }
   }
 }

@@ -5,7 +5,7 @@ import { IonicModule } from '@ionic/angular';
 import { BehaviorSubject, Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 
-import { UserProfile, Role } from '../../../services/auth.service';
+import { UserProfile, Role, AuthService } from '../../../services/auth.service';
 import { UserManagementService } from '../../../services/user-management.service';
 
 type FilterKey = 'all' | 'active' | 'drivers' | 'admins' | 'owners';
@@ -35,7 +35,10 @@ export class UsersPage implements OnInit {
   filteredUsers$!: Observable<UserProfile[]>;
   counts$!: Observable<Counts>;
 
-  constructor(private userManagement: UserManagementService) {}
+  constructor(
+    private userManagement: UserManagementService,
+    private authService: AuthService
+  ) {}
 
   ngOnInit() {
     this.allUsers$ = this.userManagement.getAllUsers();
@@ -129,6 +132,10 @@ export class UsersPage implements OnInit {
       month: 'short',
       day: 'numeric',
     });
+  }
+
+  getDisplayName(user: UserProfile): string {
+    return this.authService.getDisplayName(user) || 'Unnamed User';
   }
 
   getEmptyStateMessage(): string {

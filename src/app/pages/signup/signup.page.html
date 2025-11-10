@@ -15,19 +15,34 @@
           <h2 class="page-title">Create Account</h2>
         </div>
 
-        <!-- Full Name -->
+        <!-- First Name -->
         <ion-item class="form-field">
-          <ion-label position="stacked">Full Name *</ion-label>
+          <ion-label position="stacked">First Name *</ion-label>
           <ion-input 
             type="text" 
-            formControlName="displayName"
-            placeholder="Enter your full name">
+            formControlName="firstName"
+            placeholder="Enter your first name">
           </ion-input>
         </ion-item>
         <ion-note 
-          *ngIf="signupForm.get('displayName')?.invalid && signupForm.get('displayName')?.touched"
+          *ngIf="signupForm.get('firstName')?.invalid && signupForm.get('firstName')?.touched"
           color="danger">
-          Full name is required
+          First name is required
+        </ion-note>
+
+        <!-- Last Name -->
+        <ion-item class="form-field">
+          <ion-label position="stacked">Last Name *</ion-label>
+          <ion-input 
+            type="text" 
+            formControlName="lastName"
+            placeholder="Enter your last name">
+          </ion-input>
+        </ion-item>
+        <ion-note 
+          *ngIf="signupForm.get('lastName')?.invalid && signupForm.get('lastName')?.touched"
+          color="danger">
+          Last name is required
         </ion-note>
 
         <!-- Email -->

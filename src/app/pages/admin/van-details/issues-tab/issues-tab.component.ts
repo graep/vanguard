@@ -544,7 +544,7 @@ export class IssuesTabComponent implements OnInit {
           if (inspection.createdBy) {
             try {
               const userProfile = await this.authService.getUserProfile(inspection.createdBy);
-              submitterName = userProfile?.displayName || 'Unknown';
+              submitterName = this.authService.getDisplayName(userProfile);
             } catch (error) {
               console.error('Failed to load user profile:', error);
             }

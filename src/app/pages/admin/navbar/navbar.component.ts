@@ -1,4 +1,4 @@
-// src/app/pages/dashboard/navbar/navbar.component.ts
+// src/app/pages/admin/navbar/navbar.component.ts
 import {
   Component,
   OnInit,
@@ -41,6 +41,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
   // Menu config (no manual 'active' flags; routing decides)
   menuItems = [
     { title: 'Dashboard', icon: 'home-outline', route: '/admin' },
+    { title: 'Fleet', icon: 'car-outline', route: '/admin/fleet' },
     { title: 'Users', icon: 'people-outline', route: '/admin/users' },
     { title: 'Planning', icon: 'calendar-outline', route: '/admin/planning' },
     {
@@ -49,7 +50,6 @@ export class NavbarComponent implements OnInit, OnDestroy {
       action: () => this.openPendingModal(),
       hasNotification: () => this.hasNewSubmissions
     },
-    { title: 'Analytics', icon: 'analytics-outline', route: '/admin/statistics' },
     { title: 'Projects', icon: 'folder-outline' },
     { title: 'Messages', icon: 'chatbubbles-outline' },
     { title: 'Settings', icon: 'settings-outline' }
@@ -85,7 +85,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
   loadUserInfo() {
     const sub = this.authService.currentUserProfile$.subscribe(profile => {
-      this.userDisplayName = profile?.displayName || 'User';
+      this.userDisplayName = this.authService.getDisplayName(profile);
     });
     this.subs.push(sub);
   }

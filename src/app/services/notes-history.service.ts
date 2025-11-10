@@ -26,7 +26,7 @@ export class NotesHistoryService {
     }
 
     const userProfile = this.authService.currentUserProfile$.value;
-    const authorName = userProfile?.displayName || user.displayName || 'Admin User';
+    const authorName = this.authService.getDisplayName(userProfile) || user.displayName || 'Admin User';
 
     const noteData = {
       vanId,

@@ -1,4 +1,4 @@
-// src/app/pages/dashboard/van-report/van-report.component.ts
+// src/app/pages/admin/van-report/van-report.component.ts
 import { Component, OnInit, AfterViewInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IonicModule, AlertController, ToastController } from '@ionic/angular';
@@ -134,13 +134,13 @@ export class VanReportComponent implements OnInit, AfterViewInit, OnDestroy {
       // Load current inspection submitter name
       if (this.currentInspection?.createdBy) {
         const currentUser = await this.auth.getUserProfile(this.currentInspection.createdBy);
-        this.currentSubmitterName = currentUser?.displayName || 'Unknown';
+        this.currentSubmitterName = this.auth.getDisplayName(currentUser);
       }
 
       // Load previous inspection submitter name
       if (this.previousInspection?.createdBy) {
         const previousUser = await this.auth.getUserProfile(this.previousInspection.createdBy);
-        this.previousSubmitterName = previousUser?.displayName || 'Unknown';
+        this.previousSubmitterName = this.auth.getDisplayName(previousUser);
       }
     } catch (error) {
       console.error('Failed to load user display names:', error);

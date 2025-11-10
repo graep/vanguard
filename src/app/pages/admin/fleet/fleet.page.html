@@ -1,0 +1,105 @@
+
+<ion-content>
+  <div class="content-container">
+
+    <!-- Page Header -->
+    <div class="page-header">
+      <div class="header-content">
+        <div>
+          <h1 class="page-title">Fleet</h1>
+          <p class="page-subtitle">Welcome, {{ userDisplayName }}!</p>
+        </div>
+        <div class="status-bar-container">
+          <app-status-count-bar
+            [dataSource]="overallDataSource"
+            [showProgress]="true"
+            [clickable]="true"
+            [searchPlaceholder]="'Search by #, VIN or Type'"
+            (filteredData)="onOverallFilteredData($event)"
+            variant="default">
+          </app-status-count-bar>
+        </div>
+      </div>
+    </div>
+
+    <!-- Van List -->
+    <div class="van-list">
+      <!-- EDV Section -->
+      <div class="van-section-container">
+        <div class="section-header">
+          <h3 class="section-title">EDV</h3>
+        </div>
+
+        <div class="van-grid">
+          <div class="van-card" *ngFor="let van of filteredEdvs" [class.active]="!van.isGrounded" [class.grounded]="van.isGrounded" (click)="viewVan(van)">
+            <div class="van-card-content">
+              <img [src]="'assets/EDV.jpg'" alt="EDV" class="van-image"/>
+              <div class="van-details">
+                <h4 class="van-id">{{ van.number || 'Unknown' }}</h4>
+                <div class="van-vin">{{ van.VIN || 'No VIN Available' }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CDV Section -->
+      <div class="van-section-container">
+        <div class="section-header">
+          <h3 class="section-title">CDV</h3>
+        </div>
+
+        <div class="van-grid">
+          <div class="van-card" *ngFor="let van of filteredCdvs" [class.active]="!van.isGrounded" [class.grounded]="van.isGrounded" (click)="viewVan(van)">
+            <div class="van-card-content">
+              <img [src]="'assets/CDV.jpg'" alt="CDV" class="van-image"/>
+              <div class="van-details">
+                <h4 class="van-id">{{ van.number || 'Unknown' }}</h4>
+                <div class="van-vin">{{ van.VIN || 'No VIN Available' }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rental Section -->
+      <div class="van-section-container">
+        <div class="section-header">
+          <h3 class="section-title">Rental</h3>
+        </div>
+
+        <div class="van-grid">
+          <!-- Rental Van Cards -->
+          <div class="van-card" *ngFor="let van of filteredRentals" [class.active]="!van.isGrounded" [class.grounded]="van.isGrounded" (click)="viewVan(van)">
+            <div class="van-card-content">
+              <img [src]="getRentalImage(van)" alt="Rental" class="van-image"/>
+              <div class="van-details">
+                <h4 class="van-id">{{ van.number || 'Unknown' }}</h4>
+                <div class="van-vin">{{ van.VIN || 'No VIN Available' }}</div>
+              </div>
+              <div class="van-actions">
+                <ion-button fill="clear" size="small" color="danger" (click)="deleteVan(van); $event.stopPropagation()">
+                  <ion-icon name="trash-outline"></ion-icon>
+                </ion-button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- ADD VAN Card -->
+          <div class="van-card add-van-card" *ngIf="!hasActiveFilters" (click)="addVan()">
+            <div class="van-card-content">
+              <div class="add-van-icon">
+                <ion-icon name="add-circle-outline"></ion-icon>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="empty-state" *ngIf="filteredEdvs.length === 0 && filteredCdvs.length === 0 && filteredRentals.length === 0">
+        <ion-icon name="car-outline"></ion-icon>
+        <p>No vans found matching your search criteria</p>
+      </div>
+    </div>
+  </div>
+</ion-content>

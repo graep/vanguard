@@ -10,103 +10,108 @@
     <!-- Main Content -->
     <div *ngIf="!isLoading && dailyPlan" class="planning-container">
       
-      <!-- Header Section -->
-      <ion-card class="planning-header">
-        <ion-card-content>
-          <!-- Title and Date Row -->
-          <div class="header-title-row">
-            <div class="title-group">
-              <h1 class="page-title">Daily Planning</h1>
-              <p class="page-subtitle">{{ getFormattedDate() }}</p>
-            </div>
-            <div class="header-stats">
-              <ion-button
-                fill="outline"
-                size="small"
-                color="primary"
-                (click)="printPlan()"
-                class="print-button">
-                <ion-icon name="print-outline" slot="start"></ion-icon>
-                Print
-              </ion-button>
-              <ion-chip [color]="stats.totalUnassigned > 0 ? 'danger' : 'success'">
-                <ion-icon [name]="stats.totalUnassigned > 0 ? 'alert-circle' : 'checkmark-circle'"></ion-icon>
-                <ion-label>
-                  {{ stats.totalAssigned }}/{{ stats.totalAssigned + stats.totalUnassigned }} Assigned
-                </ion-label>
-              </ion-chip>
-            </div>
+      <!-- Page Header -->
+      <div class="page-header">
+        <div class="header-content">
+          <div>
+            <h1 class="page-title">Planning</h1>
+            <p class="page-subtitle">{{ getFormattedDate() }}</p>
           </div>
-          
-          <!-- Controls Row -->
-          <div class="header-controls-row">
-            <div class="control-group date-group">
-              <label class="control-label">Date</label>
-              <div class="date-controls">
-                <div class="date-input-wrapper" (click)="openDatePicker()">
-                  <input 
-                    type="date" 
-                    #dateInput
-                    [value]="selectedDate"
-                    (change)="onDateChange($event)"
-                    (click)="$event.stopPropagation()"
-                    class="date-input"
-                  />
+          <div class="controls-container">
+            <ion-card class="controls-card">
+              <ion-card-content>
+                <div class="controls-content">
+                  <!-- Top Row: Stats and Print -->
+                  <div class="controls-row top-row">
+                    <ion-chip [color]="stats.totalUnassigned > 0 ? 'danger' : 'success'" class="stats-chip">
+                      <ion-icon [name]="stats.totalUnassigned > 0 ? 'alert-circle' : 'checkmark-circle'"></ion-icon>
+                      <ion-label>
+                        {{ stats.totalAssigned }}/{{ stats.totalAssigned + stats.totalUnassigned }} Assigned
+                      </ion-label>
+                    </ion-chip>
+                    <ion-button
+                      fill="outline"
+                      size="small"
+                      color="primary"
+                      (click)="printPlan()"
+                      class="print-button">
+                      <ion-icon name="print-outline" slot="start"></ion-icon>
+                      Print
+                    </ion-button>
+                  </div>
+                  
+                  <!-- Middle Row: Date Controls -->
+                  <div class="controls-row date-row">
+                    <label class="control-label">Date</label>
+                    <div class="date-controls">
+                      <div class="date-buttons">
+                        <ion-button 
+                          fill="outline" 
+                          size="small"
+                          [class.selected]="isTodaySelected()"
+                          (click)="selectToday()">
+                          Today
+                        </ion-button>
+                        <ion-button 
+                          fill="outline" 
+                          size="small"
+                          [class.selected]="isTomorrowSelected()"
+                          (click)="selectTomorrow()">
+                          Tomorrow
+                        </ion-button>
+                      </div>
+                      <div class="date-input-wrapper" (click)="openDatePicker()">
+                        <input 
+                          type="date" 
+                          #dateInput
+                          [value]="selectedDate"
+                          (change)="onDateChange($event)"
+                          (click)="$event.stopPropagation()"
+                          class="date-input"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Bottom Row: Route Generation Controls -->
+                  <div class="controls-row route-row">
+                    <label class="control-label">Generate Routes</label>
+                    <div class="route-controls">
+                      <ion-button
+                        fill="solid"
+                        color="primary"
+                        size="small"
+                        [disabled]="isSaving || !numberOfRoutes || numberOfRoutes <= 0"
+                        (click)="generateRoutes()">
+                        <ion-icon name="add-circle-outline" slot="start"></ion-icon>
+                        Generate
+                      </ion-button>
+                      <ion-button 
+                        *ngIf="hasCheckedAssignments()"
+                        fill="solid" 
+                        color="success"
+                        size="small"
+                        [disabled]="isSaving"
+                        (click)="submitCheckedAssignments()">
+                        <ion-icon name="save" slot="start"></ion-icon>
+                        Save {{ getCheckedCount() }}
+                      </ion-button>
+                      <div class="input-with-label">
+                        <ion-input
+                          type="number"
+                          [(ngModel)]="numberOfRoutes"
+                          placeholder="# of routes"
+                          min="1">
+                        </ion-input>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div class="date-buttons">
-                  <ion-button 
-                    fill="outline" 
-                    size="small"
-                    [class.selected]="isTodaySelected()"
-                    (click)="selectToday()">
-                    Today
-                  </ion-button>
-                  <ion-button 
-                    fill="outline" 
-                    size="small"
-                    [class.selected]="isTomorrowSelected()"
-                    (click)="selectTomorrow()">
-                    Tomorrow
-                  </ion-button>
-                </div>
-              </div>
-            </div>
-            
-            <div class="control-group routes-group">
-              <div class="route-controls">
-                <ion-button 
-                  *ngIf="hasCheckedAssignments()"
-                  fill="solid" 
-                  color="success"
-                  size="small"
-                  [disabled]="isSaving"
-                  (click)="submitCheckedAssignments()">
-                  <ion-icon name="save" slot="start"></ion-icon>
-                  Save {{ getCheckedCount() }}
-                </ion-button>
-                <ion-button
-                  fill="solid"
-                  color="primary"
-                  size="small"
-                  [disabled]="isSaving || !numberOfRoutes || numberOfRoutes <= 0"
-                  (click)="generateRoutes()">
-                  <ion-icon name="add-circle-outline" slot="start"></ion-icon>
-                  Generate
-                </ion-button>
-                <div class="input-with-label">
-                  <label class="control-label">Generate Routes</label>
-                  <ion-input
-                    type="number"
-                    [(ngModel)]="numberOfRoutes"
-                    placeholder="# of routes"
-                    min="1">
-                  </ion-input>
-                </div>
-              </div>
-            </div>
+              </ion-card-content>
+            </ion-card>
           </div>
-        </ion-card-content>
-      </ion-card>
+        </div>
+      </div>
       
       <!-- Planning Spreadsheet -->
       <ion-card class="planning-card">

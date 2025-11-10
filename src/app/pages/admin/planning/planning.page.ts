@@ -247,12 +247,12 @@ export class PlanningPage implements OnInit, OnDestroy {
         // Extract driver names from active users who have driver role
         this.driverNames = users
           .filter(user => 
-            user.displayName && 
+            (user.firstName || user.displayName) && 
             user.isActive === true &&
             user.roles && 
             user.roles.includes('driver')
           )
-          .map(user => user.displayName)
+          .map(user => this.authService.getDisplayName(user as UserProfile))
           .sort();
         
         console.log('[Planning] Loaded', this.driverNames.length, 'active drivers');

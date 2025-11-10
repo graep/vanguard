@@ -64,9 +64,19 @@ export const routes: Routes = [
           import('./pages/admin/planning/planning.page').then(m => m.PlanningPage),
       },
       {
-        path: 'statistics',
+        path: 'fleet',
         loadComponent: () =>
-          import('./pages/admin/statistics/statistics.page').then(m => m.StatisticsPage),
+          import('./pages/admin/fleet/fleet.page').then(m => m.FleetPage),
+      },
+      {
+        path: 'vehicles',
+        redirectTo: 'fleet',
+        pathMatch: 'full'
+      },
+      {
+        path: 'statistics',
+        redirectTo: '',
+        pathMatch: 'full'
       },
       {
         path: 'van-report/:id',

@@ -45,13 +45,25 @@ service cloud.firestore {
       allow delete: if isAdmin();
       
       // Validate user data on create/update
+      // Support both new format (firstName/lastName) and legacy format (displayName)
       allow create: if signedIn() 
-        && request.resource.data.keys().hasAll(['uid', 'email', 'displayName', 'roles', 'createdAt', 'isActive'])
+        && request.resource.data.keys().hasAll(['uid', 'email', 'roles', 'createdAt', 'isActive'])
         && request.resource.data.uid == request.auth.uid
         && isValidEmail(request.resource.data.email)
-        && request.resource.data.displayName is string
-        && request.resource.data.displayName.size() > 0
-        && request.resource.data.displayName.size() <= 100
+        && (
+          // New format: firstName and lastName required
+          (request.resource.data.firstName is string 
+           && request.resource.data.firstName.size() > 0
+           && request.resource.data.firstName.size() <= 50
+           && request.resource.data.lastName is string
+           && request.resource.data.lastName.size() > 0
+           && request.resource.data.lastName.size() <= 50)
+          ||
+          // Legacy format: displayName (for backward compatibility)
+          (request.resource.data.displayName is string
+           && request.resource.data.displayName.size() > 0
+           && request.resource.data.displayName.size() <= 100)
+        )
         && request.resource.data.roles is list
         && request.resource.data.roles.size() > 0
         && request.resource.data.roles.size() <= 3
@@ -64,9 +76,20 @@ service cloud.firestore {
         && (!('isActive' in request.resource.data.diff(resource.data).affectedKeys()) || isAdmin()) // Only admins can deactivate users
         && (!('email' in request.resource.data.diff(resource.data).affectedKeys()) || isOwner(uid)) // Only user can change their email
         && (request.resource.data.email == resource.data.email || isValidEmail(request.resource.data.email))
-        && request.resource.data.displayName is string
-        && request.resource.data.displayName.size() > 0
-        && request.resource.data.displayName.size() <= 100;
+        && (
+          // New format validation
+          (request.resource.data.firstName is string 
+           && request.resource.data.firstName.size() > 0
+           && request.resource.data.firstName.size() <= 50
+           && request.resource.data.lastName is string
+           && request.resource.data.lastName.size() > 0
+           && request.resource.data.lastName.size() <= 50)
+          ||
+          // Legacy format validation (for backward compatibility)
+          (request.resource.data.displayName is string
+           && request.resource.data.displayName.size() > 0
+           && request.resource.data.displayName.size() <= 100)
+        );
     }
 
     // Vans collection - Enhanced security
