@@ -13,7 +13,7 @@ app-breadcrumb {
       padding: 6px 12px;
     }
     
-    @media (max-width: 480px) {
+    @media (max-width: 430px) {
       padding: 6px 8px;
     }
   }
@@ -35,7 +35,7 @@ app-breadcrumb {
     margin-top: 16px;
   }
   
-  @media (max-width: 480px) {
+  @media (max-width: 430px) {
     padding: 0;
     margin: 0;
     width: 100%;
@@ -75,7 +75,7 @@ app-breadcrumb {
       border-radius: 10px !important;
     }
     
-    @media (max-width: 480px) {
+    @media (max-width: 430px) {
       border-radius: 10px !important;
     }
   }
@@ -88,7 +88,7 @@ app-breadcrumb {
       padding: 1rem !important;
     }
     
-    @media (max-width: 480px) {
+    @media (max-width: 430px) {
       padding: 0.75rem !important;
     }
   }
@@ -101,7 +101,7 @@ app-breadcrumb {
       padding: 1rem 1rem 0 1rem !important;
     }
     
-    @media (max-width: 480px) {
+    @media (max-width: 430px) {
       padding: 0.75rem 0.75rem 0 0.75rem !important;
     }
   }
@@ -116,7 +116,7 @@ app-breadcrumb {
       font-size: 1.1rem !important;
     }
     
-    @media (max-width: 480px) {
+    @media (max-width: 430px) {
       font-size: 1rem !important;
     }
   }
@@ -145,7 +145,7 @@ app-breadcrumb {
     margin-right: 16px !important;
   }
   
-  @media (max-width: 480px) {
+  @media (max-width: 430px) {
     margin-bottom: 1rem !important;
     margin-left: 12px !important;
     margin-right: 12px !important;
@@ -167,7 +167,7 @@ app-breadcrumb {
     gap: 1rem;
   }
   
-  @media (max-width: 480px) {
+  @media (max-width: 430px) {
     gap: 0.75rem;
   }
 }
@@ -192,7 +192,7 @@ app-breadcrumb {
       margin: 0.75rem 1rem 0.5rem 1rem;
     }
     
-    @media (max-width: 480px) {
+    @media (max-width: 430px) {
       font-size: 1.7rem;
       margin: 0.25rem 0.75rem 0.125rem 0.75rem !important;
     }
@@ -209,7 +209,7 @@ app-breadcrumb {
       margin: 0 1rem 0.75rem 1rem;
     }
     
-    @media (max-width: 480px) {
+    @media (max-width: 430px) {
       font-size: 0.9rem;
       margin: 0 0.75rem 0.5rem 0.75rem !important;
     }
@@ -241,7 +241,7 @@ app-breadcrumb {
       }
     }
     
-    @media (max-width: 480px) {
+    @media (max-width: 430px) {
       margin-bottom: 0.5rem;
       margin-left: 0.75rem !important;
       margin-right: 0.75rem;
@@ -267,7 +267,7 @@ app-breadcrumb {
       margin-right: 1rem;
     }
     
-    @media (max-width: 480px) {
+    @media (max-width: 430px) {
       gap: 0.3rem;
       margin-bottom: 1rem;
       margin-left: 0.75rem !important;
@@ -292,7 +292,7 @@ app-breadcrumb {
       gap: 0.5rem;
     }
     
-    @media (max-width: 480px) {
+    @media (max-width: 430px) {
       gap: 0.4rem;
     }
     
@@ -317,7 +317,7 @@ app-breadcrumb {
         font-size: 1.1rem;
       }
       
-      @media (max-width: 480px) {
+      @media (max-width: 430px) {
         font-size: 1rem;
       }
     }
@@ -337,7 +337,7 @@ app-breadcrumb {
           margin-bottom: 0.1rem;
         }
         
-        @media (max-width: 480px) {
+        @media (max-width: 430px) {
           font-size: 0.75rem;
           margin-bottom: 0.05rem;
         }
@@ -354,7 +354,7 @@ app-breadcrumb {
           font-size: 0.85rem;
         }
         
-        @media (max-width: 480px) {
+        @media (max-width: 430px) {
           font-size: 0.75rem;
         }
       }
@@ -434,7 +434,7 @@ app-breadcrumb {
       margin-right: 1rem;
     }
     
-    @media (max-width: 480px) {
+    @media (max-width: 430px) {
       gap: 0.4rem;
       margin-top: 0.5rem;
       margin-left: 0.75rem;
@@ -456,7 +456,7 @@ app-breadcrumb {
         font-size: 0.8rem;
       }
       
-      @media (max-width: 480px) {
+      @media (max-width: 430px) {
         height: 36px;
         font-size: 0.75rem;
       }
@@ -548,7 +548,7 @@ app-breadcrumb {
         }
       }
       
-      @media (max-width: 480px) {
+      @media (max-width: 430px) {
         width: 120px;
         height: 120px;
         
@@ -574,7 +574,7 @@ app-breadcrumb {
         font-size: 0.85rem;
       }
       
-      @media (max-width: 480px) {
+      @media (max-width: 430px) {
         min-width: 120px;
         height: 36px;
         font-size: 0.75rem;
@@ -616,7 +616,7 @@ app-breadcrumb {
     margin-right: 1rem !important;
   }
   
-  @media (max-width: 480px) {
+  @media (max-width: 430px) {
     margin-top: 1rem !important;
     margin-left: 0.75rem !important;
     margin-right: 0.75rem !important;
@@ -631,7 +631,7 @@ app-breadcrumb {
     padding: 1rem !important;
   }
   
-  @media (max-width: 480px) {
+  @media (max-width: 430px) {
     padding: 0.75rem !important;
   }
 }
@@ -649,7 +649,7 @@ app-breadcrumb {
     margin-bottom: 12px;
   }
   
-  @media (max-width: 480px) {
+  @media (max-width: 430px) {
     gap: 0.25rem;
     margin-bottom: 8px;
   }
@@ -682,7 +682,7 @@ app-breadcrumb {
       font-size: 12px;
     }
     
-    @media (max-width: 480px) {
+    @media (max-width: 430px) {
       --padding-start: 6px;
       --padding-end: 6px;
       height: 36px;
@@ -722,7 +722,7 @@ app-breadcrumb {
     min-height: 150px;
   }
   
-  @media (max-width: 480px) {
+  @media (max-width: 430px) {
     padding: 8px 0.3rem;
     min-height: 100px;
   }
@@ -766,7 +766,7 @@ app-breadcrumb {
     gap: 0.75rem;
   }
   
-  @media (max-width: 480px) {
+  @media (max-width: 430px) {
     grid-template-columns: 1fr;
   }
 }
@@ -1207,7 +1207,7 @@ app-breadcrumb {
   gap: 0.75rem;
   margin-bottom: 1.5rem;
   
-  @media (max-width: 480px) {
+  @media (max-width: 430px) {
     flex-direction: column;
   }
 }

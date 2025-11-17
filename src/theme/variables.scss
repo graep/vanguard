@@ -1,5 +1,12 @@
 // For information on how to create your own theme, please see:
 // http://ionicframework.com/docs/theming/
+
+// Responsive Breakpoints
+$mobile-breakpoint: 430px;
+$tablet-breakpoint: 768px;
+$desktop-breakpoint: 900px;
+$large-desktop-breakpoint: 1200px;
+
 :root {
   --ion-font-family: 'TikTok Sans', sans-serif;
 }

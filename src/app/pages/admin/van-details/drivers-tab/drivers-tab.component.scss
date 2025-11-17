@@ -7,7 +7,7 @@
       padding: 0 8px;
     }
     
-    @media (max-width: 480px) {
+    @media (max-width: 430px) {
       padding: 0 4px;
     }
     
@@ -17,7 +17,7 @@
       color: var(--ion-color-dark);
       margin: 0 0 8px 0;
       
-      @media (max-width: 480px) {
+      @media (max-width: 430px) {
         font-size: 1rem;
       }
     }
@@ -27,7 +27,7 @@
       color: var(--ion-color-medium);
       margin: 0;
       
-      @media (max-width: 480px) {
+      @media (max-width: 430px) {
         font-size: 0.8rem;
       }
     }
@@ -47,7 +47,7 @@
       ion-card-content {
         padding: 16px;
         
-        @media (max-width: 480px) {
+        @media (max-width: 430px) {
           padding: 12px;
         }
       }
@@ -62,7 +62,7 @@
       ion-card-content {
         padding: 16px !important;
         
-        @media (max-width: 480px) {
+        @media (max-width: 430px) {
           padding: 12px !important;
         }
       }
