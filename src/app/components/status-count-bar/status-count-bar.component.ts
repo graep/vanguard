@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnChanges, OnDestroy, SimpleChanges } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnChanges, OnDestroy, SimpleChanges, HostListener, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -59,50 +59,81 @@ export interface VanTypeTotals {
       <div class="status-section">
         <div class="totals-container">
           <div class="total-container">
-            <span class="total-label">Total:</span>
             <span class="total-number">{{ total }}</span>
-          </div>
-          
-          <!-- Van Type Totals -->
-          <div class="van-type-totals">
-            <div class="van-type-item" 
-                 *ngFor="let typeTotal of orderedVanTypeTotals; trackBy: trackByVanType"
-                 [class.van-type-selected]="selectedVanTypeFilter === typeTotal.key"
-                 (click)="onVanTypeClick(typeTotal.key)">
-              <span class="van-type-label">{{ typeTotal.key }}:</span>
-              <span class="van-type-count">{{ typeTotal.value }}</span>
-            </div>
           </div>
         </div>
 
-        <div class="status-items-container">
-          <!-- Clear status filter button -->
-          <button *ngIf="hasStatusFilter" class="status-clear-button" (click)="clearStatusFilter()" type="button">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
+        <!-- Filter Button with Dropdown -->
+        <div class="filter-container">
+          <button 
+            class="filter-button"
+            [class.filter-active]="hasActiveFilters"
+            (click)="toggleFilterDropdown()"
+            type="button">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+            </svg>
+            <span *ngIf="activeFilterCount > 0" class="filter-badge">{{ activeFilterCount }}</span>
+            <svg 
+              class="filter-arrow"
+              [class.filter-arrow-open]="isFilterDropdownOpen"
+              width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 12 15 18 9"></polyline>
             </svg>
           </button>
 
-          <div *ngFor="let item of computedStatusData; trackBy: trackByStatusId"
-               class="status-item"
-               [style.background-color]="item.color + '15'"
-               [style.border-color]="item.color + '30'"
-               (click)="onItemClick(item)">
-            
-            <div class="status-overlay" [style.background-color]="item.color + '10'"></div>
-            
-            <div class="status-indicator-container">
-              <div class="status-indicator" [style.background-color]="item.color"></div>
-              <div class="status-pulse" [style.background-color]="item.color"></div>
+          <!-- Filter Dropdown -->
+          <div 
+            class="filter-dropdown"
+            [class.filter-dropdown-open]="isFilterDropdownOpen"
+            *ngIf="isFilterDropdownOpen">
+            <!-- Status Filters -->
+            <div class="filter-group">
+              <div class="filter-group-header">Status</div>
+              <div class="filter-options">
+                <label 
+                  *ngFor="let item of computedStatusData; trackBy: trackByStatusId"
+                  class="filter-option">
+                  <input
+                    type="checkbox"
+                    [checked]="selectedStatusFilters.has(item.id)"
+                    (change)="toggleStatusFilter(item.id)"
+                    class="filter-checkbox">
+                  <div class="filter-option-content">
+                    <div class="filter-option-indicator" [style.background-color]="item.color"></div>
+                    <span class="filter-option-label">{{ item.label }}</span>
+                    <span class="filter-option-count">{{ item.count }}</span>
+                  </div>
+                </label>
+              </div>
             </div>
 
-            <span class="status-label">{{ item.label }}</span>
-            <span class="status-count" 
-                  [style.background-color]="item.color + '20'"
-                  [style.border-color]="item.color + '30'">
-              {{ item.count }}
-            </span>
+            <!-- Van Type Filters -->
+            <div class="filter-group">
+              <div class="filter-group-header">Van Type</div>
+              <div class="filter-options">
+                <label 
+                  *ngFor="let typeTotal of orderedVanTypeTotals; trackBy: trackByVanType"
+                  class="filter-option">
+                  <input
+                    type="checkbox"
+                    [checked]="selectedVanTypeFilters.has(typeTotal.key)"
+                    (change)="toggleVanTypeFilter(typeTotal.key)"
+                    class="filter-checkbox">
+                  <div class="filter-option-content">
+                    <span class="filter-option-label">{{ typeTotal.key }}</span>
+                    <span class="filter-option-count">{{ typeTotal.value }}</span>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <!-- Clear Filters Button -->
+            <div class="filter-actions" *ngIf="hasActiveFilters">
+              <button class="filter-clear-button" (click)="clearAllFilters()" type="button">
+                Clear All Filters
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -134,12 +165,19 @@ export class StatusCountBarComponent implements OnInit, OnChanges, OnDestroy {
 
   @Output() filteredData = new EventEmitter<any[]>();
 
+  constructor(private elementRef: ElementRef) {}
+
   searchValue: string = '';
   computedStatusData: StatusItem[] = [];
   selectedStatusFilter: string | null = null;
   selectedVanTypeFilter: string | null = null;
   vanTypeTotals: VanTypeTotals = { EDV: 0, CDV: 0, Rental: 0 };
   private searchDebounceTimer: any;
+  
+  // Filter dropdown state
+  isFilterDropdownOpen: boolean = false;
+  selectedStatusFilters: Set<string> = new Set();
+  selectedVanTypeFilters: Set<string> = new Set();
 
   ngOnInit(): void {
     this.updateComputedData();
@@ -169,6 +207,14 @@ export class StatusCountBarComponent implements OnInit, OnChanges, OnDestroy {
     return this.selectedVanTypeFilter !== null;
   }
 
+  get hasActiveFilters(): boolean {
+    return this.selectedStatusFilters.size > 0 || this.selectedVanTypeFilters.size > 0;
+  }
+
+  get activeFilterCount(): number {
+    return this.selectedStatusFilters.size + this.selectedVanTypeFilters.size;
+  }
+
   get orderedVanTypeTotals(): { key: string; value: number }[] {
     // Order: EDV first, then CDV, then Rental
     const order = ['EDV', 'CDV', 'Rental'];
@@ -190,23 +236,38 @@ export class StatusCountBarComponent implements OnInit, OnChanges, OnDestroy {
 
     let items = this.dataSource.items;
     
+    // Apply base filter if exists
+    if (this.dataSource.filterField && this.dataSource.filterValue !== undefined) {
+      items = items.filter(item => {
+        const fieldValue = this.getNestedValue(item, this.dataSource!.filterField!);
+        return this.compareValues(fieldValue, this.dataSource!.filterValue);
+      });
+    }
+    
     // Apply search filter if active
     if (this.searchValue) {
       items = this.filterItemsBySearchTerm(items, this.searchValue);
     }
 
-    // Apply status filter if active
-    if (this.selectedStatusFilter) {
+    // Apply status filters if active
+    if (this.selectedStatusFilters.size > 0) {
       items = items.filter(item => {
         const statusValue = this.getNestedValue(item, this.dataSource!.statusField);
         const activeValue = this.dataSource!.activeValue !== undefined ? this.dataSource!.activeValue : false;
-        return this.compareValues(statusValue, activeValue);
+        const isActive = this.compareValues(statusValue, activeValue);
+        
+        if (this.selectedStatusFilters.has('active') && isActive) return true;
+        if (this.selectedStatusFilters.has('inactive') && !isActive) return true;
+        return false;
       });
     }
 
-    // Apply van type filter if active
-    if (this.selectedVanTypeFilter) {
-      items = items.filter(item => (item.type || '').toUpperCase() === this.selectedVanTypeFilter);
+    // Apply van type filters if active
+    if (this.selectedVanTypeFilters.size > 0) {
+      items = items.filter(item => {
+        const itemType = (item.type || '').toUpperCase();
+        return Array.from(this.selectedVanTypeFilters).some(filterType => itemType === filterType);
+      });
     }
 
     // Count by van type
@@ -256,10 +317,82 @@ export class StatusCountBarComponent implements OnInit, OnChanges, OnDestroy {
     return this.total > 0 ? (count / this.total) * 100 : 0;
   }
 
+  toggleFilterDropdown(): void {
+    this.isFilterDropdownOpen = !this.isFilterDropdownOpen;
+  }
+
+  toggleStatusFilter(statusId: string): void {
+    if (this.selectedStatusFilters.has(statusId)) {
+      this.selectedStatusFilters.delete(statusId);
+    } else {
+      this.selectedStatusFilters.add(statusId);
+    }
+    this.applyFilters();
+  }
+
+  toggleVanTypeFilter(vanType: string): void {
+    if (this.selectedVanTypeFilters.has(vanType)) {
+      this.selectedVanTypeFilters.delete(vanType);
+    } else {
+      this.selectedVanTypeFilters.add(vanType);
+    }
+    this.applyFilters();
+  }
+
+  clearAllFilters(): void {
+    this.selectedStatusFilters.clear();
+    this.selectedVanTypeFilters.clear();
+    this.selectedStatusFilter = null;
+    this.selectedVanTypeFilter = null;
+    this.applyFilters();
+  }
+
+  private applyFilters(): void {
+    if (!this.dataSource) return;
+
+    let filtered = [...this.dataSource.items];
+
+    // Apply base filter if exists
+    if (this.dataSource.filterField && this.dataSource.filterValue !== undefined) {
+      filtered = filtered.filter(item => {
+        const fieldValue = this.getNestedValue(item, this.dataSource!.filterField!);
+        return this.compareValues(fieldValue, this.dataSource!.filterValue);
+      });
+    }
+
+    // Apply search filter
+    if (this.searchValue) {
+      filtered = this.filterItemsBySearchTerm(filtered, this.searchValue);
+    }
+
+    // Apply status filters (multiple selection)
+    if (this.selectedStatusFilters.size > 0) {
+      filtered = filtered.filter(item => {
+        const statusValue = this.getNestedValue(item, this.dataSource!.statusField);
+        const activeValue = this.dataSource!.activeValue !== undefined ? this.dataSource!.activeValue : false;
+        const isActive = this.compareValues(statusValue, activeValue);
+        
+        if (this.selectedStatusFilters.has('active') && isActive) return true;
+        if (this.selectedStatusFilters.has('inactive') && !isActive) return true;
+        return false;
+      });
+    }
+
+    // Apply van type filters (multiple selection)
+    if (this.selectedVanTypeFilters.size > 0) {
+      filtered = filtered.filter(item => {
+        const itemType = (item.type || '').toUpperCase();
+        return Array.from(this.selectedVanTypeFilters).some(filterType => itemType === filterType);
+      });
+    }
+
+    this.updateVanTypeTotals();
+    this.filteredData.emit(filtered);
+  }
+
   onItemClick(item: StatusItem): void {
     if (this.clickable) {
-      this.selectedStatusFilter = item.id;
-      this.filterByStatus(item.id);
+      this.toggleStatusFilter(item.id);
     }
   }
 
@@ -333,74 +466,32 @@ export class StatusCountBarComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   private filterBySearch(searchTerm: string): void {
-    if (!this.dataSource) return;
-
-    const term = searchTerm.trim().toLowerCase();
-    let filtered = [...this.dataSource.items];
-
-    if (this.dataSource.filterField && this.dataSource.filterValue !== undefined) {
-      filtered = filtered.filter(item => {
-        const fieldValue = this.getNestedValue(item, this.dataSource!.filterField!);
-        return this.compareValues(fieldValue, this.dataSource!.filterValue);
-      });
-    }
-
-    if (term) {
-      filtered = filtered.filter(item => {
-        return this.dataSource!.searchFields.some(field => {
-          const value = this.getNestedValue(item, field);
-          if (!value) return false;
-          
-          const stringValue = String(value).toLowerCase();
-          
-          // Special handling for VIN field - check last 4 digits
-          if (field === 'VIN' && term.length === 4 && /^\d{4}$/.test(term)) {
-            return stringValue.endsWith(term);
-          }
-          
-          // Regular search for all other cases
-          return stringValue.includes(term);
-        });
-      });
-    }
-
-    // Apply van type filter if active
-    if (this.selectedVanTypeFilter) {
-      filtered = filtered.filter(item => (item.type || '').toUpperCase() === this.selectedVanTypeFilter);
-    }
-
-    this.filteredData.emit(filtered);
+    this.updateVanTypeTotals();
+    this.applyFilters();
   }
 
   clearSearch(): void {
     this.searchValue = '';
     this.updateVanTypeTotals();
-    this.filterBySearch('');
+    this.applyFilters();
   }
 
   clearStatusFilter(): void {
     this.selectedStatusFilter = null;
+    this.selectedStatusFilters.clear();
     this.updateVanTypeTotals();
-    this.filterBySearch(this.searchValue); // Maintain search but clear status filter
+    this.applyFilters();
   }
 
   onVanTypeClick(vanType: string): void {
-    if (this.selectedVanTypeFilter === vanType) {
-      // If clicking the same type, clear the filter
-      this.selectedVanTypeFilter = null;
-    } else {
-      // Set the new van type filter
-      this.selectedVanTypeFilter = vanType;
-    }
-    
-    this.updateVanTypeTotals();
-    this.filterBySearch(this.searchValue);
+    this.toggleVanTypeFilter(vanType);
   }
 
   clearVanTypeFilter(): void {
     this.selectedVanTypeFilter = null;
+    this.selectedVanTypeFilters.clear();
     this.updateVanTypeTotals();
-    this.filterBySearch(this.searchValue);
+    this.applyFilters();
   }
 
   trackByStatusId(index: number, item: StatusItem): string {
@@ -409,5 +500,12 @@ export class StatusCountBarComponent implements OnInit, OnChanges, OnDestroy {
 
   trackByVanType(index: number, item: { key: string; value: number }): string {
     return item.key;
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    if (this.isFilterDropdownOpen && !this.elementRef.nativeElement.contains(event.target)) {
+      this.isFilterDropdownOpen = false;
+    }
   }
 }
