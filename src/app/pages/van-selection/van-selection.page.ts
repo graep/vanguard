@@ -111,23 +111,23 @@ export class VanSelectionPage implements OnInit, OnDestroy {
       // Start GPS tracking session for this van (tracks entire shift)
       await this.shiftSession.startShift(van.docId);
       
-      // Navigate to photo capture with van info
-      this.router.navigate([
-        '/photo-capture',
-        van.type,
-        van.number.toString()
-      ], { 
-        queryParams: { vanId: van.docId } // NEW: Pass the van document ID
+      // Navigate to background tracking page (will show message and minimize)
+      this.router.navigate(['/background-tracking'], {
+        queryParams: {
+          vanType: van.type,
+          vanNumber: van.number.toString(),
+          vanId: van.docId
+        }
       });
     } catch (error) {
       console.error('Failed to start shift:', error);
       // Still navigate even if GPS fails
-      this.router.navigate([
-        '/photo-capture',
-        van.type,
-        van.number.toString()
-      ], { 
-        queryParams: { vanId: van.docId } // NEW: Pass the van document ID
+      this.router.navigate(['/background-tracking'], {
+        queryParams: {
+          vanType: van.type,
+          vanNumber: van.number.toString(),
+          vanId: van.docId
+        }
       });
     }
   }

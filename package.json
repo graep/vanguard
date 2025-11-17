@@ -58,7 +58,7 @@
     "@angular/router": "^19.0.0",
     "@angular/service-worker": "^19.2.15",
     "@capacitor-community/camera-preview": "^7.0.1",
-    "@capacitor/android": "^7.4.3",
+    "@capacitor/android": "^7.4.4",
     "@capacitor/app": "7.0.1",
     "@capacitor/camera": "^7.0.1",
     "@capacitor/core": "^7.4.3",

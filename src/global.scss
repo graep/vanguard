@@ -44,6 +44,12 @@ ion-content {
   --ion-background-color: #232F3E;
 }
 
+/* Safe area insets for native apps - respect status bar */
+/* Use Ionic CSS variable to ensure safe-area is applied to scrollable content */
+ion-content {
+  --padding-top: var(--ion-safe-area-top, env(safe-area-inset-top));
+}
+
 /* Prevent body scroll when camera is open */
 body.camera-open {
   overflow: hidden;

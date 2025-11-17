@@ -6,34 +6,76 @@
     <div class="header-content">
       <div>
         <h1 class="page-title">Users</h1>
-          <p class="page-subtitle">Welcome, manage user accounts and permissions</p>
+          <p class="page-subtitle">Manage user accounts</p>
       </div>
         <div class="status-bar-container" *ngIf="counts$ | async as c">
-            <div class="stats-breakdown">
-              <div class="stat-item total-users" 
-                   [class.active]="activeFilter === 'all'"
-                   (click)="setFilter('all')">
-                <ion-icon name="people" class="stat-icon"></ion-icon>
-                <div class="stat-value">{{ c.total }}</div>
-                <div class="stat-label">Total Users</div>
+          <!-- Search Section -->
+          <div class="search-section">
+            <div class="search-container">
+              <div class="search-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <path d="m21 21-4.35-4.35"></path>
+                </svg>
               </div>
-              
+              <input type="text" class="search-input" placeholder="Search by name or email" 
+                     [(ngModel)]="searchValue" (input)="onSearchChange($event)" />
+              <button *ngIf="searchValue" class="clear-button" (click)="clearSearch()" type="button">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+          </div>
+          
+          <!-- Stats Section -->
+          <div class="status-section">
+            <div class="totals-container">
+              <div class="total-container">
+                <span class="total-label">Total:</span>
+                <span class="total-number">{{ c.total }}</span>
+              </div>
+            </div>
+            
+            <div class="status-items-container">
               <div class="stat-item drivers" 
                    [class.active]="activeFilter === 'drivers'"
                    (click)="setFilter('drivers')">
-                <ion-icon name="car" class="stat-icon"></ion-icon>
-                <div class="stat-value">{{ c.drivers }}</div>
-                <div class="stat-label">Drivers</div>
+                <div class="stat-indicator-container">
+                  <div class="stat-indicator" style="background-color: #4CAF50;"></div>
+                </div>
+                <span class="stat-label">Drivers</span>
+                <span class="stat-count" style="background-color: #4CAF5020; border-color: #4CAF5030;">{{ c.drivers }}</span>
               </div>
               
               <div class="stat-item admins" 
                    [class.active]="activeFilter === 'admins'"
                    (click)="setFilter('admins')">
-                <ion-icon name="shield-checkmark" class="stat-icon"></ion-icon>
-                <div class="stat-value">{{ c.admins }}</div>
-                <div class="stat-label">Admins</div>
+                <div class="stat-indicator-container">
+                  <div class="stat-indicator" style="background-color: #FF9800;"></div>
+                </div>
+                <span class="stat-label">Admins</span>
+                <span class="stat-count" style="background-color: #FF980020; border-color: #FF980030;">{{ c.admins }}</span>
               </div>
             </div>
+          </div>
+          
+          <!-- Progress bar -->
+          <div class="progress-bar">
+            <div class="progress-track">
+              <div class="progress-segment" 
+                   [style.width.%]="getProgressWidth(c.drivers, c.total)" 
+                   style="background-color: #4CAF50;"></div>
+              <div class="progress-segment" 
+                   [style.width.%]="getProgressWidth(c.admins, c.total)" 
+                   style="background-color: #FF9800;"></div>
+              <div class="progress-segment" 
+                   [style.width.%]="getProgressWidth(c.owners, c.total)" 
+                   style="background-color: #9C27B0;"></div>
+            </div>
+            <div class="progress-shimmer"></div>
+          </div>
       </div>
     </div>
   </div>
@@ -49,7 +91,8 @@
                  [class.inactive]="!user.isActive"
                  (click)="viewUser(user)">
               <div class="user-card-content">
-                <div class="user-avatar" [class.owner]="getHighestRole(user) === 'owner'" 
+                <div class="user-avatar" *ngIf="getHighestRole(user)"
+                     [class.owner]="getHighestRole(user) === 'owner'"
                      [class.admin]="getHighestRole(user) === 'admin'"
                      [class.driver]="getHighestRole(user) === 'driver'">
                   <ion-icon [name]="getAvatarIcon(user)"></ion-icon>
@@ -57,20 +100,7 @@
                 <div class="user-details">
                   <h4 class="user-name">{{ getDisplayName(user) }}</h4>
                   <div class="user-email">{{ user.email }}</div>
-                  <div class="user-meta">
-                    <span class="user-date">Created: {{ formatDate(user.createdAt) }}</span>
-                    <span class="user-status" [class.inactive]="!user.isActive">
-                      {{ user.isActive ? 'Active' : 'Inactive' }}
-                    </span>
-                  </div>
-            <div class="roles">
-                    <ion-chip *ngFor="let r of getSortedRoles(user); trackBy: trackByRole"
-                        [class]="r" size="small">
-                <ion-icon [name]="getRoleIcon(r)"></ion-icon>
-                <ion-label>{{ r | titlecase }}</ion-label>
-              </ion-chip>
-                    <ion-label *ngIf="!(user.roles?.length)" class="no-roles">No Roles</ion-label>
-                  </div>
+                  <div class="user-phone">{{ user.phoneNumber || 'No phone number' }}</div>
                 </div>
               </div>
             </div>

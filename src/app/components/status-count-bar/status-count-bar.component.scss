@@ -397,3 +397,95 @@
     gap: 12px;
   }
 }
+
+// Smaller content for 426px and below
+@media (max-width: 426px) {
+  .container {
+    padding: 12px 16px;
+  }
+
+  .search-section {
+    margin-bottom: 12px;
+  }
+
+  .search-container {
+    padding: 8px 12px;
+    border-radius: 8px;
+  }
+
+  .search-input {
+    font-size: 14px;
+  }
+
+  .search-icon {
+    margin-right: 8px;
+    font-size: 18px;
+  }
+
+  .status-section {
+    gap: 12px;
+  }
+
+  .totals-container {
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .total-container {
+    gap: 8px;
+  }
+
+  .total-label {
+    font-size: 14px;
+  }
+
+  .total-number {
+    font-size: 18px;
+  }
+
+  .van-type-totals {
+    gap: 8px;
+  }
+
+  .van-type-item {
+    padding: 4px 8px;
+    gap: 4px;
+  }
+
+  .van-type-label {
+    font-size: 10px;
+  }
+
+  .van-type-count {
+    font-size: 11px;
+  }
+
+  .status-items-container {
+    gap: 8px;
+  }
+
+  .status-item {
+    padding: 8px 12px;
+    gap: 8px;
+    border-radius: 8px;
+  }
+
+  .status-label {
+    font-size: 12px;
+  }
+
+  .status-count {
+    font-size: 11px;
+    padding: 3px 8px;
+  }
+
+  .status-clear-button {
+    width: 28px;
+    height: 28px;
+  }
+
+  .progress-bar {
+    margin-top: 12px;
+    height: 4px;
+  }
+}

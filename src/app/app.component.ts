@@ -3,7 +3,10 @@ import { IonApp, IonRouterOutlet } from '@ionic/angular/standalone';
 import { NavService } from './services/nav.service';
 import { PwaBackButtonService } from './services/pwa-back-button.service';
 import { AuthService } from './services/auth.service';
+import { AppLifecycleService } from './services/app-lifecycle.service';
 import { SwUpdate, VersionReadyEvent } from '@angular/service-worker';
+import { StatusBar, Style } from '@capacitor/status-bar';
+import { Platform } from '@ionic/angular';
 import { filter } from 'rxjs';
 import { isDevMode } from '@angular/core';
 
@@ -17,6 +20,8 @@ export class AppComponent implements OnInit, OnDestroy {
   private navService = inject(NavService);
   private pwaBackButtonService = inject(PwaBackButtonService);
   private authService = inject(AuthService);
+  private appLifecycle = inject(AppLifecycleService);
+  private platform = inject(Platform);
 
   constructor() {
     // NavService constructor will automatically setup Android back button handling
@@ -45,7 +50,26 @@ export class AppComponent implements OnInit, OnDestroy {
     }
   }
 
-  ngOnInit() {
+  private async initStatusBar() {
+    try {
+      await StatusBar.setOverlaysWebView({ overlay: false });
+      await StatusBar.setStyle({ style: Style.Light });
+      await StatusBar.setBackgroundColor({ color: '#0B1A2A' });
+    } catch (err) {
+      console.warn('StatusBar init failed:', err);
+    }
+  }
+
+  async ngOnInit() {
+    // Initialize StatusBar after platform is ready
+    if (this.platform.is('capacitor')) {
+      await this.platform.ready();
+      await this.initStatusBar();
+    } else {
+      // For web/PWA, still try to initialize (will fail gracefully)
+      await this.initStatusBar();
+    }
+
     // Check for service worker updates
     if (this.swUpdate.isEnabled && !isDevMode()) {
       // Check for updates immediately

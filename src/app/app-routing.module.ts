@@ -29,6 +29,12 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
+    path: 'background-tracking',
+    loadComponent: () =>
+      import('./pages/background-tracking/background-tracking.page').then(m => m.BackgroundTrackingPage),
+    canActivate: [authGuard],
+  },
+  {
     path: 'photo-capture/:vanType/:vanNumber',
     loadComponent: () =>
       import('./pages/photo-capture/photo-capture.page').then(m => m.PhotoCapturePage),

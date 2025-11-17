@@ -599,7 +599,7 @@ ion-content {
   --background: #1e293b;
   --padding-start: 0;
   --padding-end: 0;
-  --padding-top: 0;
+  --padding-top: var(--ion-safe-area-top, env(safe-area-inset-top));
   --padding-bottom: 0;
 }
 

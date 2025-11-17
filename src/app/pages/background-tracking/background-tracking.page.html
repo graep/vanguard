@@ -1,0 +1,32 @@
+<!-- src/app/pages/background-tracking/background-tracking.page.html -->
+<ion-content class="background-tracking-content">
+  <div class="tracking-container">
+    <div class="tracking-card">
+      <div class="icon-container">
+        <ion-icon name="location" class="tracking-icon"></ion-icon>
+      </div>
+      
+      <h1 class="tracking-title">GPS Tracking Active</h1>
+      
+      <p class="tracking-message">
+        Running in the background to track mileage...
+      </p>
+      
+      <div class="van-info">
+        <p class="van-details">{{ vanType }} {{ vanNumber }}</p>
+      </div>
+      
+      <div class="spinner-container">
+        <ion-spinner name="crescent"></ion-spinner>
+      </div>
+      
+      <p class="minimize-hint" *ngIf="platform.is('capacitor') && platform.is('android')">
+        The app will minimize automatically...
+      </p>
+      <p class="minimize-hint" *ngIf="!(platform.is('capacitor') && platform.is('android'))">
+        Press the home button to continue working. GPS tracking will continue in the background.
+      </p>
+    </div>
+  </div>
+</ion-content>
+

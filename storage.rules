@@ -42,7 +42,10 @@ service firebase.storage {
     }
     
     function isValidSide(side) {
-      return side in ['front', 'back', 'left', 'right', 'interior', 'engine', 'other'];
+      // Only allow the sides actually used in the app:
+      // - 'front', 'rear', 'driver', 'passenger' for van inspection photos
+      // - 'unsure' for unsure issue photos
+      return side in ['front', 'rear', 'driver', 'passenger', 'unsure'];
     }
 
     // Inspection photos - Enhanced security

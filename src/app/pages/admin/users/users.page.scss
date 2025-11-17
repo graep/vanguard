@@ -4,7 +4,7 @@ ion-content {
   --background: #1e293b;
   --padding-start: 0;
   --padding-end: 0;
-  --padding-top: 0;
+  --padding-top: var(--ion-safe-area-top, env(safe-area-inset-top));
   --padding-bottom: 0;
 }
 
@@ -56,6 +56,15 @@ ion-content {
   @media (max-width: 480px) {
     margin-bottom: 1rem;
     padding: 0 12px;
+  }
+  
+  // More room on sides for tablet and 426px and below
+  @media (max-width: 1023px) and (min-width: 767px) {
+    padding: 0 20px;
+  }
+  
+  @media (max-width: 426px) {
+    padding: 0 20px;
   }
   
   .header-content {
@@ -112,17 +121,82 @@ ion-content {
         }
       }
     }
+    
+    // Tablet: More space on top and bottom for title div, position to bottom left, show logo
+    @media (max-width: 1023px) and (min-width: 767px) {
+      > div:first-child {
+        padding-top: 1.5rem;
+        padding-bottom: 1.5rem;
+        position: relative;
+        justify-content: flex-end;
+        align-items: flex-start;
+        
+        // Show logo behind title with 0.2 opacity
+        &::before {
+          display: block;
+          opacity: 0.2;
+          width: 250px;
+          height: 250px;
+          z-index: 0;
+        }
+      }
+    }
+    
+    // More space on top and bottom for title div at 426px and below
+    @media (max-width: 426px) {
+      > div:first-child {
+        padding-top: 1.5rem;
+        padding-bottom: 1.5rem;
+        position: relative;
+        justify-content: flex-end;
+        align-items: flex-start;
+        
+        // Show logo behind title with 0.2 opacity
+        &::before {
+          display: block;
+          opacity: 0.2;
+          width: 200px;
+          height: 200px;
+          z-index: 0;
+        }
+      }
+    }
   }
   
   .status-bar-container {
     flex: 1;
     max-width: 650px;
     align-self: center;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.03) 100%);
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    padding: 24px 32px;
+    min-height: 288px;
+    height: 288px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
     
     @media (max-width: 768px) {
       max-width: 100%;
       width: 100%;
       margin: 0;
+      padding: 16px 20px;
+      min-height: auto;
+      height: auto;
+    }
+    
+    @media (max-width: 426px) {
+      padding: 12px 16px;
     }
   }
   
@@ -172,152 +246,296 @@ ion-content {
   }
 }
 
-/* ========== Stats Container ========== */
-.stats-breakdown {
+// Search Section
+.search-section {
+  margin-bottom: 20px;
+}
+
+.search-container {
+  position: relative;
   display: flex;
-  flex-direction: row;
-  gap: 1.5rem;
   align-items: center;
-  justify-content: space-between;
-  
-  @media (max-width: 768px) {
-    gap: 1rem;
-  }
-  
-  @media (max-width: 480px) {
-    gap: 0.75rem;
-    flex-direction: column;
-    align-items: stretch;
-  }
-  
-  .stat-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    flex: 1;
-    padding: 1.5rem 1rem;
-    border-radius: 12px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    position: relative;
-    border: 2px solid transparent;
-    
-    @media (max-width: 480px) {
-      flex-direction: row;
-      justify-content: space-between;
-      padding: 1rem;
-      background: rgba(255, 255, 255, 0.05);
-    }
-    
-    &:hover {
-      background: rgba(255, 255, 255, 0.08);
-      transform: translateY(-2px);
-    }
-    
-    // Active state
-    &.active {
-      background: rgba(255, 255, 255, 0.1);
-      
-      &.total-users {
-        border-color: #2196F3;
-        box-shadow: 0 4px 16px rgba(33, 150, 243, 0.2);
-        
-        .stat-icon {
-          color: #2196F3;
-          filter: drop-shadow(0 2px 4px rgba(33, 150, 243, 0.4));
-        }
-        
-        .stat-value {
-          color: #2196F3;
-          text-shadow: 0 2px 4px rgba(33, 150, 243, 0.3);
-        }
-      }
-      
-      &.drivers {
-        border-color: #4CAF50;
-        box-shadow: 0 4px 16px rgba(76, 175, 80, 0.2);
-        
-        .stat-icon {
-          color: #4CAF50;
-          filter: drop-shadow(0 2px 4px rgba(76, 175, 80, 0.4));
-        }
-        
-        .stat-value {
-          color: #4CAF50;
-          text-shadow: 0 2px 4px rgba(76, 175, 80, 0.3);
-        }
-      }
-      
-      &.admins {
-        border-color: #FF9800;
-        box-shadow: 0 4px 16px rgba(255, 152, 0, 0.2);
-        
-        .stat-icon {
-          color: #FF9800;
-          filter: drop-shadow(0 2px 4px rgba(255, 152, 0, 0.4));
-        }
-        
-        .stat-value {
-          color: #FF9800;
-          text-shadow: 0 2px 4px rgba(255, 152, 0, 0.3);
-        }
-      }
-    }
-    
-    .stat-icon {
-      font-size: 2rem;
-      color: rgba(255, 255, 255, 0.7);
-      transition: all 0.3s ease;
-      margin-bottom: 0.5rem;
-      
-      @media (max-width: 768px) {
-        font-size: 1.75rem;
-      }
-      
-      @media (max-width: 480px) {
-        font-size: 1.5rem;
-        margin-bottom: 0;
-        margin-right: 1rem;
-      }
-    }
-    
-    .stat-value {
-      font-size: 2.25rem;
-      font-weight: 700;
-      color: #ffffff;
-      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-      transition: all 0.3s ease;
-      
-      @media (max-width: 768px) {
-        font-size: 1.75rem;
-      }
-      
-      @media (max-width: 480px) {
-        font-size: 1.5rem;
-      }
-    }
-    
-    .stat-label {
-      color: rgba(255, 255, 255, 0.8);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      font-size: 0.85rem;
-      font-weight: 600;
-      transition: all 0.3s ease;
-      
-      @media (max-width: 480px) {
-        font-size: 0.8rem;
-      }
+  background: var(--ion-color-light-shade);
+  border: 1px solid var(--ion-color-light-shade);
+  border-radius: 12px;
+  padding: 12px 16px;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(10px);
+
+  &:focus-within {
+    border-color: rgba(33, 150, 243, 0.5);
+    box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+    background: var(--ion-color-light-tint);
+
+    .search-icon {
+      color: #2196F3;
     }
   }
 }
 
+.search-icon {
+  color: rgba(255, 255, 255, 0.7);
+  margin-right: 12px;
+  flex-shrink: 0;
+  transition: color 0.2s ease;
+  
+  svg {
+    display: block;
+  }
+}
+
+.search-input {
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 400;
+  outline: none;
+  width: 100%;
+  padding: 0;
+
+  &::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+    font-weight: 400;
+  }
+}
+
+.clear-button {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  margin-left: 8px;
+  flex-shrink: 0;
+  
+  svg {
+    display: block;
+  }
+
+  &:hover {
+    color: rgba(255, 255, 255, 0.8);
+    background: rgba(255, 255, 255, 0.1);
+  }
+}
+
+// Status Section
+.status-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.totals-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.total-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.total-label {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0.025em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.total-number {
+  color: #ffffff;
+  font-size: 24px;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--ion-color-primary), var(--ion-color-primary-shade));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.status-items-container {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  position: relative;
+  
+  @media (max-width: 768px) {
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  
+  @media (max-width: 426px) {
+    gap: 8px;
+  }
+  
+  .stat-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 20px;
+    border-radius: 12px;
+    border: 1px solid;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    backdrop-filter: blur(10px);
+    flex-shrink: 0;
+    white-space: nowrap;
+    
+    // Default colors for each type
+    &.drivers {
+      background-color: #4CAF5015;
+      border-color: #4CAF5030;
+    }
+    
+    &.admins {
+      background-color: #FF980015;
+      border-color: #FF980030;
+    }
+    
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+
+      .status-overlay {
+        opacity: 1;
+      }
+    }
+    
+    // Active state
+    &.active {
+      &.drivers {
+        background-color: #4CAF5025;
+        border-color: #4CAF5050;
+        box-shadow: 0 4px 16px rgba(76, 175, 80, 0.3);
+      }
+      
+      &.admins {
+        background-color: #FF980025;
+        border-color: #FF980050;
+        box-shadow: 0 4px 16px rgba(255, 152, 0, 0.3);
+      }
+    }
+    
+    .status-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+      border-radius: 12px;
+      pointer-events: none;
+    }
+    
+    .stat-indicator-container {
+      position: relative;
+      flex-shrink: 0;
+    }
+    
+    .stat-indicator {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .stat-label {
+      color: #ffffff;
+      font-size: 14px;
+      font-weight: 500;
+      text-transform: capitalize;
+      letter-spacing: 0.025em;
+      position: relative;
+      z-index: 1;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    }
+    
+    .stat-count {
+      color: #ffffff;
+      padding: 4px 12px;
+      font-size: 13px;
+      border-radius: 20px;
+      font-weight: 600;
+      min-width: 24px;
+      text-align: center;
+      backdrop-filter: blur(10px);
+      border: 1px solid;
+      position: relative;
+      z-index: 1;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    }
+  }
+}
+
+// Progress Bar
+.progress-bar {
+  margin-top: 20px;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+  position: relative;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.progress-track {
+  height: 100%;
+  display: flex;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-segment {
+  height: 100%;
+  transition: all 0.5s ease;
+}
+
+.progress-shimmer {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  animation: shimmer 3s infinite;
+}
+
+// Animations
+@keyframes shimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
 
 /* ========== Users List ========== */
 .users-list {
   width: 100%;
+  
+  // Add padding for tablet and 426px mobile view - more room on sides
+  @media (max-width: 1023px) and (min-width: 767px) {
+    padding: 0 20px;
+  }
+  
+  @media (max-width: 426px) {
+    padding: 0 20px;
+  }
 }
 
 // Users Grid - CSS Grid Layout with fixed-size cards that expand horizontally (like fleet page)
@@ -349,12 +567,17 @@ ion-content {
     grid-template-columns: 1fr;
     gap: 0.875rem;
     justify-content: stretch; // Full width on mobile
-    padding: 0 16px;
   }
   
   @media (max-width: 480px) {
     gap: 0.625rem;
-    padding: 0 12px;
+  }
+  
+  // Mobile 425px: 2 columns side by side
+  @media (max-width: 426px) {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+    justify-content: stretch;
   }
 }
 
@@ -373,11 +596,43 @@ ion-content {
   min-width: 0; // Prevent overflow in grid
   height: 100%;
   
+  // Match status count bar styling for tablet and 426px and below
+  @media (max-width: 1023px) and (min-width: 767px) {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.03) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+  }
+  
+  @media (max-width: 426px) {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.03) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+  }
+  
   &:hover {
     transform: translateY(-2px);
     box-shadow: 0 12px 40px rgba(128, 128, 128, 0.2);
     border-color: var(--ion-color-light-shade);
     background: var(--ion-color-light-tint);
+    
+    // Match status count bar hover for tablet and 426px and below
+    @media (max-width: 1023px) and (min-width: 767px) {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+      border-color: rgba(255, 255, 255, 0.2);
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.05) 100%);
+    }
+    
+    @media (max-width: 426px) {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+      border-color: rgba(255, 255, 255, 0.2);
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.05) 100%);
+    }
   }
   
   // Active status - clean bright appearance
@@ -385,16 +640,51 @@ ion-content {
     background: var(--ion-color-light);
     border: 1px solid var(--ion-color-light-shade);
     
+    // Match status count bar styling for tablet and 426px and below
+    @media (max-width: 1023px) and (min-width: 767px) {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.03) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    @media (max-width: 426px) {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.03) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
     .user-card-content {
       color: var(--ion-color-dark);
-  }
+      
+      @media (max-width: 1023px) and (min-width: 767px) {
+        color: #ffffff;
+      }
+      
+      @media (max-width: 426px) {
+        color: #ffffff;
+      }
+    }
   
     .user-name {
       color: var(--ion-color-dark);
+      
+      @media (max-width: 1023px) and (min-width: 767px) {
+        color: #ffffff;
+      }
+      
+      @media (max-width: 426px) {
+        color: #ffffff;
+      }
     }
     
     .user-email {
       color: var(--ion-color-medium);
+      
+      @media (max-width: 1023px) and (min-width: 767px) {
+        color: rgba(255, 255, 255, 0.8);
+      }
+      
+      @media (max-width: 426px) {
+        color: rgba(255, 255, 255, 0.8);
+      }
     }
   }
   
@@ -404,21 +694,51 @@ ion-content {
     filter: grayscale(.3);
     background: var(--ion-color-light-shade);
     
-    .user-card-content {
-      color: var(--ion-color-medium);
+    // Match status count bar styling for tablet and 426px and below
+    @media (max-width: 1023px) and (min-width: 767px) {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.02) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.08);
     }
     
-    .user-avatar {
-      filter: grayscale(0.8);
-      opacity: 0.7;
+    @media (max-width: 426px) {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.02) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    
+    .user-card-content {
+      color: var(--ion-color-medium);
+      
+      @media (max-width: 1023px) and (min-width: 767px) {
+        color: rgba(255, 255, 255, 0.6);
+      }
+      
+      @media (max-width: 426px) {
+        color: rgba(255, 255, 255, 0.6);
+      }
     }
     
     .user-name {
       color: var(--ion-color-medium);
+      
+      @media (max-width: 1023px) and (min-width: 767px) {
+        color: rgba(255, 255, 255, 0.6);
+      }
+      
+      @media (max-width: 426px) {
+        color: rgba(255, 255, 255, 0.6);
+      }
     }
     
     .user-email {
       color: var(--ion-color-medium-shade);
+      
+      @media (max-width: 1023px) and (min-width: 767px) {
+        color: rgba(255, 255, 255, 0.5);
+      }
+      
+      @media (max-width: 426px) {
+        color: rgba(255, 255, 255, 0.5);
+      }
     }
   }
 }
@@ -429,41 +749,89 @@ ion-content {
   display: flex;
   flex-direction: column;
   height: 100%;
-  min-height: 220px; // Fixed minimum height for consistent card size
+  min-height: 220px; // Fixed minimum height for consistent card size (matching van cards)
   position: relative;
   box-sizing: border-box;
-      
-      @media (max-width: 768px) {
+  
+  @media (max-width: 766px) {
     padding: 0.75rem;
     min-height: 180px;
-      }
-      
-      @media (max-width: 480px) {
+  }
+  
+  @media (max-width: 480px) {
     padding: 0.5rem;
     min-height: 160px;
   }
+  
+  // Tablet: smaller cards
+  @media (max-width: 1023px) and (min-width: 767px) {
+    padding: 0.75rem;
+    min-height: 180px;
+  }
+  
+  // Smaller cards for 425px to fit 2 per row
+  @media (max-width: 426px) {
+    padding: 0.5rem;
+    min-height: 140px;
+  }
 }
 
+
 .user-avatar {
+  width: 100%;
+  height: 120px;
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-bottom: 0.75rem;
-      
-      ion-icon {
+  border-radius: 12px;
+  border: 2px solid var(--ion-color-light-shade);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  background: var(--ion-color-light);
+  
+  @media (max-width: 766px) {
+    height: 140px;
+  }
+  
+  @media (max-width: 480px) {
+    height: 120px;
+  }
+  
+  // Tablet: smaller image - match van image exactly
+  @media (max-width: 1023px) and (min-width: 767px) {
+    height: 100px;
+    border-radius: 10px;
+  }
+  
+  // Smaller image for 425px to fit 2 cards per row - match van image exactly
+  @media (max-width: 426px) {
+    height: 80px;
+    border-radius: 8px;
+  }
+  
+  ion-icon {
     font-size: 3.5rem;
     color: #4CAF50; // Default driver color
-        filter: drop-shadow(0 2px 4px rgba(76, 175, 80, 0.3));
+    filter: drop-shadow(0 2px 4px rgba(76, 175, 80, 0.3));
     transition: all 0.3s ease;
-        
-        @media (max-width: 768px) {
+    
+    @media (max-width: 766px) {
       font-size: 3rem;
-        }
-        
-        @media (max-width: 480px) {
+    }
+    
+    @media (max-width: 480px) {
       font-size: 2.5rem;
-        }
-      }
+    }
+    
+    // Tablet: smaller icon
+    @media (max-width: 1023px) and (min-width: 767px) {
+      font-size: 2.5rem;
+    }
+    
+    // Smaller icon for 425px to fit 2 cards per row
+    @media (max-width: 426px) {
+      font-size: 2rem;
+    }
+  }
   
   // Owner role - Purple
   &.owner ion-icon {
@@ -482,44 +850,127 @@ ion-content {
     color: #4CAF50;
     filter: drop-shadow(0 2px 4px rgba(76, 175, 80, 0.3));
   }
+  
+  // Match inactive state
+  .user-card.inactive & {
+    opacity: 0.7;
+    filter: grayscale(0.3);
+    
+    ion-icon {
+      opacity: 0.6;
+      filter: grayscale(0.5);
+    }
+  }
 }
 
 .user-details {
   flex-grow: 1;
   text-align: center;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-        }
+}
         
 .user-name {
   font-size: 1.5rem;
   font-weight: 700;
+  // margin: 0.5rem 0;
   color: var(--ion-color-dark);
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  margin: 0;
-        
-        @media (max-width: 768px) {
+  
+  @media (max-width: 766px) {
     font-size: 1.3rem;
-        }
-        
-        @media (max-width: 480px) {
+  }
+  
+  @media (max-width: 480px) {
     font-size: 1.2rem;
-        }
+  }
+  
+  // Tablet: smaller font
+  @media (max-width: 1023px) and (min-width: 767px) {
+    font-size: 1.1rem;
+    margin: 0.25rem 0;
+  }
+  
+  // Smaller font for 425px
+  @media (max-width: 426px) {
+    font-size: 1rem;
+    margin: 0.25rem 0;
+  }
 }
 
 .user-email {
   font-size: 0.875rem;
   color: var(--ion-color-medium);
+  // margin: 0.25rem 0 0.75rem 0;
   word-break: break-all;
-  margin: 0;
-          
-          @media (max-width: 768px) {
-            font-size: 0.9rem;
-          }
-          
-          @media (max-width: 480px) {
+  
+  @media (max-width: 766px) {
+    font-size: 0.9rem;
+  }
+  
+  @media (max-width: 480px) {
     font-size: 0.85rem;
+  }
+  
+  // Tablet: smaller font
+  @media (max-width: 1023px) and (min-width: 767px) {
+    font-size: 0.75rem;
+    margin: 0.125rem 0;
+  }
+  
+  // Smaller font for 425px
+  @media (max-width: 426px) {
+    font-size: 0.7rem;
+    margin: 0.125rem 0;
+  }
+}
+
+.user-phone {
+  font-size: 0.875rem;
+  color: var(--ion-color-medium);
+  // margin: 0.25rem 0 0.75rem 0;
+  word-break: break-all;
+  
+  @media (max-width: 766px) {
+    font-size: 0.9rem;
+  }
+  
+  @media (max-width: 480px) {
+    font-size: 0.85rem;
+  }
+  
+  // Tablet: smaller font
+  @media (max-width: 1023px) and (min-width: 767px) {
+    font-size: 0.75rem;
+    margin: 0.125rem 0;
+  }
+  
+  // Smaller font for 425px
+  @media (max-width: 426px) {
+    font-size: 0.7rem;
+    margin: 0.125rem 0;
+  }
+  
+  // Match inactive state colors
+  .user-card.inactive & {
+    color: var(--ion-color-medium-shade);
+    
+    @media (max-width: 1023px) and (min-width: 767px) {
+      color: rgba(255, 255, 255, 0.5);
+    }
+    
+    @media (max-width: 426px) {
+      color: rgba(255, 255, 255, 0.5);
+    }
+  }
+  
+  // Match active state colors
+  .user-card.active & {
+    @media (max-width: 1023px) and (min-width: 767px) {
+      color: rgba(255, 255, 255, 0.8);
+    }
+    
+    @media (max-width: 426px) {
+      color: rgba(255, 255, 255, 0.8);
+    }
   }
 }
 
@@ -546,10 +997,31 @@ ion-content {
   
   @media (max-width: 768px) {
     font-size: 0.8rem;
-    }
+  }
   
   @media (max-width: 480px) {
     font-size: 0.75rem;
+  }
+  
+  // Tablet: smaller font
+  @media (max-width: 1023px) and (min-width: 767px) {
+    font-size: 0.7rem;
+    margin: 0.25rem 0;
+  }
+  
+  // Smaller font for 425px
+  @media (max-width: 426px) {
+    font-size: 0.65rem;
+    margin: 0.25rem 0;
+    gap: 0.125rem;
+    
+    .user-date {
+      font-size: 0.65rem;
+    }
+    
+    .user-status {
+      font-size: 0.65rem;
+    }
   }
 }
 
@@ -663,6 +1135,66 @@ ion-content {
 
 /* ========== Responsive Design ========== */
 @media (max-width: 768px) {
+  .search-section {
+    margin-bottom: 12px;
+  }
+  
+  .search-container {
+    padding: 8px 12px;
+    border-radius: 8px;
+  }
+  
+  .search-input {
+    font-size: 14px;
+  }
+  
+  .search-icon {
+    margin-right: 8px;
+    
+    svg {
+      width: 18px;
+      height: 18px;
+    }
+  }
+  
+  .status-section {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .totals-container {
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  
+  .total-label {
+    font-size: 14px;
+  }
+  
+  .total-number {
+    font-size: 18px;
+  }
+  
+  .stat-item {
+    padding: 8px 12px;
+    gap: 8px;
+    border-radius: 8px;
+  }
+  
+  .stat-label {
+    font-size: 12px;
+  }
+  
+  .stat-count {
+    font-size: 11px;
+    padding: 3px 8px;
+  }
+  
+  .progress-bar {
+    margin-top: 12px;
+    height: 4px;
+  }
+  
   .user-card {
     margin-bottom: 0.75rem;
     
@@ -704,6 +1236,32 @@ ion-content {
       ion-icon {
         font-size: 0.65rem;
       }
+    }
+  }
+}
+
+// Additional styles for 425px mobile view (matching fleet page)
+@media (max-width: 426px) {
+  .roles {
+    gap: 2px;
+    margin-top: 0.25rem;
+    
+    ion-chip {
+      font-size: 0.5rem;
+      height: 14px;
+      --padding-start: 4px;
+      --padding-end: 4px;
+      --padding-top: 1px;
+      --padding-bottom: 1px;
+      
+      ion-icon {
+        font-size: 0.6rem;
+        margin-right: 2px;
+      }
+    }
+    
+    .no-roles {
+      font-size: 0.5rem;
     }
   }
 }

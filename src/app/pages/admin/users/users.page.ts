@@ -31,6 +31,10 @@ export class UsersPage implements OnInit {
   // UI state for <ion-segment>
   activeFilter: FilterKey = 'all';
   private filter$ = new BehaviorSubject<FilterKey>('all');
+  
+  // Search state
+  searchValue: string = '';
+  private search$ = new BehaviorSubject<string>('');
 
   // Streams
   allUsers$!: Observable<UserProfile[]>;
@@ -59,9 +63,9 @@ export class UsersPage implements OnInit {
       }))
     );
 
-    // Apply filter
-    this.filteredUsers$ = combineLatest([this.allUsers$, this.filter$]).pipe(
-      map(([users, filter]) => {
+    // Apply filter and search
+    this.filteredUsers$ = combineLatest([this.allUsers$, this.filter$, this.search$]).pipe(
+      map(([users, filter, search]) => {
         let filtered: UserProfile[];
         
         switch (filter) {
@@ -82,6 +86,16 @@ export class UsersPage implements OnInit {
             filtered = users;
         }
         
+        // Apply search filter
+        if (search && search.trim()) {
+          const searchLower = search.toLowerCase().trim();
+          filtered = filtered.filter((u) => {
+            const displayName = this.getDisplayName(u).toLowerCase();
+            const email = (u.email || '').toLowerCase();
+            return displayName.includes(searchLower) || email.includes(searchLower);
+          });
+        }
+        
         // Sort by role hierarchy (owner > admin > driver > no role)
         return this.sortUsersByRole(filtered);
       })
@@ -97,6 +111,23 @@ export class UsersPage implements OnInit {
   setFilter(f: FilterKey) {
     this.activeFilter = f;
     this.filter$.next(f);
+  }
+  
+  // Search handlers
+  onSearchChange(event: Event) {
+    const value = (event.target as HTMLInputElement).value;
+    this.searchValue = value;
+    this.search$.next(value);
+  }
+  
+  clearSearch() {
+    this.searchValue = '';
+    this.search$.next('');
+  }
+  
+  // Progress bar calculation
+  getProgressWidth(count: number, total: number): number {
+    return total > 0 ? (count / total) * 100 : 0;
   }
 
   // Helpers

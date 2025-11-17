@@ -8,6 +8,7 @@ import {
   IonImg,
   IonLoading,
   IonIcon,
+  IonModal,
   ToastController,
   Platform
 } from '@ionic/angular/standalone';
@@ -16,6 +17,7 @@ import { Auth } from '@angular/fire/auth';
 import { getApp } from '@angular/fire/app';
 import { AppHeaderComponent } from '@app/components/app-header/app-header.component';
 import { NavService } from '@app/services/nav.service';
+import { AppLifecycleService } from '@app/services/app-lifecycle.service';
 import { FullscreenCameraComponent } from '@app/components/fullscreen-camera/fullscreen-camera.component';
 import { PageHeaderComponent } from '@app/components/page-header/page-header.component';
 import { BreadcrumbItem } from '@app/components/breadcrumb/breadcrumb.component';
@@ -31,6 +33,7 @@ import { BreadcrumbItem } from '@app/components/breadcrumb/breadcrumb.component'
     IonButton,
     IonIcon,
     IonContent,
+    IonModal,
     CommonModule,
     FullscreenCameraComponent,
     PageHeaderComponent
@@ -58,6 +61,7 @@ export class PhotoCapturePage implements OnInit, OnDestroy, ViewWillLeave {
   isLoading = false;
   showCamera = false;
   currentSide = '';
+  showInspectionPrompt = false;
 
   get allPhotosTaken(): boolean {
     return this.sides.every((side) => !!this.photos[side]);
@@ -112,7 +116,8 @@ export class PhotoCapturePage implements OnInit, OnDestroy, ViewWillLeave {
     private toastCtrl: ToastController,
     private auth: Auth,
     private navService: NavService,
-    private platform: Platform
+    private platform: Platform,
+    private appLifecycle: AppLifecycleService
   ) {}
   ngOnInit() {
     // Pull vanType and vanNumber out of the URL
@@ -121,6 +126,12 @@ export class PhotoCapturePage implements OnInit, OnDestroy, ViewWillLeave {
     
     // Get vanId from query params (passed from van selection)
     this.vanId = this.route.snapshot.queryParamMap.get('vanId') || '';
+    
+    // Check if we're coming from background tracking
+    const fromBackground = this.route.snapshot.queryParamMap.get('fromBackground') === 'true';
+    if (fromBackground) {
+      this.showInspectionPrompt = true;
+    }
     
     // Setup breadcrumb items
     this.breadcrumbItems = [
@@ -255,6 +266,9 @@ export class PhotoCapturePage implements OnInit, OnDestroy, ViewWillLeave {
 
       // 4. Show success toast
       await this.showSuccessToast();
+      // Clear background tracking state when inspection is submitted
+      this.appLifecycle.clearBackgroundTracking();
+      
       await this.router.navigate(['/user-review'], {
         replaceUrl: true,
         queryParams: {
@@ -296,6 +310,33 @@ export class PhotoCapturePage implements OnInit, OnDestroy, ViewWillLeave {
       await errToast.present();
     }
   }
+  async startInspection() {
+    this.showInspectionPrompt = false;
+  }
+
+  async returnLater() {
+    // Close the modal
+    this.showInspectionPrompt = false;
+    
+    // Navigate back to background-tracking page
+    // This keeps the background tracking state active
+    // The prompt will show again when user returns to the app
+    const trackingData = this.appLifecycle.getBackgroundTrackingData();
+    if (trackingData) {
+      this.router.navigate(['/background-tracking'], {
+        queryParams: {
+          vanType: trackingData.vanType,
+          vanNumber: trackingData.vanNumber,
+          vanId: trackingData.vanId
+        },
+        replaceUrl: true
+      });
+    } else {
+      // Fallback: navigate to van selection
+      this.router.navigate(['/van-selection'], { replaceUrl: true });
+    }
+  }
+
   async logout() {
     await this.auth.signOut();
     this.navService.reset(); // Clear navigation history to prevent back navigation to protected routes
