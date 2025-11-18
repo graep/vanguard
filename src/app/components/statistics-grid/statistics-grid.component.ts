@@ -46,9 +46,11 @@ export class StatisticsGridComponent {
   @Input() vanStats: any;
   @Input() inspectionStats: any;
   @Input() driverStats: any;
+  @Input() userStats: any;
   @Input() operationalHealth: any;
   @Output() cardMoved = new EventEmitter<{ cardId: string; direction: 'up' | 'down' | 'left' | 'right' }>();
   @Output() cardColorChanged = new EventEmitter<{ cardId: string; color: string }>();
+  @Output() cardClicked = new EventEmitter<{ cardId: string }>();
   
   selectedCardId: string | null = null;
   showColorPicker: boolean = false;
@@ -90,15 +92,21 @@ export class StatisticsGridComponent {
   }
 
   onCardClick(card: StatCard, event: Event): void {
-    if (!this.isEditMode) return;
-    event.stopPropagation();
-    
-    if (this.selectedCardId === card.id) {
-      // Deselect if clicking the same card
-      this.selectedCardId = null;
+    if (this.isEditMode) {
+      // Edit mode: handle selection
+      event.stopPropagation();
+      
+      if (this.selectedCardId === card.id) {
+        // Deselect if clicking the same card
+        this.selectedCardId = null;
+      } else {
+        // Select the clicked card
+        this.selectedCardId = card.id;
+      }
     } else {
-      // Select the clicked card
-      this.selectedCardId = card.id;
+      // Normal mode: emit click event
+      event.stopPropagation();
+      this.cardClicked.emit({ cardId: card.id });
     }
   }
 

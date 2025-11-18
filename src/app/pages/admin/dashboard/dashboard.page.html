@@ -12,29 +12,42 @@
       
       <!-- Page Header -->
       <div class="page-header">
+        <!-- Edit Layout Button and Reset Buttons - Top Right Corner -->
+        <div class="edit-buttons-group">
+          <!-- Reset Buttons - Only shown when edit mode is active -->
+          <ion-button fill="outline" size="small" (click)="resetLayout()" 
+                      class="reset-button" *ngIf="isEditMode">
+            <ion-icon name="refresh-outline"></ion-icon>
+          </ion-button>
+          <ion-button fill="outline" size="small" (click)="resetAllTileColors()" 
+                      class="reset-colors-button" *ngIf="isEditMode">
+            <ion-icon name="color-palette-outline"></ion-icon>
+          </ion-button>
+          
+          <!-- Edit Layout Button -->
+          <ion-button fill="outline" size="small" (click)="toggleEditMode()" 
+                      [class.edit-mode-active]="isEditMode" class="edit-mode-button">
+            <ion-icon [name]="isEditMode ? 'lock-open-outline' : 'create-outline'"></ion-icon>
+          </ion-button>
+        </div>
+        
+        <!-- Save Button - Below Edit Button -->
+        <div class="save-button-container">
+          <ion-button fill="outline" size="small" (click)="saveDashboardPreferences()" 
+                      class="save-button" *ngIf="isEditMode">
+            <ion-icon name="save-outline"></ion-icon>
+          </ion-button>
+        </div>
+        
+        <!-- Title and Subtitle with Background Logo in Middle -->
         <div class="header-content">
           <div>
             <h1 class="page-title">Dashboard</h1>
             <p class="page-subtitle">Welcome, {{ userDisplayName }}!</p>
           </div>
-          <div class="header-actions-container">
-            <div class="header-actions">
-              <ion-button fill="outline" size="small" (click)="toggleEditMode()" 
-                          [class.edit-mode-active]="isEditMode" class="edit-mode-button">
-                <ion-icon [name]="isEditMode ? 'lock-open-outline' : 'lock-closed-outline'" slot="start"></ion-icon>
-                {{ isEditMode ? 'Exit Edit Mode' : 'Edit Layout' }}
-              </ion-button>
-              <ion-button fill="outline" size="small" (click)="resetLayout()" class="reset-button" [disabled]="!isEditMode">
-                <ion-icon name="refresh-outline" slot="start"></ion-icon>
-                Reset Layout
-              </ion-button>
-              <ion-button fill="outline" size="small" (click)="resetAllTileColors()" class="reset-colors-button" [disabled]="!isEditMode">
-                <ion-icon name="color-palette-outline" slot="start"></ion-icon>
-                Reset Colors
-              </ion-button>
-            </div>
-          </div>
         </div>
+        
+        <!-- Edit Mode Indicator -->
         <div class="edit-mode-indicator" *ngIf="isEditMode">
           <ion-icon name="create-outline"></ion-icon>
           <span>Edit Mode Active - Drag tiles to rearrange</span>
@@ -48,9 +61,11 @@
         [vanStats]="vanStats"
         [inspectionStats]="inspectionStats"
         [driverStats]="driverStats"
+        [userStats]="userStats"
         [operationalHealth]="operationalHealth"
         (cardMoved)="moveCard($event)"
-        (cardColorChanged)="onCardColorChanged($event)">
+        (cardColorChanged)="onCardColorChanged($event)"
+        (cardClicked)="onCardClicked($event)">
       </app-statistics-grid>
       
     </div>

@@ -3,6 +3,8 @@
 ## Overview
 Comprehensive style guide for the Vanguard Fleet Inspection & Condition Tracking Application, establishing visual design patterns, component styles, and user experience standards.
 
+**Important**: The Fleet page (`src/app/pages/admin/fleet/fleet.page.*`) serves as the **blueprint** for all admin list pages. All styling conventions, layout patterns, responsive breakpoints, and component positioning established on the Fleet page should be replicated on other pages (Users, etc.) for consistency.
+
 ---
 
 ## Color System
@@ -799,6 +801,653 @@ will-change: transform, opacity;
 
 ---
 
+## Page Layout Patterns (Fleet Page Blueprint)
+
+### Standard Page Structure
+The Fleet page establishes the blueprint for all admin list pages (Users, Fleet, etc.). This pattern ensures consistency across the application.
+
+#### Content Container
+```scss
+.content-container {
+  --background: #1e293b;
+  min-height: 100vh;
+  width: 100%;
+  margin: 0;
+  padding: 20px;
+  
+  // Laptop and above: expand to fill available space
+  @media (min-width: 1024px) {
+    max-width: none;
+    margin: 0;
+  }
+  
+  @media (max-width: 768px) {
+    padding: 0; // Remove padding to match inner-scroll position
+    margin: 0;
+    width: 100%;
+    max-width: 100%;
+    margin-top: 16px; // Add top margin
+  }
+  
+  @media (max-width: 430px) {
+    padding: 0;
+    margin: 0;
+    width: 100%;
+    max-width: 100%;
+    margin-top: 12px; // Add top margin
+  }
+}
+
+// Remove left margin when sidebar is expanded (allows overlay)
+:host ::ng-deep .content-wrapper:not(.sidebar-collapsed) .content-container {
+  margin-left: 0 !important;
+}
+```
+
+#### Page Header Structure
+```scss
+.page-header {
+  position: relative;
+  z-index: 100;
+  margin-bottom: 2rem;
+  padding: 0 16px;
+  
+  @media (max-width: 768px) {
+    margin-bottom: 1.5rem;
+    padding: 0 16px;
+  }
+  
+  @media (max-width: 430px) {
+    margin-bottom: 0;
+    padding: 0 12px;
+  }
+  
+  // More room on sides for tablet and 426px and below
+  @media (max-width: 1023px) and (min-width: 767px) {
+    padding: 0 20px;
+  }
+  
+  @media (max-width: 430px) {
+    padding: 0 20px;
+  }
+  
+  .header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 2.5rem;
+    padding: 0;
+    
+    > div:first-child {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: flex-start;
+      flex: 1;
+      min-height: 288px;
+      height: 288px;
+      margin-left: 1rem;
+      position: relative;
+      
+      // Background logo centered in the container
+      &::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 300px;
+        height: 300px;
+        background-image: url('/assets/5L3R_logo2.png');
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+        opacity: 0.2;
+        z-index: 0;
+        pointer-events: none;
+      }
+    }
+    
+    @media (max-width: 768px) {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 1.5rem;
+      padding: 0;
+      
+      > div:first-child {
+        align-items: center;
+        margin-left: 0;
+        min-height: auto;
+        height: auto;
+      }
+    }
+    
+    // Mobile: reverse order - status bar first, then title/logo
+    @media (max-width: 430px) {
+      > div:first-child {
+        order: 2; // Title/logo appears second
+      }
+      
+      .status-bar-container {
+        order: 1; // Status bar appears first
+      }
+    }
+    
+    // More space on top and bottom for title div from 425px to 767px - show logo
+    @media (max-width: 767px) and (min-width: 425px) {
+      > div:first-child {
+        padding-top: 1.5rem;
+        padding-bottom: 1.5rem;
+        position: relative;
+        justify-content: flex-end;
+        align-items: flex-start;
+        min-height: auto;
+        height: auto;
+        margin-left: 0;
+        
+        // Show logo behind title with 0.2 opacity
+        &::before {
+          display: block;
+          opacity: 0.2;
+          width: 200px;
+          height: 200px;
+          z-index: 0;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+        }
+      }
+    }
+    
+    // Tablet: More space on top and bottom for title div, position to bottom left, show logo
+    @media (max-width: 1023px) and (min-width: 768px) {
+      > div:first-child {
+        padding-top: 1.5rem;
+        padding-bottom: 1.5rem;
+        position: relative;
+        justify-content: flex-end;
+        align-items: flex-start;
+        
+        // Show logo behind title with 0.2 opacity
+        &::before {
+          display: block;
+          opacity: 0.2;
+          width: 250px;
+          height: 250px;
+          z-index: 0;
+        }
+      }
+    }
+    
+    // More space on top and bottom for title div at 424px and below
+    @media (max-width: 430px) {
+      > div:first-child {
+        padding-top: 2rem;
+        padding-bottom: 0;
+        position: relative;
+        justify-content: flex-end;
+        align-items: flex-start;
+        min-height: auto;
+        height: auto;
+        margin-left: 0;
+        
+        // Show logo behind title with 0.2 opacity
+        &::before {
+          display: block;
+          opacity: 0.2;
+          width: 200px;
+          height: 200px;
+          z-index: 0;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+        }
+      }
+    }
+  }
+}
+```
+
+#### Page Title & Subtitle
+```scss
+.page-title {
+  font-family: 'Montserrat', 'TikTok Sans', sans-serif;
+  font-size: 2.5rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+  margin: 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  background: linear-gradient(135deg, #ffffff 0%, #e0e0e0 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  position: relative;
+  z-index: 1;
+  text-transform: uppercase;
+  
+  @media (max-width: 768px) {
+    font-size: 1.75rem;
+  }
+  
+  @media (max-width: 430px) {
+    font-size: 1.5rem;
+  }
+}
+
+.page-subtitle {
+  font-family: 'Montserrat', 'TikTok Sans', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0;
+  text-transform: uppercase;
+  position: relative;
+  z-index: 1;
+  
+  @media (max-width: 768px) {
+    font-size: 0.85rem;
+  }
+  
+  @media (max-width: 430px) {
+    font-size: 0.75rem;
+    margin-bottom: 35px; // Compensate for lack of section titles on mobile
+  }
+}
+```
+
+#### Status Count Bar Container
+```scss
+.status-bar-container {
+  flex: 1;
+  max-width: 650px;
+  width: 100%;
+  align-self: center;
+  
+  @media (max-width: 768px) {
+    max-width: 100%;
+    width: 100%;
+    margin: 0;
+  }
+}
+
+// Status Count Bar Component (app-status-count-bar)
+// Component styles are compartmentalized within the component
+// Container styling:
+.container {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.03) 100%);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  padding: 24px 32px;
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  box-sizing: border-box;
+  
+  // 431px and above - reduce padding
+  @media (min-width: 431px) {
+    padding: 18px;
+  }
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+  
+  @media (max-width: 768px) {
+    padding: 16px 20px;
+  }
+  
+  @media (max-width: 430px) {
+    padding: 12px 16px;
+  }
+}
+```
+
+#### Search Bar (Status Count Bar)
+```scss
+.search-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: var(--ion-color-light-shade);
+  border: 1px solid var(--ion-color-light-shade);
+  border-radius: 12px;
+  padding: 12px 16px;
+  min-height: 48px; // Consistent height across pages
+  transition: all 0.2s ease;
+  backdrop-filter: blur(10px);
+
+  &:focus-within {
+    border-color: rgba(33, 150, 243, 0.5);
+    box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+    background: var(--ion-color-light-tint);
+
+    .search-icon {
+      color: #2196F3;
+    }
+  }
+  
+  @media (max-width: 430px) {
+    padding: 8px 12px;
+    border-radius: 8px;
+    min-height: 44px;
+  }
+}
+```
+
+#### Section Containers (Optional - for grouped content)
+```scss
+.section-container {
+  border-radius: 10px;
+  padding: 1.5rem;
+  margin-bottom: 1.3rem;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+  
+  @media (max-width: 430px) {
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+    margin-left: 12px;
+    margin-right: 12px;
+  }
+  
+  @media (max-width: 768px) {
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    margin-left: 16px;
+    margin-right: 16px;
+  }
+  
+  // 431px and above - reduce padding
+  @media (min-width: 431px) {
+    padding: 18px 18px 30px 18px;
+  }
+  
+  // Remove container styling only at 426px and below
+  @media (max-width: 430px) {
+    background: transparent;
+    backdrop-filter: none;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+    margin-bottom: 1.5rem;
+    margin-left: 0;
+    margin-right: 0;
+    border-radius: 0;
+    
+    &:hover {
+      transform: none;
+      box-shadow: none;
+      border-color: transparent;
+    }
+  }
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+  
+  .section-header {
+    margin: 0 0 18px 0;
+    text-align: right;
+    
+    @media (max-width: 768px) {
+      margin: 0 0 0.75rem 0;
+    }
+    
+    @media (max-width: 430px) {
+      margin: 0 0 1rem 0;
+      padding: 0;
+    }
+    
+    .section-title {
+      font-family: 'Montserrat', 'TikTok Sans', sans-serif;
+      font-size: 1.75rem;
+      font-weight: 800;
+      color: #ffffff;
+      margin: 0;
+      text-transform: uppercase;
+      letter-spacing: -0.02em;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+      background: linear-gradient(135deg, #ffffff 0%, #e0e0e0 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      display: inline-block;
+      
+      @media (max-width: 1024px) and (min-width: 427px) {
+        font-size: 1.5rem;
+      }
+      
+      @media (max-width: 768px) {
+        font-size: 1.25rem;
+      }
+      
+      @media (max-width: 430px) {
+        font-size: 1.5rem;
+      }
+    }
+  }
+}
+```
+
+#### Grid Layout Pattern
+```scss
+.items-grid {
+  display: grid;
+  width: 100%;
+  justify-content: center; // Center cards when there's extra space
+  
+  // Base gap for all views (mobile-first)
+  gap: 0.625rem;
+  
+  // Mobile: 2 columns side by side
+  grid-template-columns: repeat(2, 1fr);
+  justify-content: stretch;
+  
+  // Tablet: 431px to 768px - same gap, auto-fill columns
+  @media (min-width: 431px) {
+    grid-template-columns: repeat(auto-fill, minmax(260px, 260px));
+    justify-content: center;
+  }
+  
+  // Desktop: 769px and above - slightly larger gap
+  @media (min-width: 769px) {
+    gap: 0.875rem;
+  }
+}
+```
+
+#### Card Pattern (List Items)
+```scss
+.item-card {
+  border-radius: 20px;
+  padding: 0;
+  background: #1e1e1e; // Sidebar color at all view sizes 426px and up
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--ion-color-light-shade);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  overflow: hidden;
+  width: 100%;
+  min-width: 0; // Prevent overflow in grid
+  height: 100%;
+  position: relative;
+  
+  // Cool effects for 431px and above
+  @media (min-width: 431px) {
+    background: linear-gradient(135deg, rgba(35, 35, 40, 0.98) 0%, rgba(25, 25, 30, 0.98) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 
+      0 4px 16px rgba(0, 0, 0, 0.25),
+      0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+    
+    // Subtle shine overlay
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.05),
+        transparent
+      );
+      transition: left 0.6s ease;
+      z-index: 1;
+      pointer-events: none;
+    }
+  }
+  
+  // Mobile: use status count bar color
+  @media (max-width: 430px) {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.03) 100%);
+    border: none;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+  }
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(128, 128, 128, 0.2);
+    border-color: var(--ion-color-light-shade);
+    background: #2a2a2a;
+    
+    // Enhanced hover effects for 431px and above
+    @media (min-width: 431px) {
+      transform: translateY(-6px) scale(1.02);
+      background: linear-gradient(135deg, rgba(45, 45, 50, 1) 0%, rgba(35, 35, 40, 1) 100%);
+      border-color: rgba(255, 255, 255, 0.25);
+      box-shadow: 
+        0 8px 24px rgba(0, 0, 0, 0.3),
+        0 0 0 1px rgba(255, 255, 255, 0.15) inset,
+        0 0 20px rgba(33, 150, 243, 0.1);
+      
+      // Animate shine overlay on hover
+      &::before {
+        left: 100%;
+      }
+    }
+    
+    // Mobile hover
+    @media (max-width: 430px) {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+      border: none;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.05) 100%);
+    }
+  }
+}
+
+.item-card-content {
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  position: relative;
+  box-sizing: border-box;
+  z-index: 2; // Ensure content is above shine overlay
+  
+  // Mobile (base blueprint): 430px and below
+  padding: 0.75rem 0.75rem 0.2rem 0.75rem;
+  min-height: 85px;
+  
+  // All views above mobile: 431px and above - use tablet styling
+  @media (min-width: 431px) {
+    padding: 14px 14px 0.3rem 14px;
+    min-height: 140px;
+  }
+}
+```
+
+#### List Container
+```scss
+.items-list {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  
+  // Add padding for tablet and 426px mobile view - more room on sides
+  @media (max-width: 1023px) and (min-width: 767px) {
+    padding: 0 20px;
+  }
+  
+  @media (max-width: 430px) {
+    padding: 0 20px;
+  }
+}
+```
+
+### Responsive Breakpoints (Fleet Page Standard)
+```scss
+// Mobile-first approach
+// Key breakpoints:
+// - 430px and below: Mobile base (2-column grid, minimal styling)
+// - 431px to 768px: Tablet (auto-fill grid, enhanced card effects)
+// - 769px and above: Desktop (larger gaps, full effects)
+// - 1024px and above: Laptop (full expansion)
+
+// Mobile: 430px and below
+@media (max-width: 430px) { }
+
+// Tablet Small: 431px to 767px
+@media (min-width: 431px) and (max-width: 767px) { }
+
+// Tablet: 768px to 1023px
+@media (min-width: 768px) and (max-width: 1023px) { }
+
+// Desktop: 769px and above
+@media (min-width: 769px) { }
+
+// Laptop: 1024px and above
+@media (min-width: 1024px) { }
+```
+
+### Logo Background Pattern
+```scss
+// Logo appears behind page title at 0.2 opacity
+// Centered in title container
+// Responsive sizing:
+// - Desktop: 300px × 300px
+// - Tablet (768px-1023px): 250px × 250px
+// - Mobile (425px-767px): 200px × 200px
+// - Mobile (≤430px): 200px × 200px
+
+.page-header .header-content > div:first-child::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 300px; // Responsive sizes above
+  height: 300px;
+  background-image: url('/assets/5L3R_logo2.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  opacity: 0.2;
+  z-index: 0;
+  pointer-events: none;
+}
+```
+
+---
+
 ## Design Tokens Summary
 
 ```scss
@@ -820,9 +1469,10 @@ will-change: transform, opacity;
 
 // Border Radius
 --radius-sm: 8px;
---radius-md: 12px;
---radius-lg: 16px;
---radius-xl: 20px;
+--radius-md: 10px;      // Standard container radius
+--radius-lg: 12px;
+--radius-xl: 16px;
+--radius-card: 20px;    // Card border radius
 
 // Shadows
 --shadow-sm: 0 4px 16px rgba(0, 0, 0, 0.2);
@@ -834,10 +1484,11 @@ will-change: transform, opacity;
 --transition-normal: 0.3s ease;
 
 // Breakpoints
---breakpoint-sm: 480px;
---breakpoint-md: 768px;
---breakpoint-lg: 900px;
---breakpoint-xl: 1200px;
+--breakpoint-mobile: 430px;
+--breakpoint-tablet-sm: 431px;
+--breakpoint-tablet: 768px;
+--breakpoint-desktop: 769px;
+--breakpoint-laptop: 1024px;
 ```
 
 ---
@@ -873,6 +1524,16 @@ will-change: transform, opacity;
 - [ ] Icons follow guidelines
 - [ ] Forms use consistent inputs
 
+### Page Layout Consistency (Fleet Page Blueprint)
+- [ ] Content container follows fleet page pattern
+- [ ] Page header structure matches (title, subtitle, logo background)
+- [ ] Status count bar container positioned correctly
+- [ ] Grid layout uses fleet page breakpoints (430px, 431px, 768px, 1024px)
+- [ ] Cards follow fleet page styling (mobile vs tablet/desktop)
+- [ ] Responsive behavior matches fleet page exactly
+- [ ] Search bar height consistent (min-height: 48px)
+- [ ] Logo background pattern implemented (if applicable)
+
 ---
 
-*This document establishes the visual and interaction standards for the Vanguard application. All components should adhere to these guidelines for consistency and quality.*
+*This document establishes the visual and interaction standards for the Vanguard application. All components should adhere to these guidelines for consistency and quality. The Fleet page serves as the blueprint for all admin list pages - use it as the reference for styling and layout patterns.*

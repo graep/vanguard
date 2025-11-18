@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, HostListener, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
@@ -9,8 +9,6 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { UserProfile, Role, AuthService } from '../../../services/auth.service';
 import { UserManagementService } from '../../../services/user-management.service';
 import { BreadcrumbService } from '../../../services/breadcrumb.service';
-
-type FilterKey = 'all' | 'active' | 'drivers' | 'admins' | 'owners';
 
 interface Counts {
   total: number;
@@ -28,9 +26,11 @@ interface Counts {
   styleUrls: ['./users.page.scss'],
 })
 export class UsersPage implements OnInit {
-  // UI state for <ion-segment>
-  activeFilter: FilterKey = 'all';
-  private filter$ = new BehaviorSubject<FilterKey>('all');
+  // Filter dropdown state
+  isFilterDropdownOpen: boolean = false;
+  selectedRoleFilters: Set<string> = new Set();
+  selectedStatusFilters: Set<string> = new Set();
+  private filters$ = new BehaviorSubject<{ roles: Set<string>, statuses: Set<string> }>({ roles: new Set(), statuses: new Set() });
   
   // Search state
   searchValue: string = '';
@@ -40,13 +40,14 @@ export class UsersPage implements OnInit {
   allUsers$!: Observable<UserProfile[]>;
   filteredUsers$!: Observable<UserProfile[]>;
   counts$!: Observable<Counts>;
-
+  
   constructor(
     private userManagement: UserManagementService,
     private authService: AuthService,
     private router: Router,
     private route: ActivatedRoute,
-    private breadcrumbService: BreadcrumbService
+    private breadcrumbService: BreadcrumbService,
+    private elementRef: ElementRef
   ) {}
 
   ngOnInit() {
@@ -64,26 +65,29 @@ export class UsersPage implements OnInit {
     );
 
     // Apply filter and search
-    this.filteredUsers$ = combineLatest([this.allUsers$, this.filter$, this.search$]).pipe(
-      map(([users, filter, search]) => {
-        let filtered: UserProfile[];
+    this.filteredUsers$ = combineLatest([this.allUsers$, this.search$, this.filters$]).pipe(
+      map(([users, search, filters]) => {
+        let filtered: UserProfile[] = [...users];
         
-        switch (filter) {
-          case 'active':
-            filtered = users.filter((u) => u.isActive);
-            break;
-          case 'drivers':
-            filtered = users.filter((u) => this.has(u, 'driver'));
-            break;
-          case 'admins':
-            filtered = users.filter((u) => this.has(u, 'admin'));
-            break;
-          case 'owners':
-            filtered = users.filter((u) => this.has(u, 'owner'));
-            break;
-          case 'all':
-          default:
-            filtered = users;
+        // Apply role filters
+        if (filters.roles.size > 0) {
+          filtered = filtered.filter((u) => {
+            return Array.from(filters.roles).some(role => {
+              if (role === 'driver') return this.has(u, 'driver');
+              if (role === 'admin') return this.has(u, 'admin');
+              if (role === 'owner') return this.has(u, 'owner');
+              return false;
+            });
+          });
+        }
+        
+        // Apply status filters
+        if (filters.statuses.size > 0) {
+          filtered = filtered.filter((u) => {
+            if (filters.statuses.has('active') && u.isActive) return true;
+            if (filters.statuses.has('inactive') && !u.isActive) return true;
+            return false;
+          });
         }
         
         // Apply search filter
@@ -102,15 +106,56 @@ export class UsersPage implements OnInit {
     );
   }
 
-  // Segment handlers
-  onSegmentChange(ev: CustomEvent) {
-    const raw = (ev.detail as any)?.value as string | null;
-    const next = (raw ?? 'all') as FilterKey;
-    this.setFilter(next);
+  // Filter dropdown handlers
+  toggleFilterDropdown(): void {
+    this.isFilterDropdownOpen = !this.isFilterDropdownOpen;
   }
-  setFilter(f: FilterKey) {
-    this.activeFilter = f;
-    this.filter$.next(f);
+
+  toggleRoleFilter(role: string): void {
+    if (this.selectedRoleFilters.has(role)) {
+      this.selectedRoleFilters.delete(role);
+    } else {
+      this.selectedRoleFilters.add(role);
+    }
+    this.applyFilters();
+  }
+
+  toggleStatusFilter(status: string): void {
+    if (this.selectedStatusFilters.has(status)) {
+      this.selectedStatusFilters.delete(status);
+    } else {
+      this.selectedStatusFilters.add(status);
+    }
+    this.applyFilters();
+  }
+
+  clearAllFilters(): void {
+    this.selectedRoleFilters.clear();
+    this.selectedStatusFilters.clear();
+    this.applyFilters();
+  }
+
+  private applyFilters(): void {
+    // Trigger filter update by emitting new filter state
+    this.filters$.next({
+      roles: new Set(this.selectedRoleFilters),
+      statuses: new Set(this.selectedStatusFilters)
+    });
+  }
+
+  get hasActiveFilters(): boolean {
+    return this.selectedRoleFilters.size > 0 || this.selectedStatusFilters.size > 0;
+  }
+
+  get activeFilterCount(): number {
+    return this.selectedRoleFilters.size + this.selectedStatusFilters.size;
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    if (this.isFilterDropdownOpen && !this.elementRef.nativeElement.contains(event.target)) {
+      this.isFilterDropdownOpen = false;
+    }
   }
   
   // Search handlers
@@ -285,18 +330,10 @@ export class UsersPage implements OnInit {
   }
 
   getEmptyStateMessage(): string {
-    switch (this.activeFilter) {
-      case 'active':
-        return 'No active users found';
-      case 'drivers':
-        return 'No drivers found';
-      case 'admins':
-        return 'No admin users found';
-      case 'owners':
-        return 'No owners found';
-      default:
-        return 'No users found';
+    if (this.hasActiveFilters) {
+      return 'No users found matching your filters';
     }
+    return 'No users found';
   }
 
   viewUser(user: UserProfile): void {

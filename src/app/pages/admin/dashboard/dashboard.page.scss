@@ -59,6 +59,8 @@ app-breadcrumb {
 
 // Page Header
 .page-header {
+  position: relative;
+  z-index: 100;
   margin-bottom: 2rem;
   padding: 0 16px;
   
@@ -68,7 +70,7 @@ app-breadcrumb {
   }
   
   @media (max-width: 430px) {
-    margin-bottom: 1rem;
+    margin-bottom: 0;
     padding: 0 12px;
   }
   
@@ -81,6 +83,218 @@ app-breadcrumb {
     padding: 0 20px;
   }
   
+  // Edit Buttons Group - Top Right Corner
+  .edit-buttons-group {
+    position: absolute;
+    top: 0;
+    right: 16px;
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    
+    @media (max-width: 768px) {
+      top: 0;
+      right: 16px;
+      gap: 6px;
+    }
+    
+    @media (max-width: 430px) {
+      top: 0;
+      right: 20px;
+      gap: 6px;
+    }
+  }
+  
+  // Edit Layout Button
+  .edit-mode-button {
+    --padding-start: 0;
+    --padding-end: 0;
+    --padding-top: 0;
+    --padding-bottom: 0;
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    min-height: 40px;
+    margin: 0;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    pointer-events: auto;
+    cursor: pointer;
+    
+    &::part(native) {
+      cursor: pointer;
+    }
+    
+    ion-icon {
+      margin: 0;
+      font-size: 1.2rem;
+      pointer-events: none;
+    }
+    
+    &.edit-mode-active {
+      --background: rgba(59, 130, 246, 0.2);
+      --border-color: rgba(59, 130, 246, 0.5);
+    }
+    
+    &:hover {
+      --background: rgba(255, 255, 255, 0.1);
+      transform: scale(1.05);
+    }
+    
+    @media (max-width: 768px) {
+      width: 36px;
+      height: 36px;
+      min-width: 36px;
+      min-height: 36px;
+      
+      ion-icon {
+        font-size: 1.1rem;
+      }
+    }
+    
+    @media (max-width: 430px) {
+      width: 32px;
+      height: 32px;
+      min-width: 32px;
+      min-height: 32px;
+      
+      ion-icon {
+        font-size: 1rem;
+      }
+    }
+  }
+  
+  // Reset Buttons - Small square icon-only buttons
+  .reset-button,
+  .reset-colors-button {
+    --padding-start: 0;
+    --padding-end: 0;
+    --padding-top: 0;
+    --padding-bottom: 0;
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    min-height: 40px;
+    margin: 0;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    pointer-events: auto;
+    cursor: pointer;
+    
+    &::part(native) {
+      cursor: pointer;
+    }
+    
+    ion-icon {
+      margin: 0;
+      font-size: 1.2rem;
+      pointer-events: none;
+    }
+    
+    &:hover {
+      --background: rgba(255, 255, 255, 0.1);
+      transform: scale(1.05);
+    }
+    
+    @media (max-width: 768px) {
+      width: 36px;
+      height: 36px;
+      min-width: 36px;
+      min-height: 36px;
+      
+      ion-icon {
+        font-size: 1.1rem;
+      }
+    }
+    
+    @media (max-width: 430px) {
+      width: 32px;
+      height: 32px;
+      min-width: 32px;
+      min-height: 32px;
+      
+      ion-icon {
+        font-size: 1rem;
+      }
+    }
+  }
+  
+  // Save Button Container - Below Edit Button
+  .save-button-container {
+    position: absolute;
+    top: 48px; // Position below edit button (40px height + 8px gap)
+    right: 16px;
+    z-index: 200;
+    
+    @media (max-width: 768px) {
+      top: 44px; // 36px height + 8px gap
+      right: 16px;
+    }
+    
+    @media (max-width: 430px) {
+      top: 40px; // 32px height + 8px gap
+      right: 20px;
+    }
+  }
+  
+  // Save Button - Small square icon-only button
+  .save-button {
+    --padding-start: 0;
+    --padding-end: 0;
+    --padding-top: 0;
+    --padding-bottom: 0;
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    min-height: 40px;
+    margin: 0;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    pointer-events: auto;
+    cursor: pointer;
+    
+    &::part(native) {
+      cursor: pointer;
+    }
+    
+    ion-icon {
+      margin: 0;
+      font-size: 1.2rem;
+      pointer-events: none;
+    }
+    
+    &:hover {
+      --background: rgba(34, 197, 94, 0.2);
+      --border-color: rgba(34, 197, 94, 0.5);
+      transform: scale(1.05);
+    }
+    
+    @media (max-width: 768px) {
+      width: 36px;
+      height: 36px;
+      min-width: 36px;
+      min-height: 36px;
+      
+      ion-icon {
+        font-size: 1.1rem;
+      }
+    }
+    
+    @media (max-width: 430px) {
+      width: 32px;
+      height: 32px;
+      min-width: 32px;
+      min-height: 32px;
+      
+      ion-icon {
+        font-size: 1rem;
+      }
+    }
+  }
+  
+  // Title and Subtitle Container in Middle
   .header-content {
     display: flex;
     justify-content: space-between;
@@ -102,7 +316,6 @@ app-breadcrumb {
       // Background image centered in the container
       &::before {
         content: '';
-        display: block;
         position: absolute;
         top: 50%;
         left: 50%;
@@ -130,15 +343,44 @@ app-breadcrumb {
         margin-left: 0;
         min-height: auto;
         height: auto;
+        padding-top: 110px; // Push down title/subtitle, logo stays in place
         
+        // Keep logo at top position
         &::before {
-          display: none;
+          top: 0;
+          transform: translate(-50%, 0);
+        }
+      }
+    }
+    
+    // More space on top and bottom for title div from 425px to 767px - show logo
+    @media (max-width: 767px) and (min-width: 425px) {
+      > div:first-child {
+        padding-top: calc(1.5rem + 110px); // Push down title/subtitle, logo stays in place
+        padding-bottom: 1.5rem;
+        position: relative;
+        justify-content: flex-end;
+        align-items: flex-start;
+        min-height: auto;
+        height: auto;
+        margin-left: 0;
+        
+        // Show logo behind title with 0.2 opacity, keep at top
+        &::before {
+          display: block;
+          opacity: 0.2;
+          width: 200px;
+          height: 200px;
+          z-index: 0;
+          top: 0;
+          left: 50%;
+          transform: translate(-50%, 0);
         }
       }
     }
     
     // Tablet: More space on top and bottom for title div, position to bottom left, show logo
-    @media (max-width: 1023px) and (min-width: 767px) {
+    @media (max-width: 1023px) and (min-width: 768px) {
       > div:first-child {
         padding-top: 1.5rem;
         padding-bottom: 1.5rem;
@@ -157,22 +399,29 @@ app-breadcrumb {
       }
     }
     
-    // More space on top and bottom for title div at 426px and below
+    // More space on top and bottom for title div at 424px and below
     @media (max-width: 430px) {
       > div:first-child {
-        padding-top: 1.5rem;
-        padding-bottom: 1.5rem;
+        order: 2; // Title/logo appears second
+        padding-top: calc(30px + 110px); // Push down title/subtitle, logo stays in place
+        padding-bottom: 30px;
         position: relative;
         justify-content: flex-end;
         align-items: flex-start;
+        min-height: auto;
+        height: auto;
+        margin-left: 0;
         
-        // Show logo behind title with 0.2 opacity
+        // Show logo behind title with 0.2 opacity, keep at top
         &::before {
           display: block;
           opacity: 0.2;
           width: 200px;
           height: 200px;
           z-index: 0;
+          top: 0;
+          left: 50%;
+          transform: translate(-50%, 0);
         }
       }
     }
@@ -180,11 +429,11 @@ app-breadcrumb {
   
   .page-title {
     font-family: 'Montserrat', 'TikTok Sans', sans-serif;
-    font-size: 2.75rem;
+    font-size: 2.5rem;
     font-weight: 800;
     letter-spacing: -0.02em;
     color: #ffffff;
-    margin: 0 0 0.5rem 0;
+    margin: 0;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
     background: linear-gradient(135deg, #ffffff 0%, #e0e0e0 100%);
     -webkit-background-clip: text;
@@ -205,7 +454,7 @@ app-breadcrumb {
   
   .page-subtitle {
     font-family: 'Montserrat', 'TikTok Sans', sans-serif;
-    font-size: 1.2rem;
+    font-size: 0.95rem;
     font-weight: 600;
     letter-spacing: 0.05em;
     color: rgba(255, 255, 255, 0.8);
@@ -215,23 +464,38 @@ app-breadcrumb {
     z-index: 1;
     
     @media (max-width: 768px) {
-      font-size: 1rem;
+      font-size: 0.85rem;
     }
     
     @media (max-width: 430px) {
-      font-size: 0.9rem;
+      font-size: 0.75rem;
     }
   }
   
-  .header-actions-container {
-    flex: 1;
-    max-width: 650px;
-    align-self: center;
+  // Edit Mode Indicator
+  .edit-mode-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    padding: 0.75rem 1rem;
+    background: rgba(59, 130, 246, 0.1);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    border-radius: 8px;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.875rem;
+    font-weight: 600;
     
-    @media (max-width: 768px) {
-      max-width: 100%;
-      width: 100%;
-      margin: 0;
+    ion-icon {
+      font-size: 1.2rem;
+      color: #3b82f6;
+    }
+    
+    @media (max-width: 430px) {
+      margin-top: 0.75rem;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.8rem;
     }
   }
 }
@@ -700,6 +964,29 @@ app-breadcrumb {
     font-size: 1rem;
     margin: 0;
     color: rgba(255, 255, 255, 0.7);
+  }
+}
+
+// Statistics Content Container
+.statistics-content {
+  width: 100%;
+  
+  // Statistics grid wrapper - ensure proper spacing (like fleet page)
+  app-statistics-grid {
+    display: block;
+    width: 100%;
+    
+    ::ng-deep .stats-grid-container {
+      // Add padding for mobile (like fleet page van-list)
+      @media (max-width: 430px) {
+        padding: 0 20px;
+      }
+      
+      // Tablet padding
+      @media (max-width: 1023px) and (min-width: 767px) {
+        padding: 0 20px;
+      }
+    }
   }
 }
 

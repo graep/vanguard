@@ -14,18 +14,22 @@ import {
   IonCardContent,
   IonIcon,
   IonSpinner,
-  IonButton
+  IonButton,
+  ModalController
 } from '@ionic/angular/standalone';
-import { Firestore, collection, collectionData, Timestamp, CollectionReference } from '@angular/fire/firestore';
+import { Firestore, collection, collectionData, Timestamp, CollectionReference, doc, getDoc, updateDoc } from '@angular/fire/firestore';
 import { Van } from '@app/models/van.model';
 import { Inspection } from '@app/services/inspection.service';
 import { PlanningService } from '@app/services/planning.service';
 import { DailyPlan, getPlanStats } from '@app/models/planning.model';
 import { BreadcrumbService } from '@app/services/breadcrumb.service';
-import { AuthService } from '@app/services/auth.service';
+import { AuthService, UserProfile } from '@app/services/auth.service';
+import { UserManagementService } from '@app/services/user-management.service';
+import { ToastController } from '@ionic/angular';
 import { Subscription, combineLatest, from, of } from 'rxjs';
-import { map, catchError } from 'rxjs/operators';
+import { map, catchError, filter, take } from 'rxjs/operators';
 import { StatisticsGridComponent, StatCard } from '@app/components/statistics-grid/statistics-grid.component';
+import { RecentSubmissionsModalComponent } from '@app/components/recent-submissions/recent-submissions-modal.component';
 
 interface VanStats {
   total: number;
@@ -75,6 +79,12 @@ interface OperationalHealth {
   needsAttention: number;
 }
 
+interface UserStats {
+  total: number;
+  active: number;
+  inactive: number;
+}
+
 interface StatisticsSection {
   id: string;
   title: string;
@@ -101,6 +111,7 @@ export class DashboardPage implements OnInit, OnDestroy, AfterViewInit {
   // Data
   vans: Van[] = [];
   inspections: Inspection[] = [];
+  users: UserProfile[] = [];
   todayPlan: DailyPlan | null = null;
   
   // Statistics
@@ -143,6 +154,12 @@ export class DashboardPage implements OnInit, OnDestroy, AfterViewInit {
     needsAttention: 0
   };
   
+  userStats: UserStats = {
+    total: 0,
+    active: 0,
+    inactive: 0
+  };
+  
   // Loading state
   isLoading = true;
   
@@ -181,13 +198,52 @@ export class DashboardPage implements OnInit, OnDestroy, AfterViewInit {
   private planningService = inject(PlanningService);
   private breadcrumbService = inject(BreadcrumbService);
   private authService = inject(AuthService);
+  private modalCtrl = inject(ModalController);
+  private userManagementService = inject(UserManagementService);
+  private toastCtrl = inject(ToastController);
   
-  ngOnInit() {
+  async ngOnInit() {
     this.breadcrumbService.clearTail();
-    this.loadSectionOrder();
-    this.loadEditMode();
-    this.loadAllData();
-    this.loadUserInfo();
+    console.log('=== ngOnInit() started ===');
+    
+    // Always wait for user to be authenticated - use a promise-based approach
+    const loadPreferencesAndData = async () => {
+      // Wait for user authentication
+      let user = this.authService.currentUser$.value;
+      if (!user) {
+        console.log('User not authenticated, waiting for auth...');
+        // Wait for user to be authenticated
+        await new Promise<void>((resolve) => {
+          const userSub = this.authService.currentUser$.pipe(
+            filter(u => u !== null),
+            take(1)
+          ).subscribe((u) => {
+            user = u;
+            userSub.unsubscribe();
+            resolve();
+          });
+        });
+      }
+      
+      if (user) {
+        console.log('User authenticated:', user.uid);
+        // Load preferences first
+        await this.loadDashboardPreferences();
+        console.log('Preferences loading completed');
+      }
+      
+      // Then load data (this will trigger initializeCards which uses the preferences)
+      this.loadAllData();
+      this.loadUserInfo();
+    };
+    
+    // Start loading
+    loadPreferencesAndData().catch(error => {
+      console.error('Error in ngOnInit:', error);
+      // Fallback: load data anyway
+      this.loadAllData();
+      this.loadUserInfo();
+    });
   }
   
   private loadUserInfo() {
@@ -198,10 +254,8 @@ export class DashboardPage implements OnInit, OnDestroy, AfterViewInit {
   }
   
   ngAfterViewInit() {
-    // Initialize cards after data loads
-    if (!this.isLoading) {
-      this.initializeCards();
-    }
+    // Don't initialize cards here - they'll be initialized when data loads
+    // This prevents double initialization and preserves saved preferences
   }
   
   ngOnDestroy() {
@@ -211,9 +265,11 @@ export class DashboardPage implements OnInit, OnDestroy, AfterViewInit {
   private loadAllData(): void {
     const vansRef = collection(this.firestore, 'vans') as CollectionReference<Van>;
     const inspectionsRef = collection(this.firestore, 'inspections') as CollectionReference<Inspection>;
+    const usersRef = collection(this.firestore, 'users') as CollectionReference<UserProfile>;
     
     const vans$ = collectionData<Van>(vansRef, { idField: 'docId' });
     const inspections$ = collectionData<Inspection>(inspectionsRef, { idField: 'id' });
+    const users$ = collectionData<UserProfile>(usersRef, { idField: 'uid' });
     
     // Get today's plan
     const today = new Date().toISOString().split('T')[0];
@@ -223,13 +279,15 @@ export class DashboardPage implements OnInit, OnDestroy, AfterViewInit {
     );
     
     this.subscriptions.add(
-      combineLatest([vans$, inspections$, todayPlan$]).subscribe({
-        next: ([vans, inspections, plan]) => {
+      combineLatest([vans$, inspections$, users$, todayPlan$]).subscribe({
+        next: ([vans, inspections, users, plan]) => {
           this.ngZone.run(() => {
             this.vans = vans;
             this.inspections = inspections;
+            this.users = users;
             this.todayPlan = plan;
             this.calculateAllStats();
+            console.log('Data loaded, initializing cards. _savedPreferences:', (this as any)._savedPreferences ? 'EXISTS' : 'NULL');
             this.initializeCards();
             this.isLoading = false;
           });
@@ -249,12 +307,25 @@ export class DashboardPage implements OnInit, OnDestroy, AfterViewInit {
     this.calculateInspectionStats();
     this.calculateDriverStats();
     this.calculateOperationalHealth();
+    this.calculateUserStats();
     // Update card values after stats are calculated
     this.updateCardValues();
   }
   
+  private calculateUserStats(): void {
+    const total = this.users.length;
+    const active = this.users.filter(u => u.isActive === true).length;
+    const inactive = this.users.filter(u => u.isActive === false).length;
+    
+    this.userStats = {
+      total,
+      active,
+      inactive
+    };
+  }
+  
   private updateCardValues(): void {
-    // Update card values with latest stats
+    // Update card values with latest stats (this doesn't change order)
     if (this.cardsBySection['vans']) {
       this.cardsBySection['vans'].forEach(card => {
         switch(card.id) {
@@ -262,15 +333,7 @@ export class DashboardPage implements OnInit, OnDestroy, AfterViewInit {
         }
       });
     }
-    if (this.cardsBySection['inspections']) {
-      this.cardsBySection['inspections'].forEach(card => {
-        switch(card.id) {
-          case 'insp-today': card.value = this.inspectionStats.today; break;
-          case 'insp-week': card.value = this.inspectionStats.thisWeek; break;
-          case 'insp-month': card.value = this.inspectionStats.thisMonth; break;
-        }
-      });
-    }
+    // Inspection timeframe tile values are handled in the template directly
     if (this.cardsBySection['drivers']) {
       this.cardsBySection['drivers'].forEach(card => {
         switch(card.id) {
@@ -288,8 +351,25 @@ export class DashboardPage implements OnInit, OnDestroy, AfterViewInit {
         }
       });
     }
-    // Update the flattened array
-    this.updateAllCards();
+    
+    // Update values in allCards array without changing order
+    // Only rebuild if we don't have a saved order (to preserve exact positions)
+    if (!(this as any)._hasSavedOrder) {
+      this.updateAllCards();
+    } else {
+      // Just sync values from cardsBySection to allCards without reordering
+      const cardsMap = new Map(this.allCards.map(c => [c.id, c]));
+      Object.values(this.cardsBySection).forEach(sectionCards => {
+        sectionCards.forEach(card => {
+          const existingCard = cardsMap.get(card.id);
+          if (existingCard) {
+            // Update values but keep position
+            existingCard.value = card.value;
+            existingCard.label = card.label;
+          }
+        });
+      });
+    }
   }
   
   private calculateVanStats(): void {
@@ -353,20 +433,23 @@ export class DashboardPage implements OnInit, OnDestroy, AfterViewInit {
   }
   
   private calculateInspectionStats(): void {
-    const pending = this.inspections.filter(i => i.status === 'pending').length;
-    const approved = this.inspections.filter(i => i.status === 'approved').length;
-    const rejected = this.inspections.filter(i => i.status === 'rejected').length;
-    
     // Time-based stats
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
     const monthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
     
-    const todayCount = this.inspections.filter(i => {
+    // Filter inspections to only today's inspections
+    const todayInspections = this.inspections.filter(i => {
       const created = this.getDateFromTimestamp(i.createdAt);
       return created >= today;
-    }).length;
+    });
+    
+    const pending = todayInspections.filter(i => i.status === 'pending').length;
+    const approved = todayInspections.filter(i => i.status === 'approved').length;
+    const rejected = todayInspections.filter(i => i.status === 'rejected').length;
+    
+    const todayCount = todayInspections.length;
     
     const thisWeekCount = this.inspections.filter(i => {
       const created = this.getDateFromTimestamp(i.createdAt);
@@ -691,6 +774,16 @@ export class DashboardPage implements OnInit, OnDestroy, AfterViewInit {
       this.cdr.detectChanges();
     }
   }
+
+  async onCardClicked(event: { cardId: string }): Promise<void> {
+    // Open pending submissions modal when inspections card is clicked
+    if (event.cardId === 'insp-approved-rejected') {
+      const modal = await this.modalCtrl.create({
+        component: RecentSubmissionsModalComponent,
+      });
+      await modal.present();
+    }
+  }
   
   resetAllTileColors(): void {
     // Clear custom colors from all cards
@@ -725,15 +818,70 @@ export class DashboardPage implements OnInit, OnDestroy, AfterViewInit {
   }
   
   private initializeCards(): void {
+    // Prevent multiple initializations
+    if ((this as any)._cardsInitialized) {
+      console.log('Cards already initialized, skipping');
+      return;
+    }
+    
     // Initialize default cards if not loaded from storage
     if (Object.keys(this.cardsBySection).length === 0) {
       this.createDefaultCards();
     }
-    this.loadCardOrder();
-    this.updateAllCards();
+    
+    // Try to load card order from saved preferences first
+    const savedPreferences = (this as any)._savedPreferences;
+    if (savedPreferences) {
+      console.log('✅ Loading saved preferences:', savedPreferences);
+      
+      // Prefer flat order (exact display order) over section-based order
+      if (savedPreferences.cardsOrder && Array.isArray(savedPreferences.cardsOrder) && savedPreferences.cardsOrder.length > 0) {
+        console.log('Loading card order from flat order:', savedPreferences.cardsOrder);
+        this.loadCardOrderFromFlatOrder(savedPreferences.cardsOrder);
+        // Mark that we have a saved order to prevent re-sorting
+        (this as any)._hasSavedOrder = true;
+      } else if (savedPreferences.cardsOrderBySection) {
+        console.log('Loading card order from section-based order');
+        this.loadCardOrderFromPreferences(savedPreferences.cardsOrderBySection);
+        // Rebuild allCards from cardsBySection to preserve order
+        this.rebuildAllCardsFromSections();
+        // Mark that we have a saved order to prevent re-sorting
+        (this as any)._hasSavedOrder = true;
+      } else {
+        console.log('No saved card order found, using default');
+        this.loadCardOrder();
+        this.updateAllCards();
+      }
+      
+      // Load card colors if available (must be done after cards are loaded)
+      if (savedPreferences.cardColors && Object.keys(savedPreferences.cardColors).length > 0) {
+        console.log('Loading card colors:', savedPreferences.cardColors);
+        // Use setTimeout to ensure cards are fully initialized
+        setTimeout(() => {
+          this.loadCardColors(savedPreferences.cardColors);
+        }, 0);
+      }
+      
+      // Mark as initialized and clear saved preferences after use
+      (this as any)._cardsInitialized = true;
+      (this as any)._savedPreferences = null;
+      console.log('✅ Cards initialized with saved preferences');
+    } else {
+      console.log('No saved preferences found, loading from localStorage');
+      this.loadCardOrder();
+      this.updateAllCards();
+      (this as any)._cardsInitialized = true;
+    }
   }
   
   private updateAllCards(): void {
+    // If we have a saved order, don't re-sort - preserve the exact order
+    if ((this as any)._hasSavedOrder && this.allCards.length > 0) {
+      // Just update card values without changing order
+      console.log('Skipping sort - preserving saved order');
+      return;
+    }
+    
     // Flatten all cards from all sections into a single array
     const allCardsArray: StatCard[] = [];
     Object.values(this.cardsBySection).forEach((sectionCards: StatCard[]) => {
@@ -761,10 +909,8 @@ export class DashboardPage implements OnInit, OnDestroy, AfterViewInit {
       ],
       inspections: [
         { id: 'insp-approved-rejected', sectionId: 'inspections', type: 'card', title: 'Inspections', icon: 'document-text-outline', value: 'custom', label: 'approved-rejected', valueType: 'custom', order: 0, size: '1x1' },
-        { id: 'insp-today', sectionId: 'inspections', type: 'compact', title: 'Today', icon: '', value: this.inspectionStats.today, label: 'Today', valueType: 'number', order: 1, size: '1x1' },
-        { id: 'insp-week', sectionId: 'inspections', type: 'compact', title: 'This Week', icon: '', value: this.inspectionStats.thisWeek, label: 'This Week', valueType: 'number', order: 2, size: '1x1' },
-        { id: 'insp-month', sectionId: 'inspections', type: 'compact', title: 'This Month', icon: '', value: this.inspectionStats.thisMonth, label: 'This Month', valueType: 'number', order: 3, size: '1x1' },
-        { id: 'insp-severity', sectionId: 'inspections', type: 'card', title: 'Issues', icon: 'flag-outline', value: 'custom', label: 'issues', valueType: 'custom', order: 4, size: '2x2' }
+        { id: 'insp-timeframe', sectionId: 'inspections', type: 'card', title: 'Inspection Activity', icon: 'calendar-outline', value: 'custom', label: 'timeframe', valueType: 'custom', order: 1, size: '2x1' },
+        { id: 'insp-severity', sectionId: 'inspections', type: 'card', title: 'Issues', icon: 'flag-outline', value: 'custom', label: 'issues', valueType: 'custom', order: 2, size: '2x2' }
       ],
       drivers: [
         { id: 'driver-active', sectionId: 'drivers', type: 'card', title: 'Active Today', icon: 'person-outline', iconClass: 'icon-info', value: this.driverStats.activeToday, label: 'Drivers assigned', valueType: 'number', order: 0, size: '1x1' },
@@ -773,6 +919,9 @@ export class DashboardPage implements OnInit, OnDestroy, AfterViewInit {
         { id: 'driver-rate', sectionId: 'drivers', type: 'card', title: 'Assignment Rate', icon: 'pie-chart-outline', value: this.driverStats.assignmentRate, label: 'of active vans assigned', valueType: 'percentage', order: 3, size: '1x1' },
         { id: 'driver-coverage', sectionId: 'drivers', type: 'card', title: 'Coverage by Type', icon: 'car-sport-outline', value: 'custom', label: 'coverage', valueType: 'custom', order: 4, size: '2x1' },
         { id: 'driver-top', sectionId: 'drivers', type: 'card', title: 'Most Assigned Drivers', icon: 'star-outline', value: 'custom', label: 'drivers', valueType: 'custom', order: 5, size: '2x2' }
+      ],
+      users: [
+        { id: 'users-active', sectionId: 'users', type: 'card', title: 'Active Users', icon: 'person-outline', iconClass: 'icon-success', value: 'custom', label: 'active-inactive', valueType: 'custom', order: 0, size: '1x1' }
       ],
       health: [
         { id: 'health-ready', sectionId: 'health', type: 'card', title: 'Ready for Service', icon: 'checkmark-circle', value: this.operationalHealth.readyForService, label: 'Active, assigned, and recently inspected', valueType: 'number', order: 0, size: '1x1' }
@@ -814,10 +963,24 @@ export class DashboardPage implements OnInit, OnDestroy, AfterViewInit {
   
   private loadCardOrder(): void {
     try {
-      // Try loading unified order first
-      const saved = localStorage.getItem(this.STORAGE_KEY_CARDS);
+      // Try loading unified order first (check user-specific keys first, then global)
+      const user = this.authService.currentUser$.value;
+      let saved: string | null = null;
+      
+      if (user) {
+        // Try user-specific key first
+        const userStoragePrefix = `dashboard_${user.uid}_`;
+        saved = localStorage.getItem(`${userStoragePrefix}${this.STORAGE_KEY_CARDS}`);
+      }
+      
+      // Fall back to global key if user-specific not found
+      if (!saved) {
+        saved = localStorage.getItem(this.STORAGE_KEY_CARDS);
+      }
+      
       if (saved) {
         const savedOrder = JSON.parse(saved) as string[];
+        console.log('Loading card order from localStorage:', savedOrder);
         // Reorder all cards based on saved order
         const allCardsArray: StatCard[] = [];
         Object.values(this.cardsBySection).forEach((sectionCards: StatCard[]) => {
@@ -831,8 +994,19 @@ export class DashboardPage implements OnInit, OnDestroy, AfterViewInit {
         this.allCards = [...orderedCards, ...newCards];
         this.syncCardsToSections();
       } else {
-        // Fallback to section-based order
-        const savedSectionOrder = localStorage.getItem('statistics_cards_order_by_section');
+        // Fallback to section-based order (check user-specific keys first)
+        const user = this.authService.currentUser$.value;
+        let savedSectionOrder: string | null = null;
+        
+        if (user) {
+          const userStoragePrefix = `dashboard_${user.uid}_`;
+          savedSectionOrder = localStorage.getItem(`${userStoragePrefix}statistics_cards_order_by_section`);
+        }
+        
+        if (!savedSectionOrder) {
+          savedSectionOrder = localStorage.getItem('statistics_cards_order_by_section');
+        }
+        
         if (savedSectionOrder) {
           const savedOrder = JSON.parse(savedSectionOrder) as Record<string, string[]>;
           // Reorder cards based on saved order
@@ -899,6 +1073,39 @@ export class DashboardPage implements OnInit, OnDestroy, AfterViewInit {
         this.cardsBySection[sectionId] = this.cardsBySection[sectionId].filter(
           (card: StatCard) => !['health-attention'].includes(card.id)
         );
+        
+        // Remove old separate timeframe cards if they exist (migration to combined timeframe tile)
+        const hasOldTimeframeCards = this.cardsBySection[sectionId].some(
+          (card: StatCard) => ['insp-today', 'insp-week', 'insp-month'].includes(card.id)
+        );
+        const hasNewTimeframeCard = this.cardsBySection[sectionId].some(
+          (card: StatCard) => card.id === 'insp-timeframe'
+        );
+        
+        if (hasOldTimeframeCards && !hasNewTimeframeCard) {
+          // Remove old individual timeframe cards
+          this.cardsBySection[sectionId] = this.cardsBySection[sectionId].filter(
+            (card: StatCard) => !['insp-today', 'insp-week', 'insp-month'].includes(card.id)
+          );
+          // Add the new combined timeframe card
+          this.cardsBySection[sectionId].push({
+            id: 'insp-timeframe',
+            sectionId: 'inspections',
+            type: 'card',
+            title: 'Inspection Activity',
+            icon: 'calendar-outline',
+            value: 'custom',
+            label: 'timeframe',
+            valueType: 'custom',
+            order: 1,
+            size: '2x1'
+          });
+        } else if (hasOldTimeframeCards && hasNewTimeframeCard) {
+          // Just remove the old ones if new one already exists
+          this.cardsBySection[sectionId] = this.cardsBySection[sectionId].filter(
+            (card: StatCard) => !['insp-today', 'insp-week', 'insp-month'].includes(card.id)
+          );
+        }
       });
       
       this.updateAllCards();
@@ -977,6 +1184,380 @@ export class DashboardPage implements OnInit, OnDestroy, AfterViewInit {
     localStorage.removeItem(this.STORAGE_KEY_SECTIONS_DATA);
     localStorage.removeItem(this.STORAGE_KEY_CARDS);
     localStorage.removeItem('statistics_cards_order_by_section');
+  }
+  
+  async saveDashboardPreferences(): Promise<void> {
+    const user = this.authService.currentUser$.value;
+    if (!user) {
+      const toast = await this.toastCtrl.create({
+        message: 'You must be logged in to save preferences',
+        color: 'warning',
+        duration: 2000,
+        position: 'top'
+      });
+      await toast.present();
+      return;
+    }
+    
+    try {
+      // Ensure allCards is up to date before saving
+      if (this.allCards.length === 0) {
+        console.warn('allCards is empty, cannot save preferences');
+        const toast = await this.toastCtrl.create({
+          message: 'No cards to save. Please wait for the dashboard to load.',
+          color: 'warning',
+          duration: 2000,
+          position: 'top'
+        });
+        await toast.present();
+        return;
+      }
+      
+      // Capture the EXACT current order of tiles as they appear on screen
+      // Create a copy of allCards to preserve the exact order without any modifications
+      const currentCardOrder = [...this.allCards].map(c => c.id);
+      console.log('Saving card order:', currentCardOrder);
+      console.log('Total cards:', this.allCards.length);
+      
+      // Collect all dashboard preferences including card colors
+      const cardColors: Record<string, string> = {};
+      this.allCards.forEach(card => {
+        if (card.customColor) {
+          cardColors[card.id] = card.customColor;
+        }
+      });
+      console.log('Saving card colors:', cardColors);
+      
+      // Save the exact order as displayed (preserving current tile positions)
+      // Include userId to ensure preferences are associated with the correct user
+      const preferences = {
+        userId: user.uid, // Store user ID to verify ownership
+        sections: this.sections.map(s => s.id),
+        sectionsData: this.sections,
+        cardsOrder: currentCardOrder, // Exact order as currently displayed - this preserves tile positions
+        cardsOrderBySection: this.getCardsOrderBySection(), // Order within each section
+        cardColors: cardColors,
+        editMode: this.isEditMode,
+        savedAt: new Date().toISOString()
+      };
+      
+      console.log('Saving preferences to Firestore for user:', user.uid);
+      
+      // Save to Firestore user document (user-specific storage)
+      const userRef = doc(this.firestore, 'users', user.uid);
+      console.log('Updating Firestore document at path:', userRef.path);
+      console.log('Preferences object structure:', {
+        userId: preferences.userId,
+        sectionsCount: preferences.sections?.length,
+        cardsOrderCount: preferences.cardsOrder?.length,
+        hasCardColors: !!preferences.cardColors && Object.keys(preferences.cardColors).length > 0
+      });
+      
+      await updateDoc(userRef, {
+        dashboardPreferences: preferences
+      });
+      
+      // Verify the save by reading it back immediately
+      try {
+        const verifySnap = await getDoc(userRef);
+        if (verifySnap.exists()) {
+          const savedData = verifySnap.data();
+          console.log('Verification - User document exists:', verifySnap.exists());
+          console.log('Verification - Document keys:', Object.keys(savedData));
+          if (savedData['dashboardPreferences']) {
+            const savedPrefs = savedData['dashboardPreferences'];
+            console.log('Verification - dashboardPreferences found:', {
+              userId: savedPrefs.userId,
+              cardsOrderCount: savedPrefs.cardsOrder?.length,
+              hasSectionsData: !!savedPrefs.sectionsData
+            });
+          } else {
+            console.warn('Verification - dashboardPreferences NOT found in saved document!');
+          }
+        } else {
+          console.error('Verification - User document does not exist after save!');
+        }
+      } catch (verifyError) {
+        console.error('Error verifying save:', verifyError);
+      }
+      
+      console.log('Preferences saved to Firestore successfully');
+      
+      // Also save to localStorage as backup with user-specific keys
+      const userStoragePrefix = `dashboard_${user.uid}_`;
+      localStorage.setItem(`${userStoragePrefix}${this.STORAGE_KEY_SECTIONS}`, JSON.stringify(preferences.sections));
+      localStorage.setItem(`${userStoragePrefix}${this.STORAGE_KEY_SECTIONS_DATA}`, JSON.stringify(preferences.sectionsData));
+      localStorage.setItem(`${userStoragePrefix}${this.STORAGE_KEY_CARDS}`, JSON.stringify(preferences.cardsOrder));
+      localStorage.setItem(`${userStoragePrefix}statistics_cards_order_by_section`, JSON.stringify(preferences.cardsOrderBySection));
+      
+      console.log('Preferences also saved to localStorage');
+      
+      // Don't call updateAllCards() or saveCardOrder() here - we want to preserve the exact current state
+      
+      const toast = await this.toastCtrl.create({
+        message: 'Dashboard preferences saved successfully!',
+        color: 'success',
+        duration: 2000,
+        position: 'top'
+      });
+      await toast.present();
+    } catch (error) {
+      console.error('Error saving dashboard preferences for user:', user.uid, error);
+      const toast = await this.toastCtrl.create({
+        message: 'Failed to save preferences. Please try again.',
+        color: 'danger',
+        duration: 2000,
+        position: 'top'
+      });
+      await toast.present();
+    }
+  }
+  
+  private getCardsOrderBySection(): Record<string, string[]> {
+    const orderBySection: Record<string, string[]> = {};
+    Object.keys(this.cardsBySection).forEach(sectionId => {
+      orderBySection[sectionId] = this.cardsBySection[sectionId].map(card => card.id);
+    });
+    return orderBySection;
+  }
+  
+  private async loadDashboardPreferences(): Promise<void> {
+    console.log('=== loadDashboardPreferences() called ===');
+    const user = this.authService.currentUser$.value;
+    console.log('Current user:', user ? { uid: user.uid, email: user.email } : 'null');
+    
+    let preferences: any = null;
+    
+    // Try to load from Firestore first (user-specific preferences)
+    if (user) {
+      try {
+        console.log('Loading preferences from Firestore for user:', user.uid);
+        const userRef = doc(this.firestore, 'users', user.uid);
+        console.log('User ref path:', userRef.path);
+        
+        const userSnap = await getDoc(userRef);
+        console.log('User document exists:', userSnap.exists());
+        
+        if (userSnap.exists()) {
+          const userData = userSnap.data();
+          console.log('User document data keys:', Object.keys(userData));
+          console.log('Full user data:', userData);
+          
+          if (userData && userData['dashboardPreferences']) {
+            preferences = userData['dashboardPreferences'];
+            console.log('Found dashboard preferences:', preferences);
+            console.log('Preferences keys:', preferences ? Object.keys(preferences) : 'null');
+            
+            // Verify that preferences belong to the current user
+            if (preferences.userId && preferences.userId !== user.uid) {
+              console.warn('Dashboard preferences userId mismatch. Expected:', user.uid, 'Got:', preferences.userId);
+              preferences = null; // Don't use preferences from wrong user
+            } else {
+              console.log('Preferences validated for user:', user.uid);
+            }
+          } else {
+            console.log('No dashboardPreferences found in user document. Available keys:', Object.keys(userData || {}));
+          }
+        } else {
+          console.log('User document does not exist in Firestore');
+        }
+      } catch (error) {
+        console.error('Error loading dashboard preferences from Firestore for user:', user.uid, error);
+        console.error('Error details:', error);
+      }
+    } else {
+      console.log('No user authenticated, skipping Firestore load');
+    }
+    
+    console.log('Preferences loaded from Firestore:', preferences ? 'YES' : 'NO');
+    
+    // Load sections
+    if (preferences?.sectionsData && Array.isArray(preferences.sectionsData)) {
+      this.sections = preferences.sectionsData;
+    } else if (preferences?.sections && Array.isArray(preferences.sections)) {
+      // Fallback to order only
+      const order = preferences.sections;
+      this.sections = this.DEFAULT_SECTIONS
+        .map(s => {
+          const index = order.indexOf(s.id);
+          return index >= 0 ? { ...s, order: index } : { ...s, order: 999 };
+        })
+        .sort((a, b) => a.order - b.order);
+    } else {
+      // Fall back to localStorage (try user-specific keys first, then global)
+      const user = this.authService.currentUser$.value;
+      if (user) {
+        const userStoragePrefix = `dashboard_${user.uid}_`;
+        const userSectionsData = localStorage.getItem(`${userStoragePrefix}${this.STORAGE_KEY_SECTIONS_DATA}`);
+        if (userSectionsData) {
+          try {
+            const savedSections = JSON.parse(userSectionsData) as StatisticsSection[];
+            const defaultIds = new Set(this.DEFAULT_SECTIONS.map(s => s.id));
+            const customSections = savedSections.filter(s => defaultIds.has(s.id));
+            const missingSections = this.DEFAULT_SECTIONS.filter(s => !customSections.find(cs => cs.id === s.id));
+            this.sections = [...customSections, ...missingSections].sort((a, b) => a.order - b.order);
+          } catch (error) {
+            console.error('Error loading user-specific sections from localStorage:', error);
+            this.loadSectionOrder();
+          }
+        } else {
+          this.loadSectionOrder();
+        }
+      } else {
+        this.loadSectionOrder();
+      }
+    }
+    
+    // Don't restore edit mode from preferences - always start in non-edit mode
+    // Edit mode should only be activated when the user explicitly clicks the button
+    this.isEditMode = false;
+    
+    // Store preferences for later use when cards are initialized
+    if (preferences) {
+      console.log('✅ Storing preferences for card initialization');
+      console.log('Preferences structure:', {
+        hasCardsOrder: !!preferences.cardsOrder,
+        cardsOrderLength: preferences.cardsOrder?.length,
+        hasSectionsData: !!preferences.sectionsData,
+        hasCardColors: !!preferences.cardColors
+      });
+      (this as any)._savedPreferences = preferences;
+      console.log('_savedPreferences set:', (this as any)._savedPreferences ? 'YES' : 'NO');
+    } else {
+      console.log('❌ No preferences to store, _savedPreferences will remain null');
+      console.log('Will fall back to localStorage when initializing cards');
+      (this as any)._savedPreferences = null;
+    }
+    console.log('=== loadDashboardPreferences() completed ===');
+  }
+  
+  private loadCardOrderFromPreferences(cardsOrderBySection: Record<string, string[]>): void {
+    // Rebuild cardsBySection based on saved order, preserving exact order
+    const newCardsBySection: Record<string, StatCard[]> = {};
+    
+    // First, collect all cards into a map for quick lookup
+    const allCardsMap = new Map<string, StatCard>();
+    Object.values(this.cardsBySection).forEach(sectionCards => {
+      sectionCards.forEach(card => {
+        allCardsMap.set(card.id, card);
+      });
+    });
+    
+    // Rebuild sections in saved order
+    Object.keys(cardsOrderBySection).forEach(sectionId => {
+      const cardIds = cardsOrderBySection[sectionId];
+      const sectionCards: StatCard[] = [];
+      
+      cardIds.forEach(cardId => {
+        const card = allCardsMap.get(cardId);
+        if (card) {
+          // Create a copy with the correct sectionId
+          sectionCards.push({ ...card, sectionId });
+          allCardsMap.delete(cardId); // Remove from map so we don't add it twice
+        }
+      });
+      
+      if (sectionCards.length > 0) {
+        newCardsBySection[sectionId] = sectionCards;
+      }
+    });
+    
+    // Add any remaining cards that weren't in the saved order to their original sections
+    allCardsMap.forEach((card, cardId) => {
+      const originalSectionId = card.sectionId || 'other';
+      if (!newCardsBySection[originalSectionId]) {
+        newCardsBySection[originalSectionId] = [];
+      }
+      newCardsBySection[originalSectionId].push(card);
+    });
+    
+    this.cardsBySection = newCardsBySection;
+    // Don't call updateAllCards here - we'll rebuild allCards from the saved flat order instead
+  }
+  
+  private loadCardOrderFromFlatOrder(cardIds: string[]): void {
+    // Rebuild cards in the exact saved order (preserving display order)
+    const allCardsMap = new Map<string, StatCard>();
+    
+    // Collect all cards into a map
+    Object.values(this.cardsBySection).forEach(sectionCards => {
+      sectionCards.forEach(card => {
+        allCardsMap.set(card.id, card);
+      });
+    });
+    
+    // Build ordered array in exact saved order
+    const orderedCards: StatCard[] = [];
+    const foundCardIds = new Set<string>();
+    
+    cardIds.forEach(cardId => {
+      const card = allCardsMap.get(cardId);
+      if (card) {
+        orderedCards.push(card);
+        foundCardIds.add(cardId);
+      }
+    });
+    
+    // Add any remaining cards that weren't in saved order (new cards that were added)
+    allCardsMap.forEach((card, cardId) => {
+      if (!foundCardIds.has(cardId)) {
+        orderedCards.push(card);
+      }
+    });
+    
+    // Set allCards directly to preserve exact order (don't re-sort)
+    this.allCards = orderedCards;
+    
+    // Rebuild cardsBySection from ordered allCards to keep sections in sync
+    this.rebuildSectionsFromAllCards();
+  }
+  
+  private rebuildSectionsFromAllCards(): void {
+    // Rebuild cardsBySection from allCards to keep them in sync
+    const newCardsBySection: Record<string, StatCard[]> = {};
+    this.allCards.forEach(card => {
+      const sectionId = card.sectionId || 'other';
+      if (!newCardsBySection[sectionId]) {
+        newCardsBySection[sectionId] = [];
+      }
+      newCardsBySection[sectionId].push(card);
+    });
+    this.cardsBySection = newCardsBySection;
+  }
+  
+  private rebuildAllCardsFromSections(): void {
+    // Rebuild allCards from cardsBySection preserving order within each section
+    const allCardsArray: StatCard[] = [];
+    // Iterate sections in order
+    this.sections.forEach(section => {
+      if (this.cardsBySection[section.id]) {
+        allCardsArray.push(...this.cardsBySection[section.id]);
+      }
+    });
+    // Add any cards in sections not in the sections array
+    Object.keys(this.cardsBySection).forEach(sectionId => {
+      if (!this.sections.find(s => s.id === sectionId)) {
+        allCardsArray.push(...this.cardsBySection[sectionId]);
+      }
+    });
+    this.allCards = allCardsArray;
+  }
+  
+  private loadCardColors(cardColors: Record<string, string>): void {
+    // Apply saved colors to cards
+    Object.keys(cardColors).forEach(cardId => {
+      const card = this.allCards.find(c => c.id === cardId);
+      if (card) {
+        card.customColor = cardColors[cardId];
+      }
+      // Also update in cardsBySection
+      Object.keys(this.cardsBySection).forEach(sectionId => {
+        const sectionCard = this.cardsBySection[sectionId].find(c => c.id === cardId);
+        if (sectionCard) {
+          sectionCard.customColor = cardColors[cardId];
+        }
+      });
+    });
   }
   
   getCardsForSection(sectionId: string): StatCard[] {
