@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Van } from '../models/van.model';
 import { map } from 'rxjs';
-import { Firestore, collection, addDoc, doc, deleteDoc } from '@angular/fire/firestore';
+import { Firestore, collection, addDoc, doc, deleteDoc, setDoc } from '@angular/fire/firestore';
 
 @Injectable({
   providedIn: 'root'
@@ -39,11 +39,48 @@ export class VanService {
     return maxNumber + 1;
   }
 
-  /** Add a new van to Firestore */
+  /** 
+   * Sanitize vanId to create a valid Firestore document ID
+   * Firestore document IDs can contain letters, numbers, and: -, _, /
+   */
+  private sanitizeDocumentId(vanId: string): string {
+    if (!vanId || !vanId.trim()) {
+      throw new Error('Van ID cannot be empty');
+    }
+    
+    // Replace spaces and invalid characters with underscores
+    // Keep only alphanumeric characters, hyphens, underscores, and forward slashes
+    let sanitized = vanId
+      .trim()
+      .replace(/[^a-zA-Z0-9\-_\/]/g, '_')
+      .replace(/\s+/g, '_')
+      .replace(/_{2,}/g, '_') // Replace multiple underscores with single underscore
+      .substring(0, 150); // Firestore has a 1500 byte limit, but we'll be conservative
+    
+    // Ensure it doesn't start or end with underscore or hyphen
+    sanitized = sanitized.replace(/^[_-]+|[_-]+$/g, '');
+    
+    if (!sanitized || sanitized.length === 0) {
+      throw new Error('Van ID resulted in invalid document ID after sanitization');
+    }
+    
+    return sanitized;
+  }
+
+  /** Add a new van to Firestore using vanId as the document ID */
   async addVan(vanData: Omit<Van, 'docId'>): Promise<string> {
-    const vansRef = collection(this.firestore, 'vans');
-    const docRef = await addDoc(vansRef, vanData);
-    return docRef.id;
+    // Use vanId as the document ID
+    if (!vanData.vanId || !vanData.vanId.trim()) {
+      throw new Error('Van ID is required to create a document');
+    }
+    
+    const documentId = this.sanitizeDocumentId(vanData.vanId);
+    const vanDocRef = doc(this.firestore, 'vans', documentId);
+    
+    // Use setDoc to create document with custom ID
+    await setDoc(vanDocRef, vanData);
+    
+    return documentId;
   }
 
   /** Delete a van from Firestore */

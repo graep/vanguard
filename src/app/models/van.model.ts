@@ -5,6 +5,7 @@ export interface Van {
   VIN: string;
   type: string;
   number: number;
+  vanId?: string; // For all vehicles, stores the unique ID like "Budget 1", "LMR 4805", or "U-Haul 1"
   isGrounded: boolean;
   
   // Vehicle Information

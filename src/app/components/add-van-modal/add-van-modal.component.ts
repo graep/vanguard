@@ -30,6 +30,7 @@ import { VanService } from '../../services/van.service';
               [(ngModel)]="vanData.type" 
               name="type" 
               placeholder="Van type *"
+              (ionChange)="onTypeChange()"
               required>
               <ion-select-option value="EDV">EDV</ion-select-option>
               <ion-select-option value="CDV">CDV</ion-select-option>
@@ -37,13 +38,13 @@ import { VanService } from '../../services/van.service';
             </ion-select>
           </ion-item>
 
-          <!-- Van Number -->
+          <!-- Van ID -->
           <ion-item>
             <ion-input 
               type="text" 
-              [(ngModel)]="vanNumberString" 
-              name="number" 
-              placeholder="Van number *"
+              [(ngModel)]="vanIdString" 
+              name="vanId" 
+              placeholder="Van ID *"
               required>
             </ion-input>
           </ion-item>
@@ -491,6 +492,7 @@ export class AddVanModalComponent {
     VIN: '',
     type: '', // Start empty to show placeholder
     number: 0,
+    vanId: undefined,
     isGrounded: false,
     notes: '',
     imageUrl: '',
@@ -514,7 +516,7 @@ export class AddVanModalComponent {
     }
   };
 
-  vanNumberString = ''; // String version for the input field
+  vanIdString = ''; // String version for the Van ID input field
   isActive = true; // Default to active (not grounded)
   isSubmitting = false;
 
@@ -528,9 +530,12 @@ export class AddVanModalComponent {
   }
 
   onTypeChange() {
-    // Update van number when type changes
-    if (this.vanData.type && this.existingVans.length > 0) {
-      this.vanData.number = this.vanService.getNextVanNumber(this.existingVans, this.vanData.type);
+    // Reset van ID when type changes
+    if (this.vanData.type === 'Rental') {
+      this.vanData.vanId = undefined;
+      this.vanData.number = 0;
+    } else {
+      this.vanData.vanId = undefined;
     }
   }
 
@@ -641,8 +646,24 @@ export class AddVanModalComponent {
     this.isSubmitting = true;
 
     try {
-      // Convert string to number for van number
-      this.vanData.number = parseInt(this.vanNumberString) || 0;
+      // Validate and handle Van ID (required)
+      if (!this.vanIdString || !this.vanIdString.trim()) {
+        throw new Error('Van ID is required');
+      }
+      this.vanData.vanId = this.vanIdString.trim();
+
+      // Handle van number based on vehicle type
+      if (this.vanData.type === 'Rental') {
+        // For rental vehicles, number is set to 0
+        this.vanData.number = 0;
+      } else {
+        // Auto-generate van number for EDV/CDV vehicles
+        if (this.existingVans.length > 0) {
+          this.vanData.number = this.vanService.getNextVanNumber(this.existingVans, this.vanData.type);
+        } else {
+          this.vanData.number = 1; // Start with 1 if no vans exist
+        }
+      }
       
       // Add van to Firestore
       const vanId = await this.vanService.addVan(this.vanData);
@@ -654,8 +675,11 @@ export class AddVanModalComponent {
       };
 
       // Show success message
+      const displayId = this.vanData.vanId 
+        ? this.vanData.vanId
+        : (this.vanData.type === 'Rental' ? 'Rental' : `#${this.vanData.number}`);
       const toast = await this.toastCtrl.create({
-        message: `${this.vanData.type} van #${this.vanData.number} added successfully!`,
+        message: `${this.vanData.type} van ${displayId} added successfully!`,
         duration: 3000,
         color: 'success',
         position: 'top'
@@ -666,12 +690,12 @@ export class AddVanModalComponent {
       this.vanAdded.emit(newVan);
       this.dismiss();
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error adding van:', error);
 
       // Show error message
       const toast = await this.toastCtrl.create({
-        message: 'Failed to add van. Please try again.',
+        message: error.message || 'Failed to add van. Please try again.',
         duration: 4000,
         color: 'danger',
         position: 'top'

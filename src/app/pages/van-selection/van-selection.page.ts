@@ -155,7 +155,39 @@ export class VanSelectionPage implements OnInit, OnDestroy {
   }
 
   /**
-   * Get the appropriate Rental image based on the van's make
+   * Get the appropriate van image based on make, model, and type
+   * @param van The van object
+   * @returns The path to the appropriate van image
+   */
+  getVanImage(van: Van): string {
+    // Use custom image if available
+    if (van.imageUrl) {
+      return van.imageUrl;
+    }
+
+    // Check for Ford Transit (works for any van type)
+    // Use contains check to handle variations like "Transit 250", "Transit Connect", etc.
+    if (van.make && van.model) {
+      const make = van.make.toLowerCase().trim();
+      const model = van.model.toLowerCase().trim();
+      
+      if (make === 'ford' && model.includes('transit')) {
+        return 'assets/Ford_Transit.png';
+      }
+    }
+
+    // For Rental vans, check for Dodge Promaster
+    if (van.type && van.type.toUpperCase() === 'RENTAL') {
+      return this.getRentalImage(van);
+    }
+
+    // Default images based on van type for EDV and CDV
+    const vanType = (van.type || '').toUpperCase();
+    return `assets/${vanType}.jpg`;
+  }
+
+  /**
+   * Get the appropriate Rental image based on the van's make and model
    * @param van The van object
    * @returns The path to the appropriate Rental image
    */
@@ -165,7 +197,20 @@ export class VanSelectionPage implements OnInit, OnDestroy {
     }
     
     const make = van.make.toLowerCase().trim();
+    const model = van.model ? van.model.toLowerCase().trim() : '';
     
+    // Check for Ford Transit first (should have been caught in getVanImage, but double-check here)
+    if (make === 'ford' && model && model.includes('transit')) {
+      return 'assets/Ford_Transit.png';
+    }
+    
+    // Check for Dodge Promaster (Rental only)
+    // Use contains check to handle variations
+    if (make === 'dodge' && model && model.includes('promaster') && van.type && van.type.toUpperCase() === 'RENTAL') {
+      return 'assets/Dodge_Promaster_Rent.jpg';
+    }
+    
+    // Legacy support for make-only checks
     if (make === 'ford') {
       return 'assets/Rental_ford.png';
     } else if (make === 'dodge') {

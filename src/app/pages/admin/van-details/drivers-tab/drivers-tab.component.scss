@@ -78,17 +78,32 @@
     .driver-name {
       font-size: 1rem;
       font-weight: 600;
-      color: var(--ion-color-primary);
+      color: #ffffff;
       padding: 8px 16px;
-      background: rgba(var(--ion-color-primary-rgb), 0.1);
+      background: #1e1e1e;
       border-radius: 10px;
       white-space: nowrap;
       
       &.no-driver {
-        color: var(--ion-color-medium);
-        background: var(--ion-color-light);
+        color: #999999;
+        background: #1e1e1e;
         font-style: italic;
         font-weight: 400;
+      }
+
+      &.clickable {
+        cursor: pointer;
+        transition: all 0.2s ease;
+        
+        &:hover {
+          background: #2a2a2a;
+          transform: translateY(-1px);
+        }
+
+        &:active {
+          transform: translateY(0);
+          background: #252525;
+        }
       }
     }
 
@@ -108,6 +123,21 @@
         color: var(--ion-color-medium);
         margin: 0;
       }
+    }
+  }
+
+  .loading-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--ion-color-medium);
+
+    ion-spinner {
+      margin-bottom: 16px;
+    }
+
+    p {
+      font-size: 0.9rem;
+      margin: 0;
     }
   }
 

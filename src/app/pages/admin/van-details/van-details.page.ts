@@ -104,8 +104,9 @@ export class VanDetailsPage implements OnInit {
       if (this.van) {
         await this.loadLatestInspection();
         // Set layout-level breadcrumb tail with specific van label
+        const displayName = this.getVanDisplayName();
         this.breadcrumbService.setTail([
-          { label: `${this.van.type.toUpperCase()} ${this.van.number}`, icon: 'car' }
+          { label: displayName, icon: 'car' }
         ]);
       }
     } catch (error: any) {
@@ -125,7 +126,8 @@ export class VanDetailsPage implements OnInit {
     const vanDoc = await getDoc(vanDocRef);
     
     if (vanDoc.exists()) {
-      this.van = { docId: vanDoc.id, ...vanDoc.data() } as Van;
+      const data = vanDoc.data();
+      this.van = { docId: vanDoc.id, ...data } as Van;
     } else {
       throw new Error('Van not found');
     }
@@ -147,6 +149,32 @@ export class VanDetailsPage implements OnInit {
 
   getVanTypeLabel(): string {
     return this.van ? this.vanTypeLabels[this.van.type.toUpperCase()] || this.van.type : '';
+  }
+
+  getVanDisplayName(): string {
+    if (!this.van) return 'Unknown';
+    
+    // For rental vans, use vanId property (or docId as fallback)
+    const vanType = this.van.type ? this.van.type.toUpperCase() : '';
+    if (vanType === 'RENTAL') {
+      // Use vanId property first (the original user-entered value)
+      if (this.van.vanId && String(this.van.vanId).trim()) {
+        return String(this.van.vanId).trim();
+      }
+      
+      // Fallback to docId (for new vans, docId is the sanitized vanId)
+      // Convert underscores back to spaces for better display
+      if (this.van.docId) {
+        return this.van.docId.replace(/_/g, ' ');
+      }
+      
+      // If no vanId/docId, don't show number (which would be 0 for rentals)
+      return 'Unknown';
+    }
+    
+    // For EDV/CDV, use type and number
+    const type = this.van.type ? this.van.type.toUpperCase() : '';
+    return this.van.number != null ? `${type} ${this.van.number}` : 'Unknown';
   }
 
   getVehicleInfo(): string {
@@ -295,8 +323,19 @@ export class VanDetailsPage implements OnInit {
     if (this.van.imageUrl) {
       return this.van.imageUrl;
     }
+
+    // Check for Ford Transit (works for any van type)
+    // Use contains check to handle variations like "Transit 250", "Transit Connect", etc.
+    if (this.van.make && this.van.model) {
+      const make = this.van.make.toLowerCase().trim();
+      const model = this.van.model.toLowerCase().trim();
+      
+      if (make === 'ford' && model.includes('transit')) {
+        return 'assets/Ford_Transit.png';
+      }
+    }
     
-    // For Rental vans, use dynamic image based on make
+    // For Rental vans, use dynamic image based on make and model
     if (this.van.type.toUpperCase() === 'RENTAL') {
       return this.getRentalImage(this.van);
     }
@@ -307,7 +346,7 @@ export class VanDetailsPage implements OnInit {
   }
 
   /**
-   * Get the appropriate Rental image based on the van's make
+   * Get the appropriate Rental image based on the van's make and model
    * @param van The van object
    * @returns The path to the appropriate Rental image
    */
@@ -317,7 +356,20 @@ export class VanDetailsPage implements OnInit {
     }
     
     const make = van.make.toLowerCase().trim();
+    const model = van.model ? van.model.toLowerCase().trim() : '';
     
+    // Check for Ford Transit first (should have been caught in getVanImage, but double-check here)
+    if (make === 'ford' && model && model.includes('transit')) {
+      return 'assets/Ford_Transit.png';
+    }
+    
+    // Check for Dodge Promaster (Rental only)
+    // Use contains check to handle variations
+    if (make === 'dodge' && model && model.includes('promaster') && van.type && van.type.toUpperCase() === 'RENTAL') {
+      return 'assets/Dodge_Promaster_Rent.jpg';
+    }
+    
+    // Legacy support for make-only checks
     if (make === 'ford') {
       return 'assets/Rental_ford.png';
     } else if (make === 'dodge') {

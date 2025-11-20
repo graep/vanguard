@@ -23,7 +23,7 @@
             
           <!-- LEFT: info, notes, actions -->
           <div class="van-basic-info">
-            <h1 class="van-title">{{ van.type.toUpperCase() }} {{ van.number }}</h1>
+            <h1 class="van-title">{{ getVanDisplayName() }}</h1>
             <h2 class="van-subtitle">{{ getVanTypeLabel() }}</h2>
 
             <ion-chip [color]="getStatusColor()" class="status-chip">

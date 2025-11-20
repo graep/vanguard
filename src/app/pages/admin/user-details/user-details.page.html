@@ -291,19 +291,21 @@
               <div class="inspection-history-section">
                 <h3>Inspection History</h3>
                 <div class="inspection-list" *ngIf="inspectionHistory.length > 0; else noInspections">
-                  <div class="inspection-item" *ngFor="let inspection of inspectionHistory">
+                  <div class="inspection-item clickable" *ngFor="let inspection of inspectionHistory" (click)="viewInspection(inspection)">
                     <div class="inspection-icon">
                       <ion-icon name="camera"></ion-icon>
                     </div>
                     <div class="inspection-details">
                       <div class="inspection-van">{{ inspection.vanType }} {{ inspection.vanNumber }}</div>
                       <div class="inspection-meta">
-                        <span class="inspection-status" [class]="inspection.status">{{ inspection.status }}</span>
+                        <ion-chip [color]="inspection.status === 'approved' ? 'success' : inspection.status === 'rejected' ? 'danger' : 'warning'" size="small">
+                          <ion-label>{{ inspection.status | titlecase }}</ion-label>
+                        </ion-chip>
                         <span class="inspection-date">{{ inspection.date }}</span>
                       </div>
                     </div>
-                    <ion-button fill="clear" size="small" *ngIf="inspection.reportId">
-                      <ion-icon name="document-text"></ion-icon>
+                    <ion-button fill="clear" size="small" (click)="viewInspection(inspection); $event.stopPropagation()">
+                      <ion-icon name="chevron-forward"></ion-icon>
                     </ion-button>
                   </div>
                 </div>

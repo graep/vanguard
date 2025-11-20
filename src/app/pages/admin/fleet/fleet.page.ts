@@ -175,9 +175,13 @@ export class FleetPage implements OnInit, OnDestroy {
 
   viewVan(van: Van): void {
     // Prime breadcrumb so it shows immediately on navigation
-    if (van && van.type && van.number != null) {
+    if (van && van.type) {
+      // For rental vans, use vanId; for others, use number
+      const displayName = van.type.toUpperCase() === 'RENTAL' 
+        ? (van.vanId || 'Unknown')
+        : (van.number != null ? `${van.number}` : 'Unknown');
       this.breadcrumbService.setTail([
-        { label: `${(van.type || '').toUpperCase()} ${van.number}`, icon: 'car' }
+        { label: displayName, icon: 'car' }
       ]);
     }
     // Navigate to the dynamic van detail page using the van's docId
@@ -237,17 +241,64 @@ export class FleetPage implements OnInit, OnDestroy {
   }
 
   /**
-   * Get the appropriate Rental image based on the van's make
+   * Get the appropriate van image based on make, model, and type
+   * @param van The van object
+   * @returns The path to the appropriate van image
+   */
+  getVanImage(van: Van): string {
+    // Use custom image if available
+    if (van.imageUrl) {
+      return van.imageUrl;
+    }
+
+    // Check for Ford Transit (works for any van type)
+    // Use contains check to handle variations like "Transit 250", "Transit Connect", etc.
+    // Handle both undefined and empty string cases
+    if (van.make && van.make.trim() && van.model && van.model.trim()) {
+      const make = van.make.toLowerCase().trim();
+      const model = van.model.toLowerCase().trim();
+      
+      if (make === 'ford' && model.includes('transit')) {
+        return 'assets/Ford_Transit.png';
+      }
+    }
+
+    // For Rental vans, check for Dodge Promaster
+    if (van.type && van.type.toUpperCase() === 'RENTAL') {
+      return this.getRentalImage(van);
+    }
+
+    // Default images based on van type for EDV and CDV
+    const vanType = (van.type || '').toUpperCase();
+    return `assets/${vanType}.jpg`;
+  }
+
+  /**
+   * Get the appropriate Rental image based on the van's make and model
    * @param van The van object
    * @returns The path to the appropriate Rental image
    */
   getRentalImage(van: Van): string {
-    if (!van.make) {
+    // Handle both undefined and empty string cases
+    if (!van.make || !van.make.trim()) {
       return 'assets/Rental.jpg'; // Default fallback
     }
     
     const make = van.make.toLowerCase().trim();
+    const model = van.model && van.model.trim() ? van.model.toLowerCase().trim() : '';
     
+    // Check for Ford Transit first (should have been caught in getVanImage, but double-check here)
+    if (make === 'ford' && model && model.includes('transit')) {
+      return 'assets/Ford_Transit.png';
+    }
+    
+    // Check for Dodge Promaster (Rental only)
+    // Use contains check to handle variations
+    if (make === 'dodge' && model && model.includes('promaster') && van.type && van.type.toUpperCase() === 'RENTAL') {
+      return 'assets/Dodge_Promaster_Rent.jpg';
+    }
+    
+    // Legacy support for make-only checks
     if (make === 'ford') {
       return 'assets/Rental_ford.png';
     } else if (make === 'dodge') {

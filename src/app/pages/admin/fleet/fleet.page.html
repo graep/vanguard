@@ -33,7 +33,7 @@
         <div class="van-grid">
           <div class="van-card" *ngFor="let van of filteredEdvs" [class.active]="!van.isGrounded" [class.grounded]="van.isGrounded" (click)="viewVan(van)">
             <div class="van-card-content">
-              <img [src]="'assets/EDV.jpg'" alt="EDV" class="van-image"/>
+              <img [src]="getVanImage(van)" alt="EDV" class="van-image"/>
               <div class="van-details">
                 <h4 class="van-id">{{ van.number || 'Unknown' }}</h4>
                 <div class="van-vin">{{ van.VIN || 'No VIN Available' }}</div>
@@ -52,7 +52,7 @@
         <div class="van-grid">
           <div class="van-card" *ngFor="let van of filteredCdvs" [class.active]="!van.isGrounded" [class.grounded]="van.isGrounded" (click)="viewVan(van)">
             <div class="van-card-content">
-              <img [src]="'assets/CDV.jpg'" alt="CDV" class="van-image"/>
+              <img [src]="getVanImage(van)" alt="CDV" class="van-image"/>
               <div class="van-details">
                 <h4 class="van-id">{{ van.number || 'Unknown' }}</h4>
                 <div class="van-vin">{{ van.VIN || 'No VIN Available' }}</div>
@@ -72,9 +72,9 @@
           <!-- Rental Van Cards -->
           <div class="van-card" *ngFor="let van of filteredRentals" [class.active]="!van.isGrounded" [class.grounded]="van.isGrounded" (click)="viewVan(van)">
             <div class="van-card-content">
-              <img [src]="getRentalImage(van)" alt="Rental" class="van-image"/>
+              <img [src]="getVanImage(van)" alt="Rental" class="van-image"/>
               <div class="van-details">
-                <h4 class="van-id">{{ van.number || 'Unknown' }}</h4>
+                <h4 class="van-id">{{ van.vanId || 'Unknown' }}</h4>
                 <div class="van-vin">{{ van.VIN || 'No VIN Available' }}</div>
               </div>
               <div class="van-actions">

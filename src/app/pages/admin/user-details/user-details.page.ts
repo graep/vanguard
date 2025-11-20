@@ -16,10 +16,12 @@ import {
   AlertController,
   ToastController
 } from '@ionic/angular/standalone';
-import { Firestore, doc, getDoc, setDoc } from '@angular/fire/firestore';
+import { Firestore, doc, getDoc, setDoc, collection, query, where, orderBy, getDocs } from '@angular/fire/firestore';
 import { UserProfile, Role, AuthService } from '../../../services/auth.service';
 import { BreadcrumbService } from '@app/services/breadcrumb.service';
 import { UserManagementService } from '../../../services/user-management.service';
+import { InspectionService, Inspection } from '../../../services/inspection.service';
+import { Timestamp } from 'firebase/firestore';
 
 @Component({
   selector: 'app-user-details',
@@ -51,6 +53,7 @@ export class UserDetailsPage implements OnInit {
   private breadcrumbService = inject(BreadcrumbService);
   private authService = inject(AuthService);
   private userManagement = inject(UserManagementService);
+  private inspectionService = inject(InspectionService);
 
   user: UserProfile | null = null;
   loading = true;
@@ -99,6 +102,9 @@ export class UserDetailsPage implements OnInit {
         this.breadcrumbService.setTail([
           { label: this.getDisplayName(), icon: 'person' }
         ]);
+        // Load inspections and stats
+        await this.loadInspections(userId);
+        this.updateOverviewStats();
       }
     } catch (error: any) {
       this.errorMsg = error.message || 'Failed to load user data';
@@ -348,6 +354,122 @@ export class UserDetailsPage implements OnInit {
 
   goBack() {
     this.router.navigate(['/admin/users']);
+  }
+
+  private async loadInspections(userId: string): Promise<void> {
+    try {
+      console.log('[UserDetails] Loading inspections for user:', userId);
+      const inspectionsRef = collection(this.firestore, 'inspections');
+      const q = query(
+        inspectionsRef,
+        where('createdBy', '==', userId),
+        orderBy('createdAt', 'desc')
+      );
+      
+      const querySnapshot = await getDocs(q);
+      console.log('[UserDetails] Found', querySnapshot.docs.length, 'inspections');
+      
+      this.inspectionHistory = querySnapshot.docs.map(doc => {
+        const data = doc.data();
+        let createdAt: Date;
+        
+        if (data['createdAt'] instanceof Timestamp) {
+          createdAt = data['createdAt'].toDate();
+        } else if (data['createdAt'] instanceof Date) {
+          createdAt = data['createdAt'];
+        } else if (data['createdAt']) {
+          createdAt = new Date(data['createdAt']);
+        } else {
+          createdAt = new Date(); // Fallback
+        }
+        
+        return {
+          id: doc.id,
+          vanType: data['vanType'] || '',
+          vanNumber: data['vanNumber'] || '',
+          status: data['status'] || 'pending',
+          date: this.formatDate(createdAt),
+          createdAt: createdAt,
+          reportId: doc.id
+        };
+      });
+      
+      console.log('[UserDetails] Processed', this.inspectionHistory.length, 'inspections');
+    } catch (error: any) {
+      console.error('[UserDetails] Error loading inspections:', error);
+      console.error('[UserDetails] Error code:', error?.code);
+      console.error('[UserDetails] Error message:', error?.message);
+      
+      // If it's a missing index error, try without orderBy as fallback
+      if (error?.code === 'failed-precondition') {
+        console.warn('[UserDetails] Index missing, trying query without orderBy');
+        try {
+          const inspectionsRef = collection(this.firestore, 'inspections');
+          const q = query(
+            inspectionsRef,
+            where('createdBy', '==', userId)
+          );
+          
+          const querySnapshot = await getDocs(q);
+          this.inspectionHistory = querySnapshot.docs.map(doc => {
+            const data = doc.data();
+            let createdAt: Date;
+            
+            if (data['createdAt'] instanceof Timestamp) {
+              createdAt = data['createdAt'].toDate();
+            } else if (data['createdAt'] instanceof Date) {
+              createdAt = data['createdAt'];
+            } else if (data['createdAt']) {
+              createdAt = new Date(data['createdAt']);
+            } else {
+              createdAt = new Date();
+            }
+            
+            return {
+              id: doc.id,
+              vanType: data['vanType'] || '',
+              vanNumber: data['vanNumber'] || '',
+              status: data['status'] || 'pending',
+              date: this.formatDate(createdAt),
+              createdAt: createdAt,
+              reportId: doc.id
+            };
+          });
+          
+          // Sort manually by date descending
+          this.inspectionHistory.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+          console.log('[UserDetails] Loaded', this.inspectionHistory.length, 'inspections (without index)');
+        } catch (fallbackError) {
+          console.error('[UserDetails] Fallback query also failed:', fallbackError);
+          this.inspectionHistory = [];
+        }
+      } else {
+        this.inspectionHistory = [];
+      }
+    }
+  }
+
+  private updateOverviewStats(): void {
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    
+    this.overviewStats.totalInspections = this.inspectionHistory.length;
+    this.overviewStats.inspectionsThisMonth = this.inspectionHistory.filter(inspection => {
+      return inspection.createdAt >= startOfMonth;
+    }).length;
+    
+    // TODO: Load other stats (vansAssigned, issuesReported, notesAdded) from other services
+  }
+
+  viewInspection(inspection: any): void {
+    if (inspection.id) {
+      // Prime breadcrumb for Van Report
+      this.breadcrumbService.setTail([
+        { label: `${inspection.vanType} ${inspection.vanNumber}`, icon: 'car' },
+        { label: 'Van Report' }
+      ]);
+      this.router.navigate(['/admin/van-report', inspection.id]);
+    }
   }
 }
 
