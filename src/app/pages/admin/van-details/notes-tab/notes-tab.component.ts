@@ -122,9 +122,19 @@ import { NotesHistoryService, NoteEntry } from '../../../../services/notes-histo
         }
         
         h3 {
+          font-family: 'Montserrat', 'TikTok Sans', sans-serif;
           font-size: 1.2rem;
-          font-weight: 600;
-          color: var(--ion-color-dark);
+          font-weight: 800;
+          letter-spacing: -0.02em;
+          color: #ffffff;
+          text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+          background: linear-gradient(135deg, #ffffff 0%, #e0e0e0 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          text-transform: uppercase;
+          position: relative;
+          z-index: 1;
           margin: 0 0 8px 0;
           
           @media (max-width: 480px) {

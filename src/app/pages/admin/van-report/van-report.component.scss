@@ -20,6 +20,9 @@
     overflow: visible !important;
     // Don't create stacking context that could trap fixed elements
     isolation: auto !important;
+    // Add padding to account for sticky breadcrumb
+    --padding-top: 60px;
+    scroll-padding-top: 60px;
   }
 }
 
@@ -27,17 +30,30 @@
 .content-container {
   --background: #1e293b;
   min-height: 100vh;
-  max-width: 1200px;
   width: 100%;
-  margin: 0 auto;
-  padding: 12px;
-
-  @media (max-width: 768px) {
-    padding: 0;
+  margin: 0;
+  padding: 20px;
+  
+  // Laptop and above: expand to fill available space (like dashboard)
+  @media (min-width: 1024px) {
+    max-width: none;
     margin: 0;
+  }
+  
+  @media (max-width: 768px) {
+    padding: 0; // Remove padding to match inner-scroll position
+    margin: 0; // Remove margin to start at edge
     width: 100%;
     max-width: 100%;
-    margin-top: 16px;
+    margin-top: 16px; // Add top margin
+  }
+  
+  @media (max-width: 430px) {
+    padding: 0; // Remove padding to match inner-scroll position
+    margin: 0; // Remove margin to start at edge
+    width: 100%;
+    max-width: 100%;
+    margin-top: 12px; // Add top margin
   }
 }
 
@@ -68,17 +84,170 @@
   }
 }
 
+// Reports header with background logo
+.reports-header {
+  position: relative;
+  z-index: 100;
+  margin-bottom: 2rem;
+  padding: 0 16px;
+  min-height: 200px;
+  height: 200px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: flex-start;
+  
+  @media (max-width: 768px) {
+    margin-bottom: 1.5rem;
+    padding: 0 16px;
+    min-height: auto;
+    height: auto;
+  }
+  
+  @media (max-width: 430px) {
+    margin-bottom: 0;
+    margin-top: 2rem;
+    padding: 0 12px;
+    min-height: auto;
+    height: auto;
+  }
+  
+  // More room on sides for tablet and 426px and below
+  @media (max-width: 1023px) and (min-width: 767px) {
+    padding: 0 20px;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+    min-height: auto;
+    height: auto;
+  }
+  
+  @media (max-width: 430px) {
+    margin-top: 2rem;
+    padding: 0 20px;
+    padding-top: 2.5rem;
+    padding-bottom: 0;
+    min-height: auto;
+    height: auto;
+  }
+  
+  // More space on top and bottom for title div from 425px to 767px
+  @media (max-width: 767px) and (min-width: 425px) {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
+  
+  // Background image centered in the container
+  &::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 300px;
+    height: 300px;
+    background-image: url('/assets/5L3R_logo2.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    opacity: 0.2;
+    z-index: 0;
+    pointer-events: none;
+  }
+  
+  @media (max-width: 768px) {
+    &::before {
+      width: 250px;
+      height: 250px;
+    }
+  }
+  
+  // More space on top and bottom for title div from 425px to 767px - show logo
+  @media (max-width: 767px) and (min-width: 425px) {
+    padding-top: 1.5rem;
+    padding-bottom: 1.5rem;
+    position: relative;
+    justify-content: flex-end;
+    align-items: flex-start;
+    
+    // Show logo behind title with 0.2 opacity
+    &::before {
+      display: block;
+      opacity: 0.2;
+      width: 200px;
+      height: 200px;
+      z-index: 0;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+  }
+  
+  // Tablet: More space on top and bottom for title div, position to bottom left, show logo
+  @media (max-width: 1023px) and (min-width: 768px) {
+    padding-top: 1.5rem;
+    padding-bottom: 1.5rem;
+    position: relative;
+    justify-content: flex-end;
+    align-items: flex-start;
+    
+    // Show logo behind title with 0.2 opacity
+    &::before {
+      display: block;
+      opacity: 0.2;
+      width: 250px;
+      height: 250px;
+      z-index: 0;
+    }
+  }
+  
+  // More space on top and bottom for title div at 424px and below
+  @media (max-width: 430px) {
+    padding-top: 2rem;
+    padding-bottom: 0;
+    position: relative;
+    justify-content: flex-end;
+    align-items: flex-start;
+    
+    // Show logo behind title with 0.2 opacity
+    &::before {
+      display: block;
+      opacity: 0.2;
+      width: 200px;
+      height: 200px;
+      z-index: 0;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+  }
+}
+
 // Reports section title - h1, bigger, no margins, aligned with boxes
 h1.section-title.reports-title,
 .section-title.reports-title {
-  font-size: 2rem;
-  font-weight: 700;
-  margin: 10px 0 10px 20px !important;
+  font-family: 'Montserrat', 'TikTok Sans', sans-serif;
+  font-size: 2.5rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0;
   padding: 0;
+  display: block !important;
+  visibility: visible !important;
+  position: relative !important;
+  z-index: 1 !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  background: linear-gradient(135deg, #ffffff 0%, #e0e0e0 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-transform: uppercase;
   
   @media (max-width: 768px) {
+    font-size: 1.75rem;
+  }
+  
+  @media (max-width: 430px) {
     font-size: 1.5rem;
-    margin: 10px 0 10px 20px !important;
   }
 }
 
@@ -90,7 +259,7 @@ h1.section-title.reports-title,
   perspective: none !important;
   filter: none !important;
   
-  @media (min-width: 768px) {
+  @media (min-width: 431px) {
     ion-grid {
       padding: 0;
       margin: 0;
@@ -135,10 +304,11 @@ h1.section-title.reports-title,
 .photos-titles {
   display: none;
   
-  @media (min-width: 768px) {
+  @media (min-width: 431px) {
     display: grid;
     grid-template-columns: 1fr auto 1fr;
     gap: 0;
+    margin-top: 0.5rem;
     margin-bottom: 0.5rem;
     margin-left: 0;
     margin-right: 0;
@@ -167,6 +337,19 @@ h1.section-title.reports-title,
   @media (max-width: 768px) {
     font-size: 1.25rem;
   }
+  
+  // Match main title font for 430px and above
+  @media (min-width: 430px) {
+    font-family: 'Montserrat', 'TikTok Sans', sans-serif;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    text-transform: uppercase;
+    background: linear-gradient(135deg, #ffffff 0%, #e0e0e0 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
 }
 
 // Align left title with first photo card
@@ -178,6 +361,11 @@ h1.section-title.reports-title,
   margin: 8px 0 0 20px !important; // Top margin only, no bottom margin
   margin-right: 0 !important;
   padding-right: 0.75rem !important; // Match .photos-row ion-col:first-child padding-right
+  
+  // Align to right side of container for 430px and above
+  @media (min-width: 430px) {
+    text-align: right !important;
+  }
 }
 
 // Align right title with second photo card  
@@ -190,51 +378,106 @@ h1.section-title.reports-title,
   margin-right: 0 !important;
   padding-left: 0.75rem !important; // Match .photos-row ion-col:last-child padding-left
   text-align: left;
+  
+  // Align to right side of container for 430px and above
+  @media (min-width: 430px) {
+    text-align: right !important;
+  }
 }
 
 // Mobile Photos Layout
 .photos-mobile {
-  display: block;
+  display: none;
   
-  @media (min-width: 769px) {
-    display: none;
+  @media (max-width: 430px) {
+    display: block;
+    margin-top: 1rem;
   }
 }
 
-.photo-group {
-  margin-bottom: 2rem;
+// Photo group box for mobile - each side gets its own box
+.photo-group-box {
+  margin-bottom: 1.5rem;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  border-radius: 20px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  transition: all 0.3s ease;
   
-  .photo-group-title {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: var(--ion-color-primary);
-    margin-bottom: 1rem;
-    text-align: center;
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+    border-color: rgba(255, 255, 255, 0.2);
   }
 }
 
-.photo-pair {
+.photo-group-title {
+  font-family: 'Montserrat', 'TikTok Sans', sans-serif;
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0 0 1rem 0;
+  text-align: right;
+  text-transform: uppercase;
+  width: 100%;
+}
+
+// Content area for photos and chevron
+.photo-group-content {
+  padding: 1.5rem;
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 1rem;
+}
+
+// Wrapper for each photo in mobile view
+.photo-wrapper {
+  width: 100%;
+  text-align: center;
   
-  @media (min-width: 430px) {
-    flex-direction: row;
-    gap: 1rem;
+  .photo {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+    
+    &:active {
+      transform: scale(0.98);
+    }
   }
 }
 
-.photo-container {
-  flex: 1;
-  text-align: center;
+// Chevron down container
+.chevron-down-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0;
+  width: 100%;
+}
+
+.chevron-down {
+  font-size: 32px;
+  color: rgba(255, 255, 255, 0.85);
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
+  flex-shrink: 0;
 }
 
 // Desktop Photos Layout
 .photos-desktop {
-  display: none;
+  display: block;
   
-  @media (min-width: 769px) {
-    display: block;
+  @media (max-width: 430px) {
+    display: none;
   }
 }
 
@@ -270,13 +513,27 @@ h1.section-title.reports-title,
   color: rgba(255, 255, 255, 0.7);
   margin-top: 0.5rem;
   font-weight: 500;
+  
+  // Match main title font and align right for 430px and above
+  @media (min-width: 430px) {
+    font-family: 'Montserrat', 'TikTok Sans', sans-serif;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    text-transform: uppercase;
+    background: linear-gradient(135deg, #ffffff 0%, #e0e0e0 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    text-align: right;
+  }
 }
 
 // Arrow containers column between photo columns
 .arrow-containers-col {
   display: none;
 
-  @media (min-width: 768px) {
+  @media (min-width: 431px) {
     display: flex;
     align-items: stretch;
     justify-content: center;
@@ -301,7 +558,7 @@ h1.section-title.reports-title,
   padding-bottom: 16px; // Match ion-card-content padding (16px)
   position: relative; // Allow absolute positioning of arrow containers
 
-  @media (min-width: 768px) {
+  @media (min-width: 431px) {
     display: flex;
   }
 }
@@ -319,7 +576,7 @@ h1.section-title.reports-title,
   // Mobile: match img-wrap spacing (fallback)
   margin-bottom: 1rem;
   
-  @media (min-width: 768px) {
+  @media (min-width: 431px) {
     // On desktop, position will be set absolutely by JavaScript
     // But keep flex display for the icon centering
     margin-bottom: 0;
@@ -334,17 +591,17 @@ h1.section-title.reports-title,
   flex-shrink: 0;
 }
 
-// Desktop alignment: equalize row heights so arrows align picture-to-picture
+// Desktop alignment: allow photos to grow proportionally
 @media (min-width: 900px) {
   .photos-section {
-    --photo-height: 220px; // image area height
     --label-height: 28px;  // label height
     --row-gap: 32px;       // vertical gap between rows
   }
 
   .photo {
-    height: var(--photo-height);
-    object-fit: cover;
+    height: auto; // Allow proportional growth
+    width: 100%;
+    object-fit: contain; // Show full image without cropping
     
     // Ensure expanded state overrides desktop height
     &.expanded {
@@ -357,11 +614,10 @@ h1.section-title.reports-title,
     height: var(--label-height);
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-end; // Align to right to match 430px+ styling
   }
 
   .img-wrap {
-    min-height: calc(var(--photo-height) + var(--label-height));
     margin-bottom: var(--row-gap);
     margin-top: 0; // Ensure consistent top spacing
     display: flex;
@@ -424,11 +680,96 @@ h1.section-title.reports-title,
   // No special handling needed here anymore
 }
 
+// Mobile Reports Layout
+.reports-mobile {
+  display: none;
+  
+  @media (max-width: 430px) {
+    display: block;
+    margin-top: 1rem;
+  }
+}
+
+// Report group box for mobile - both reports in one box
+.report-group-box {
+  margin-bottom: 1.5rem;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  border-radius: 20px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+}
+
+// Content area for reports and chevron
+.report-group-content {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+// Wrapper for each report in mobile view
+.report-wrapper {
+  width: 100%;
+  
+  .report-card-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+    min-height: auto;
+  }
+}
+
+// Report section label (Previous/Current)
+.report-section-label {
+  font-family: 'Montserrat', 'TikTok Sans', sans-serif;
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0 0 1rem 0;
+  text-align: right;
+  width: 100%;
+  text-transform: uppercase;
+}
+
+// Desktop Reports Layout
+.reports-desktop {
+  display: block;
+  
+  @media (max-width: 430px) {
+    display: none;
+  }
+}
+
 // Reports Section
 .reports-section {
   margin-bottom: 0;
+  margin-top: 0;
+  padding-top: 0;
+  position: relative;
+  z-index: 1;
+  width: 100%;
   
-  @media (min-width: 768px) {
+  // Add padding for tablet and 426px mobile view - more room on sides
+  @media (max-width: 1023px) and (min-width: 767px) {
+    padding: 0 20px;
+  }
+  
+  @media (max-width: 430px) {
+    padding: 0;
+  }
+  
+  @media (min-width: 431px) {
     ion-grid {
       padding: 0;
       margin: 0;
@@ -449,6 +790,9 @@ h1.section-title.reports-title,
     .reports-title {
       margin: 0;
       padding: 0;
+      color: #ffffff !important;
+      display: block !important;
+      visibility: visible !important;
     }
     
     // Add gap only between report cards and arrow, not around arrow
@@ -509,7 +853,7 @@ h1.section-title.reports-title,
 .report-arrow-containers-col {
   display: none;
 
-  @media (min-width: 768px) {
+  @media (min-width: 431px) {
     display: flex !important;
     align-items: center !important; // Center vertically
     justify-content: center !important;
@@ -532,7 +876,7 @@ h1.section-title.reports-title,
   justify-content: center; // Center vertically
   min-height: 100%; // Ensure it takes full height
 
-  @media (min-width: 768px) {
+  @media (min-width: 431px) {
     display: flex !important;
   }
 }
@@ -633,6 +977,29 @@ ion-card {
 .report-items-section {
   width: 100%;
   flex: 1;
+  
+  ion-list {
+    background: transparent;
+    padding: 0;
+  }
+  
+  ion-item {
+    --border-radius: 12px;
+    --background: rgba(255, 255, 255, 0.05);
+    --background-hover: rgba(255, 255, 255, 0.08);
+    --background-activated: rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    margin-bottom: 0.5rem;
+    --padding-start: 16px;
+    --padding-end: 16px;
+    --inner-padding-end: 0;
+    --inner-padding-start: 0;
+    --min-height: auto;
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
 }
 
 .report-meta {
@@ -657,6 +1024,23 @@ ion-card {
   
   span {
     font-weight: 500;
+  }
+  
+  .clickable-name {
+    cursor: pointer;
+    color: var(--ion-color-primary);
+    text-decoration: underline;
+    text-decoration-color: rgba(var(--ion-color-primary-rgb), 0.5);
+    transition: all 0.2s ease;
+    
+    &:hover {
+      color: var(--ion-color-primary-shade);
+      text-decoration-color: var(--ion-color-primary);
+    }
+    
+    &:active {
+      opacity: 0.7;
+    }
   }
 }
 
@@ -1016,6 +1400,7 @@ ion-card {
   
   .photo-group-title {
     font-size: 1rem;
+    text-align: right;
   }
   
   .photo-label {
