@@ -171,13 +171,13 @@
             <div class="overview-content">
               <!-- Summary Stats -->
               <div class="stats-grid">
-                <div class="stat-card">
+                <div class="stat-card safety-violations-stat">
                   <div class="stat-icon">
-                    <ion-icon name="document-text"></ion-icon>
+                    <ion-icon name="warning"></ion-icon>
                   </div>
                   <div class="stat-info">
-                    <div class="stat-value">{{ overviewStats.totalInspections }}</div>
-                    <div class="stat-label">Total Inspections</div>
+                    <div class="stat-value">{{ getWeeklyViolationCount() }}</div>
+                    <div class="stat-label">Safety Violations</div>
                   </div>
                 </div>
                 
@@ -222,25 +222,96 @@
                 </div>
               </div>
 
-              <!-- Recent Activity Feed -->
-              <div class="recent-activity-section">
-                <h3>Recent Activity</h3>
-                <div class="activity-feed" *ngIf="recentActivity.length > 0; else noActivity">
-                  <div class="activity-item" *ngFor="let activity of recentActivity">
-                    <div class="activity-icon">
-                      <ion-icon [name]="activity.icon"></ion-icon>
+              <!-- Safety Violations Section -->
+              <div class="safety-violations-section">
+                <div class="section-header">
+                  <h3>Safety Violations</h3>
+                  <ion-button 
+                    fill="outline" 
+                    size="small" 
+                    (click)="addSafetyViolation()"
+                    class="add-violation-btn">
+                    <ion-icon name="add" slot="start"></ion-icon>
+                    Add Violation
+                  </ion-button>
+                </div>
+
+                <!-- Weekly View (Default) -->
+                <div *ngIf="!showAllTimeViolations" class="violations-view">
+                  <h4>This Week</h4>
+                  
+                  <!-- Violation Counts Grid -->
+                  <div class="violation-counts-grid">
+                    <div 
+                      *ngFor="let type of violationTypes"
+                      class="violation-count-card"
+                      [class.has-violations]="violationCounts[type] > 0">
+                      <ion-icon [name]="getViolationIcon(type)"></ion-icon>
+                      <div class="violation-count-info">
+                        <div class="violation-count-value">{{ violationCounts[type] }}</div>
+                        <div class="violation-count-label">{{ type }}</div>
+                      </div>
                     </div>
-                    <div class="activity-content">
-                      <div class="activity-description">{{ activity.description }}</div>
-                      <div class="activity-time">{{ activity.timestamp }}</div>
+                  </div>
+
+                  <!-- Weekly Violations List -->
+                  <div class="violations-list" *ngIf="weeklyViolations.length > 0; else noWeeklyViolations">
+                    <div class="violation-item" *ngFor="let violation of weeklyViolations">
+                      <ion-icon [name]="getViolationIcon(violation.violationType)" class="violation-icon"></ion-icon>
+                      <div class="violation-details">
+                        <div class="violation-type">{{ violation.violationType }}</div>
+                        <div class="violation-date">{{ formatViolationDate(violation.occurredAt) }}</div>
+                        <div class="violation-notes" *ngIf="violation.notes">{{ violation.notes }}</div>
+                      </div>
                     </div>
+                  </div>
+                  <ng-template #noWeeklyViolations>
+                    <div class="empty-state-small">
+                      <p>No safety violations this week</p>
+                    </div>
+                  </ng-template>
+
+                  <!-- Toggle Button -->
+                  <div class="view-toggle">
+                    <ion-button 
+                      fill="clear" 
+                      size="small" 
+                      (click)="toggleAllTimeView()">
+                      <ion-icon name="time" slot="start"></ion-icon>
+                      View All-Time Violations
+                    </ion-button>
                   </div>
                 </div>
-                <ng-template #noActivity>
-                  <div class="empty-state-small">
-                    <p>No recent activity to display</p>
+
+                <!-- All-Time View -->
+                <div *ngIf="showAllTimeViolations" class="violations-view">
+                  <div class="view-header">
+                    <h4>All-Time Violations</h4>
+                    <ion-button 
+                      fill="clear" 
+                      size="small" 
+                      (click)="toggleAllTimeView()">
+                      <ion-icon name="arrow-back" slot="start"></ion-icon>
+                      Back to Weekly View
+                    </ion-button>
                   </div>
-                </ng-template>
+
+                  <div class="violations-list" *ngIf="allTimeViolations.length > 0; else noAllTimeViolations">
+                    <div class="violation-item" *ngFor="let violation of allTimeViolations">
+                      <ion-icon [name]="getViolationIcon(violation.violationType)" class="violation-icon"></ion-icon>
+                      <div class="violation-details">
+                        <div class="violation-type">{{ violation.violationType }}</div>
+                        <div class="violation-date">{{ formatViolationDate(violation.occurredAt) }}</div>
+                        <div class="violation-notes" *ngIf="violation.notes">{{ violation.notes }}</div>
+                      </div>
+                    </div>
+                  </div>
+                  <ng-template #noAllTimeViolations>
+                    <div class="empty-state-small">
+                      <p>No safety violations recorded</p>
+                    </div>
+                  </ng-template>
+                </div>
               </div>
             </div>
           </div>

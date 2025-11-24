@@ -811,6 +811,13 @@ app-breadcrumb {
     text-transform: uppercase;
     letter-spacing: 0.5px;
   }
+  
+  &.safety-violations-stat {
+    .stat-icon {
+      color: #f44336;
+      filter: drop-shadow(0 2px 4px rgba(244, 67, 54, 0.4));
+    }
+  }
 }
 
 .quick-info-section, .recent-activity-section {
@@ -1267,6 +1274,228 @@ app-breadcrumb {
   .history-role {
     color: #3b82f6;
     font-weight: 500;
+  }
+}
+
+/* ========== Safety Violations Section ========== */
+.safety-violations-section {
+  margin-top: 2rem;
+  
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    
+    h3 {
+      margin: 0;
+    }
+    
+    .add-violation-btn {
+      --border-radius: 8px;
+      font-size: 0.85rem;
+      height: 36px;
+      margin: 0;
+    }
+    
+    @media (max-width: 430px) {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.75rem;
+      
+      .add-violation-btn {
+        width: 100%;
+      }
+    }
+  }
+  
+  .violations-view {
+    h4 {
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      margin-top: 0;
+    }
+    
+    .view-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      
+      h4 {
+        margin: 0;
+      }
+      
+      @media (max-width: 430px) {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+      }
+    }
+    
+    .view-toggle {
+      margin-top: 1rem;
+      text-align: center;
+    }
+  }
+  
+  .violation-counts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    
+    @media (max-width: 768px) {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.5rem;
+    }
+    
+    @media (max-width: 430px) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .violation-count-card {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%);
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: all 0.3s ease;
+      min-height: 80px;
+      height: 100%;
+      
+      ion-icon {
+        font-size: 1.5rem;
+        color: rgba(255, 255, 255, 0.6);
+        flex-shrink: 0;
+        width: 24px;
+        height: 24px;
+      }
+      
+      .violation-count-info {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+      
+      .violation-count-value {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: rgba(255, 255, 255, 0.7);
+        line-height: 1.2;
+        min-height: 1.5rem;
+      }
+      
+      .violation-count-label {
+        font-size: 0.7rem;
+        color: rgba(255, 255, 255, 0.6);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-top: 0.25rem;
+        word-break: break-word;
+        line-height: 1.2;
+        min-height: 2rem;
+        display: flex;
+        align-items: flex-start;
+      }
+      
+      &.has-violations {
+        background: linear-gradient(135deg, rgba(244, 67, 54, 0.2) 0%, rgba(244, 67, 54, 0.1) 100%);
+        border-color: rgba(244, 67, 54, 0.3);
+        
+        ion-icon {
+          color: #f44336;
+        }
+        
+        .violation-count-value {
+          color: #f44336;
+          font-size: 1.5rem;
+        }
+        
+        .violation-count-label {
+          color: rgba(244, 67, 54, 0.9);
+        }
+      }
+      
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      }
+    }
+  }
+  
+  .violations-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+  
+  .violation-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 0.75rem;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.2s ease;
+    
+    .violation-icon {
+      font-size: 1.5rem;
+      color: #f44336;
+      flex-shrink: 0;
+      margin-top: 0.125rem;
+    }
+    
+    .violation-details {
+      flex: 1;
+      min-width: 0;
+    }
+    
+    .violation-type {
+      font-weight: 600;
+      color: #ffffff;
+      font-size: 0.95rem;
+      margin-bottom: 0.25rem;
+    }
+    
+    .violation-date {
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 0.75rem;
+      margin-bottom: 0.25rem;
+    }
+    
+    .violation-notes {
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 0.85rem;
+      margin-top: 0.5rem;
+      font-style: italic;
+    }
+    
+    &:hover {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.08) 100%);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+  }
+}
+
+/* ========== Add Violation Modal Styles ========== */
+::ng-deep .add-violation-modal {
+  --width: 90%;
+  --max-width: 800px;
+  --height: auto;
+  --max-height: 90vh;
+  --border-radius: 16px;
+  
+  @media (min-width: 768px) {
+    --width: 700px;
   }
 }
 

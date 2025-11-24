@@ -212,6 +212,43 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // Safety Violations collection
+    match /safetyViolations/{violationId} {
+      // All signed-in users can read violations (for viewing)
+      allow read: if signedIn();
+      
+      // Helper to check if user has admin role in their profile
+      function hasAdminRole() {
+        return signedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid)) 
+          && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.roles.hasAny(['admin', 'owner']);
+      }
+      
+      // Only admins can create safety violations
+      allow create: if hasAdminRole()
+        && request.resource.data.keys().hasAll(['userId', 'violationType', 'occurredAt', 'createdAt', 'createdBy'])
+        && request.resource.data.userId is string
+        && request.resource.data.userId.size() > 0
+        && request.resource.data.violationType is string
+        && request.resource.data.violationType in ['Speeding', 'Distraction', 'Stop Sign', 'Follow Distance', 'Red Light', 'Seatbelt', 'Hard Turn', 'Roadside', 'Weaving']
+        && request.resource.data.occurredAt is timestamp
+        && request.resource.data.createdAt is timestamp
+        && request.resource.data.createdBy is string
+        && request.resource.data.createdBy == request.auth.uid
+        && (!('notes' in request.resource.data) || (request.resource.data.notes is string && request.resource.data.notes.size() <= 500))
+        && (!('vanId' in request.resource.data) || (request.resource.data.vanId is string && request.resource.data.vanId.size() > 0));
+      
+      // Only admins can update violations
+      allow update: if hasAdminRole()
+        && request.resource.data.userId == resource.data.userId
+        && request.resource.data.violationType == resource.data.violationType
+        && request.resource.data.createdBy == resource.data.createdBy
+        && request.resource.data.createdAt == resource.data.createdAt
+        && (!('notes' in request.resource.data) || (request.resource.data.notes is string && request.resource.data.notes.size() <= 500));
+      
+      // Only admins can delete violations
+      allow delete: if hasAdminRole();
+    }
+
     // Default deny for all other collections
     match /{document=**} {
       allow read, write: if false;

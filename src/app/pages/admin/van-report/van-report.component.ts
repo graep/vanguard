@@ -7,6 +7,7 @@ import { InspectionService, Inspection } from 'src/app/services/inspection.servi
 import { AuthService } from 'src/app/services/auth.service';
 import { BreadcrumbService } from '@app/services/breadcrumb.service';
 import { BreadcrumbItem } from '@app/components/breadcrumb/breadcrumb.component';
+import { Firestore, collection, query, where, getDocs } from '@angular/fire/firestore';
 
 type Side = 'front' | 'passenger' | 'rear' | 'driver';
 
@@ -28,9 +29,11 @@ export class VanReportComponent implements OnInit, AfterViewInit, OnDestroy {
   private toast = inject(ToastController);
   private alert = inject(AlertController);
   private breadcrumbService = inject(BreadcrumbService);
+  private firestore = inject(Firestore);
   
   private resizeObserver?: ResizeObserver;
   private windowResizeHandler?: () => void;
+  private keyboardHandler?: (event: KeyboardEvent) => void;
 
   currReportItems: any[] = [];
   prevReportItems: any[] = [];
@@ -42,10 +45,14 @@ export class VanReportComponent implements OnInit, AfterViewInit, OnDestroy {
   previousInspection: any = null;
   currentSubmitterName: string = 'Unknown';
   previousSubmitterName: string = 'Unknown';
+  currentSubmitterId: string | null = null;
+  previousSubmitterId: string | null = null;
   loading = true;
   errorMsg = '';
   reviewMode = false;
   expandedImage: string | null = null;
+  expandedImageRow: { side: string; prevUrl: string; currUrl: string } | null = null;
+  expandedImageType: 'prev' | 'curr' | null = null;
   unsurePhotoModal: { photoUrl: string; description: string } | null = null;
 
   async ngOnInit() {
@@ -89,16 +96,39 @@ export class VanReportComponent implements OnInit, AfterViewInit, OnDestroy {
 
       // 5. Breadcrumbs: Only append or construct if missing
       const currentTail = this.breadcrumbService.getTail();
+      const vanLabel = `${(curr.vanType || '').toUpperCase()} ${curr.vanNumber}`;
+      
+      // Get van docId to construct the URL
+      const vanDocId = await this.getVanDocId(curr.vanType, curr.vanNumber);
+      const vanUrl = vanDocId ? `/admin/van/${vanDocId}` : undefined;
+      
       if (!currentTail || currentTail.length === 0) {
         // No tail exists (direct navigation) → set Van node + Van Report
-        const vanLabel = `${(curr.vanType || '').toUpperCase()} ${curr.vanNumber}`;
         this.setBreadcrumbTail([
-          { label: vanLabel, icon: 'car' },
+          { label: vanLabel, icon: 'car', url: vanUrl },
           { label: 'Van Report' }
         ]);
       } else if (currentTail[currentTail.length - 1]?.label !== 'Van Report') {
         // Tail exists (e.g., EDV 1) → append Van Report without replacing existing items
-        this.setBreadcrumbTail([...currentTail, { label: 'Van Report' }]);
+        // Update the van item in the tail to include the URL if it doesn't have one
+        const updatedTail = currentTail.map((item, index) => {
+          if (index === 0 && !item.url && item.label === vanLabel) {
+            return { ...item, url: vanUrl };
+          }
+          return item;
+        });
+        this.setBreadcrumbTail([...updatedTail, { label: 'Van Report' }]);
+      } else {
+        // Van Report already in tail, but ensure van item has URL
+        const updatedTail = currentTail.map((item, index) => {
+          if (index === 0 && !item.url && item.label === vanLabel) {
+            return { ...item, url: vanUrl };
+          }
+          return item;
+        });
+        if (JSON.stringify(updatedTail) !== JSON.stringify(currentTail)) {
+          this.setBreadcrumbTail(updatedTail);
+        }
       }
     } catch (e: any) {
       this.errorMsg = e?.message ?? 'Failed to load report.';
@@ -117,6 +147,43 @@ export class VanReportComponent implements OnInit, AfterViewInit, OnDestroy {
     } catch {}
   }
 
+  private async getVanDocId(vanType: string, vanNumber: string): Promise<string | null> {
+    try {
+      const vansRef = collection(this.firestore, 'vans');
+      const normalizedVanNumber = vanNumber.replace(/^0+/, '') || '0';
+      
+      // Query for van by type and number
+      const q = query(
+        vansRef,
+        where('type', '==', vanType),
+        where('number', '==', parseInt(normalizedVanNumber, 10))
+      );
+      
+      const querySnapshot = await getDocs(q);
+      if (!querySnapshot.empty) {
+        return querySnapshot.docs[0].id;
+      }
+      
+      // If not found with number, try with vanId for rental vehicles
+      if (vanType === 'Rental') {
+        const rentalQ = query(
+          vansRef,
+          where('type', '==', vanType),
+          where('vanId', '==', vanNumber)
+        );
+        const rentalSnapshot = await getDocs(rentalQ);
+        if (!rentalSnapshot.empty) {
+          return rentalSnapshot.docs[0].id;
+        }
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Failed to get van docId:', error);
+      return null;
+    }
+  }
+
   private buildComparisonRows(reports: Inspection[]) {
     const order: Side[] = ['front', 'passenger', 'rear', 'driver'];
     const prev = reports[1]?.photos ?? {};
@@ -133,12 +200,14 @@ export class VanReportComponent implements OnInit, AfterViewInit, OnDestroy {
     try {
       // Load current inspection submitter name
       if (this.currentInspection?.createdBy) {
+        this.currentSubmitterId = this.currentInspection.createdBy;
         const currentUser = await this.auth.getUserProfile(this.currentInspection.createdBy);
         this.currentSubmitterName = this.auth.getDisplayName(currentUser);
       }
 
       // Load previous inspection submitter name
       if (this.previousInspection?.createdBy) {
+        this.previousSubmitterId = this.previousInspection.createdBy;
         const previousUser = await this.auth.getUserProfile(this.previousInspection.createdBy);
         this.previousSubmitterName = this.auth.getDisplayName(previousUser);
       }
@@ -147,13 +216,68 @@ export class VanReportComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
+  viewUser(userId: string | null): void {
+    if (!userId) return;
+    
+    // Prime breadcrumb so it shows immediately on navigation
+    this.breadcrumbService.setTail([
+      { label: 'User Details', icon: 'person' }
+    ]);
+    
+    // Navigate to the user detail page using the user's uid
+    // Navigate relative to parent (admin) route
+    this.router.navigate(['user', userId], { relativeTo: this.route.parent });
+  }
+
   toggleImageExpansion(url: string) {
     // If clicking the same image or backdrop, close it
     if (this.expandedImage === url || url === '') {
       this.expandedImage = null;
+      this.expandedImageRow = null;
+      this.expandedImageType = null;
     } else {
       this.expandedImage = url;
+      // Find which row and type this image belongs to
+      const row = this.comparisonRows.find(r => r.prevUrl === url || r.currUrl === url);
+      if (row) {
+        this.expandedImageRow = row;
+        this.expandedImageType = row.prevUrl === url ? 'prev' : 'curr';
+      }
     }
+  }
+
+  navigateToPreviousPhoto() {
+    if (!this.expandedImageRow || this.expandedImageType !== 'curr') return;
+    
+    // Switch from current to previous
+    if (this.expandedImageRow.prevUrl) {
+      this.expandedImage = this.expandedImageRow.prevUrl;
+      this.expandedImageType = 'prev';
+    }
+  }
+
+  navigateToCurrentPhoto() {
+    if (!this.expandedImageRow || this.expandedImageType !== 'prev') return;
+    
+    // Switch from previous to current
+    if (this.expandedImageRow.currUrl) {
+      this.expandedImage = this.expandedImageRow.currUrl;
+      this.expandedImageType = 'curr';
+    }
+  }
+
+  canNavigateToPrevious(): boolean {
+    // Show left arrow when viewing current photo (to go to previous)
+    return this.expandedImageRow !== null && 
+           this.expandedImageType === 'curr' && 
+           !!this.expandedImageRow.prevUrl;
+  }
+
+  canNavigateToCurrent(): boolean {
+    // Show right arrow when viewing previous photo (to go to current)
+    return this.expandedImageRow !== null && 
+           this.expandedImageType === 'prev' && 
+           !!this.expandedImageRow.currUrl;
   }
 
   // ----- Unsure Photo Modal -----
@@ -202,6 +326,24 @@ export class VanReportComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngAfterViewInit() {
+    // Add keyboard navigation for expanded images
+    this.keyboardHandler = (event: KeyboardEvent) => {
+      if (!this.expandedImage) return;
+      
+      if (event.key === 'ArrowLeft') {
+        this.navigateToPreviousPhoto();
+        event.preventDefault();
+      } else if (event.key === 'ArrowRight') {
+        this.navigateToCurrentPhoto();
+        event.preventDefault();
+      } else if (event.key === 'Escape') {
+        this.toggleImageExpansion('');
+        event.preventDefault();
+      }
+    };
+    
+    window.addEventListener('keydown', this.keyboardHandler);
+    
     // Wait a bit for DOM to be fully rendered
     setTimeout(() => {
       // Align arrows immediately
@@ -216,6 +358,10 @@ export class VanReportComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    // Remove keyboard event listener
+    if (this.keyboardHandler) {
+      window.removeEventListener('keydown', this.keyboardHandler);
+    }
     // Clean up ResizeObserver
     if (this.resizeObserver) {
       this.resizeObserver.disconnect();
@@ -237,8 +383,8 @@ export class VanReportComponent implements OnInit, AfterViewInit, OnDestroy {
    * Made public so it can be called from template (load events)
    */
   alignArrowsToImageCenters(): void {
-    // Only run on desktop (where arrows are visible)
-    if (window.innerWidth < 768) return;
+    // Only run on desktop (where arrows are visible) - 431px and above
+    if (window.innerWidth <= 430) return;
 
     const arrowContainers = document.querySelectorAll('.arrow-container');
     // Get the actual img.photo elements (not containers) from the previous/left column

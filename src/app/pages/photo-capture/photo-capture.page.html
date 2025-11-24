@@ -30,7 +30,7 @@
     <!-- Hero Section -->
     <div class="hero-section">
       <div class="hero-content">
-        <h1 class="hero-title">{{ vanType }} {{ vanNumber }}</h1>
+        <h1 class="hero-title">{{ vanDisplayName || (vanType + ' ' + vanNumber) }}</h1>
         <p class="hero-subtitle">Capture photos of all four sides to complete your inspection</p>
         <div class="progress-indicator">
           <div class="progress-bar">
@@ -85,7 +85,7 @@
         [disabled]="!allPhotosTaken"
         expand="block">
         <ion-icon name="checkmark-circle" slot="start"></ion-icon>
-        Submit Inspection
+        Submit Pictures
       </ion-button>
     </div>
 

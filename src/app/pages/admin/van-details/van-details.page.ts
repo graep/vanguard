@@ -13,6 +13,7 @@ import {
   IonIcon,
   IonChip,
   IonLabel,
+  IonInput,
   AlertController,
   ToastController
 } from '@ionic/angular/standalone';
@@ -44,6 +45,7 @@ import { BreadcrumbService } from '@app/services/breadcrumb.service';
     IonIcon,
     IonChip,
     IonLabel,
+    IonInput,
     IssuesTabComponent,
     MaintenanceTabComponent,
     NotesTabComponent,
@@ -75,6 +77,13 @@ export class VanDetailsPage implements OnInit {
   ];
   latestInspectionId: string | null = null;
   breadcrumbItems: BreadcrumbItem[] = [];
+  isMobile = false;
+  private resizeListener?: () => void;
+  
+  // License plate editing
+  isEditingLicensePlate = false;
+  editingLicensePlate = '';
+  isSavingLicensePlate = false;
   
   // Van type display mapping
   vanTypeLabels: Record<string, string> = {
@@ -85,6 +94,15 @@ export class VanDetailsPage implements OnInit {
 
   async ngOnInit() {
     this.loading = true;
+    // Check if mobile (430px and below)
+    this.isMobile = window.innerWidth <= 430;
+    
+    // Listen for window resize to update mobile state
+    this.resizeListener = () => {
+      this.isMobile = window.innerWidth <= 430;
+    };
+    window.addEventListener('resize', this.resizeListener);
+    
     // Only set a placeholder if no tail was primed by the previous page
     if (!this.breadcrumbService.getTail()?.length) {
       this.breadcrumbService.setTail([
@@ -119,6 +137,11 @@ export class VanDetailsPage implements OnInit {
   ngOnDestroy(): void {
     // Intentionally do not clear breadcrumb here to avoid flicker when navigating
     // into child pages like Van Report, which build on top of the existing tail.
+    
+    // Clean up resize listener
+    if (this.resizeListener) {
+      window.removeEventListener('resize', this.resizeListener);
+    }
   }
 
   private async loadVanData(vanId: string) {
@@ -474,5 +497,54 @@ export class VanDetailsPage implements OnInit {
 
   goBack() {
     this.router.navigate(['/admin']);
+  }
+
+  startEditingLicensePlate(): void {
+    this.editingLicensePlate = this.van?.licensePlate || '';
+    this.isEditingLicensePlate = true;
+  }
+
+  cancelEditingLicensePlate(): void {
+    this.isEditingLicensePlate = false;
+    this.editingLicensePlate = '';
+  }
+
+  async saveLicensePlate(): Promise<void> {
+    if (!this.van) return;
+
+    this.isSavingLicensePlate = true;
+
+    try {
+      const vanDocRef = doc(this.firestore, 'vans', this.van.docId);
+      const updateData = {
+        licensePlate: this.editingLicensePlate.trim() || null
+      };
+
+      await setDoc(vanDocRef, updateData, { merge: true });
+
+      // Update local van object
+      this.van.licensePlate = this.editingLicensePlate.trim() || undefined;
+
+      this.isEditingLicensePlate = false;
+
+      const toast = await this.toastCtrl.create({
+        message: 'License plate updated successfully',
+        duration: 2000,
+        color: 'success'
+      });
+      toast.present();
+
+    } catch (error: any) {
+      console.error('Error updating license plate:', error);
+      
+      const toast = await this.toastCtrl.create({
+        message: 'Failed to update license plate',
+        duration: 2000,
+        color: 'danger'
+      });
+      toast.present();
+    } finally {
+      this.isSavingLicensePlate = false;
+    }
   }
 }

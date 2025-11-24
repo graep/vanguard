@@ -21,6 +21,10 @@ import { UserProfile, Role, AuthService } from '../../../services/auth.service';
 import { BreadcrumbService } from '@app/services/breadcrumb.service';
 import { UserManagementService } from '../../../services/user-management.service';
 import { InspectionService, Inspection } from '../../../services/inspection.service';
+import { SafetyViolationService } from '../../../services/safety-violation.service';
+import { SafetyViolation, SafetyViolationType, SAFETY_VIOLATION_TYPES } from '../../../models/safety-violation.model';
+import { AddSafetyViolationModalComponent } from '../../../components/add-safety-violation-modal/add-safety-violation-modal.component';
+import { ModalController } from '@ionic/angular/standalone';
 import { Timestamp } from 'firebase/firestore';
 
 @Component({
@@ -54,6 +58,8 @@ export class UserDetailsPage implements OnInit {
   private authService = inject(AuthService);
   private userManagement = inject(UserManagementService);
   private inspectionService = inject(InspectionService);
+  private safetyViolationService = inject(SafetyViolationService);
+  private modalCtrl = inject(ModalController);
 
   user: UserProfile | null = null;
   loading = true;
@@ -67,7 +73,6 @@ export class UserDetailsPage implements OnInit {
 
   // Placeholder data for Overview tab
   overviewStats = {
-    totalInspections: 0,
     inspectionsThisMonth: 0,
     vansAssigned: 0,
     issuesReported: 0,
@@ -78,6 +83,22 @@ export class UserDetailsPage implements OnInit {
   recentActivity: any[] = [];
   inspectionHistory: any[] = [];
   loginHistory: any[] = [];
+
+  // Safety Violations
+  weeklyViolations: SafetyViolation[] = [];
+  allTimeViolations: SafetyViolation[] = [];
+  showAllTimeViolations = false;
+  violationCounts: Record<SafetyViolationType, number> = {
+    'Speeding': 0,
+    'Distraction': 0,
+    'Stop Sign': 0,
+    'Follow Distance': 0,
+    'Red Light': 0,
+    'Seatbelt': 0,
+    'Hard Turn': 0,
+    'Roadside': 0,
+    'Weaving': 0
+  };
 
   async ngOnInit() {
     this.loading = true;
@@ -104,6 +125,7 @@ export class UserDetailsPage implements OnInit {
         ]);
         // Load inspections and stats
         await this.loadInspections(userId);
+        await this.loadSafetyViolations(userId);
         this.updateOverviewStats();
       }
     } catch (error: any) {
@@ -453,12 +475,15 @@ export class UserDetailsPage implements OnInit {
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     
-    this.overviewStats.totalInspections = this.inspectionHistory.length;
     this.overviewStats.inspectionsThisMonth = this.inspectionHistory.filter(inspection => {
       return inspection.createdAt >= startOfMonth;
     }).length;
     
     // TODO: Load other stats (vansAssigned, issuesReported, notesAdded) from other services
+  }
+
+  getWeeklyViolationCount(): number {
+    return this.weeklyViolations.length;
   }
 
   viewInspection(inspection: any): void {
@@ -470,6 +495,176 @@ export class UserDetailsPage implements OnInit {
       ]);
       this.router.navigate(['/admin/van-report', inspection.id]);
     }
+  }
+
+  private async loadSafetyViolations(userId: string): Promise<void> {
+    try {
+      console.log('[UserDetails] Loading safety violations for user:', userId);
+      // Load weekly violations
+      this.weeklyViolations = await this.safetyViolationService.getWeeklyViolations(userId);
+      console.log('[UserDetails] Weekly violations loaded:', this.weeklyViolations.length);
+      this.weeklyViolations.forEach(v => {
+        console.log('[UserDetails] Violation:', v.violationType, 'on', v.occurredAt.toISOString());
+      });
+      
+      // Calculate violation counts for the week
+      const now = new Date();
+      const dayOfWeek = now.getDay();
+      const diff = now.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+      const monday = new Date(now.getFullYear(), now.getMonth(), diff);
+      monday.setHours(0, 0, 0, 0);
+      const sunday = new Date(monday);
+      sunday.setDate(monday.getDate() + 6);
+      sunday.setHours(23, 59, 59, 999);
+
+      console.log('[UserDetails] Week range:', monday.toISOString(), 'to', sunday.toISOString());
+
+      this.violationCounts = await this.safetyViolationService.getViolationCountsByType(
+        userId,
+        monday,
+        sunday
+      );
+      console.log('[UserDetails] Violation counts:', this.violationCounts);
+    } catch (error: any) {
+      console.error('[UserDetails] Error loading safety violations:', error);
+      this.weeklyViolations = [];
+      // Reset counts on error
+      this.violationCounts = {
+        'Speeding': 0,
+        'Distraction': 0,
+        'Stop Sign': 0,
+        'Follow Distance': 0,
+        'Red Light': 0,
+        'Seatbelt': 0,
+        'Hard Turn': 0,
+        'Roadside': 0,
+        'Weaving': 0
+      };
+    }
+  }
+
+  async toggleAllTimeView(): Promise<void> {
+    if (!this.user) return;
+
+    if (!this.showAllTimeViolations) {
+      // Load all-time violations
+      try {
+        this.allTimeViolations = await this.safetyViolationService.getAllTimeViolations(this.user.uid);
+      } catch (error: any) {
+        console.error('[UserDetails] Error loading all-time violations:', error);
+        const toast = await this.toastCtrl.create({
+          message: 'Failed to load all-time violations',
+          duration: 2000,
+          color: 'danger'
+        });
+        toast.present();
+        return;
+      }
+    }
+
+    this.showAllTimeViolations = !this.showAllTimeViolations;
+  }
+
+  async addSafetyViolation(): Promise<void> {
+    if (!this.user) return;
+
+    const modal = await this.modalCtrl.create({
+      component: AddSafetyViolationModalComponent,
+      cssClass: 'add-violation-modal'
+    });
+
+    await modal.present();
+
+    const { data, role } = await modal.onWillDismiss();
+
+    if (role === 'saved' && data) {
+      await this.handleAddViolation({
+        violationType: data.violationType,
+        occurredAt: data.occurredAt,
+        notes: data.notes
+      });
+    }
+  }
+
+  private async handleAddViolation(data: { violationType: SafetyViolationType; occurredAt: Date; notes?: string }): Promise<void> {
+    try {
+      const currentUser = this.authService.currentUserProfile$.value;
+      if (!currentUser) {
+        throw new Error('Not authenticated');
+      }
+
+      if (!this.user) {
+        throw new Error('User not loaded');
+      }
+      
+      console.log('[UserDetails] Adding violation:', {
+        userId: this.user.uid,
+        violationType: data.violationType,
+        occurredAt: data.occurredAt.toISOString(),
+        createdBy: currentUser.uid,
+        notes: data.notes
+      });
+      
+      await this.safetyViolationService.addViolation({
+        userId: this.user.uid,
+        violationType: data.violationType,
+        occurredAt: data.occurredAt,
+        createdBy: currentUser.uid,
+        notes: data.notes
+      });
+
+      console.log('[UserDetails] Violation added, reloading...');
+      // Reload violations
+      await this.loadSafetyViolations(this.user.uid);
+      console.log('[UserDetails] Reloaded violations:', this.weeklyViolations.length);
+      if (this.showAllTimeViolations) {
+        this.allTimeViolations = await this.safetyViolationService.getAllTimeViolations(this.user.uid);
+      }
+
+      const toast = await this.toastCtrl.create({
+        message: 'Safety violation added successfully',
+        duration: 2000,
+        color: 'success'
+      });
+      toast.present();
+    } catch (error: any) {
+      console.error('[UserDetails] Error adding violation:', error);
+      const toast = await this.toastCtrl.create({
+        message: 'Failed to add safety violation: ' + (error.message || 'Unknown error'),
+        duration: 3000,
+        color: 'danger'
+      });
+      toast.present();
+    }
+  }
+
+  formatViolationDate(date: Date): string {
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
+
+  getViolationIcon(type: SafetyViolationType): string {
+    const icons: Record<SafetyViolationType, string> = {
+      'Speeding': 'speedometer',
+      'Distraction': 'phone-portrait',
+      'Stop Sign': 'stop',
+      'Follow Distance': 'car',
+      'Red Light': 'traffic-light',
+      'Seatbelt': 'shield',
+      'Hard Turn': 'arrow-redo',
+      'Roadside': 'warning',
+      'Weaving': 'swap-horizontal'
+    };
+    return icons[type] || 'alert-circle';
+  }
+
+  get violationTypes(): SafetyViolationType[] {
+    return SAFETY_VIOLATION_TYPES;
   }
 }
 

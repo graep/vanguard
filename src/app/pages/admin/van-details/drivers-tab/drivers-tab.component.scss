@@ -37,7 +37,7 @@
     // Padding removed - using tab-content padding
 
     .driver-card {
-      margin-bottom: 12px;
+      margin-bottom: 2px !important;
       width: 100% !important;
       max-width: 100% !important;
       margin-left: 0 !important;
@@ -54,6 +54,7 @@
     }
     
     .driver-card.md.hydrated {
+      margin-bottom: 2px !important;
       width: 100% !important;
       max-width: 100% !important;
       margin-left: 0 !important;

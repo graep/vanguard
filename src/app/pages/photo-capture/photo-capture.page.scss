@@ -31,8 +31,10 @@
 }
 
 .hero-title {
+  font-family: 'Montserrat', 'TikTok Sans', sans-serif;
   font-size: 1.5rem;
-  font-weight: 700;
+  font-weight: 800;
+  letter-spacing: -0.02em;
   color: #ffffff;
   margin: 0 0 6px 0;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
@@ -40,6 +42,7 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  text-transform: uppercase;
 }
 
 .hero-subtitle {
@@ -202,11 +205,14 @@
 }
 
 .side-title {
+  font-family: 'Montserrat', 'TikTok Sans', sans-serif;
   font-size: 1rem;
-  font-weight: 700;
+  font-weight: 800;
+  letter-spacing: -0.02em;
   color: #ffffff;
   margin: 0 0 2px 0;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  text-transform: uppercase;
 }
 
 .side-status {
@@ -380,7 +386,7 @@
   }
   
   .hero-title {
-    font-size: 1.8rem;
+    font-size: 1.75rem;
   }
   
   .hero-subtitle {
@@ -440,7 +446,7 @@
   }
   
   .hero-title {
-    font-size: 1.6rem;
+    font-size: 1.5rem;
   }
   
   .photo-card {
@@ -500,10 +506,13 @@
 }
 
 .prompt-content h2 {
+  font-family: 'Montserrat', 'TikTok Sans', sans-serif;
   font-size: 1.5rem;
-  font-weight: 600;
+  font-weight: 800;
+  letter-spacing: -0.02em;
   color: #1e293b;
   margin: 0 0 1rem 0;
+  text-transform: uppercase;
 }
 
 .prompt-content p {

@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { ViewWillLeave } from '@ionic/angular';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule, Router } from '@angular/router';
@@ -15,12 +15,14 @@ import {
 import { InspectionService } from 'src/app/services/inspection.service';
 import { Auth } from '@angular/fire/auth';
 import { getApp } from '@angular/fire/app';
+import { Firestore, doc, getDoc } from '@angular/fire/firestore';
 import { AppHeaderComponent } from '@app/components/app-header/app-header.component';
 import { NavService } from '@app/services/nav.service';
 import { AppLifecycleService } from '@app/services/app-lifecycle.service';
 import { FullscreenCameraComponent } from '@app/components/fullscreen-camera/fullscreen-camera.component';
 import { PageHeaderComponent } from '@app/components/page-header/page-header.component';
 import { BreadcrumbItem } from '@app/components/breadcrumb/breadcrumb.component';
+import { Van } from '@app/models/van.model';
 
 @Component({
   selector: 'app-photo-capture',
@@ -43,6 +45,10 @@ export class PhotoCapturePage implements OnInit, OnDestroy, ViewWillLeave {
   vanType!: string;
   vanNumber!: string;
   vanId!: string; // NEW: Store the actual van document ID
+  vanDisplayName: string = ''; // Display name for the van (e.g., "Budget 1" for rentals)
+  van: Van | null = null; // Full van object
+
+  private firestore = inject(Firestore);
 
   // Breadcrumb items
   breadcrumbItems: BreadcrumbItem[] = [];
@@ -119,13 +125,21 @@ export class PhotoCapturePage implements OnInit, OnDestroy, ViewWillLeave {
     private platform: Platform,
     private appLifecycle: AppLifecycleService
   ) {}
-  ngOnInit() {
+  async ngOnInit() {
     // Pull vanType and vanNumber out of the URL
     this.vanType = this.route.snapshot.paramMap.get('vanType')!;
     this.vanNumber = this.route.snapshot.paramMap.get('vanNumber')!;
     
     // Get vanId from query params (passed from van selection)
     this.vanId = this.route.snapshot.queryParamMap.get('vanId') || '';
+    
+    // Load van data to get proper display name
+    if (this.vanId) {
+      await this.loadVanData();
+    } else {
+      // Fallback to URL params if vanId not available
+      this.vanDisplayName = `${this.vanType} ${this.vanNumber}`;
+    }
     
     // Check if we're coming from background tracking
     const fromBackground = this.route.snapshot.queryParamMap.get('fromBackground') === 'true';
@@ -136,11 +150,70 @@ export class PhotoCapturePage implements OnInit, OnDestroy, ViewWillLeave {
     // Setup breadcrumb items
     this.breadcrumbItems = [
       { label: 'Van Selection', url: '/van-selection', icon: 'car' },
-      { label: `${this.vanType} ${this.vanNumber}`, icon: 'camera' }
+      { label: this.vanDisplayName || `${this.vanType} ${this.vanNumber}`, icon: 'camera' }
     ];
     
     // Check if we're returning to this page and clear photos
     this.checkForReturnNavigation();
+  }
+
+  private async loadVanData() {
+    if (!this.vanId) return;
+    
+    try {
+      const vanDocRef = doc(this.firestore, 'vans', this.vanId);
+      const vanDoc = await getDoc(vanDocRef);
+      
+      if (vanDoc.exists()) {
+        const data = vanDoc.data();
+        this.van = { docId: vanDoc.id, ...data } as Van;
+        this.vanDisplayName = this.getVanDisplayName(this.van);
+        
+        // Update breadcrumb with correct display name
+        this.breadcrumbItems = [
+          { label: 'Van Selection', url: '/van-selection', icon: 'car' },
+          { label: this.vanDisplayName, icon: 'camera' }
+        ];
+      } else {
+        // Fallback if van not found
+        this.vanDisplayName = `${this.vanType} ${this.vanNumber}`;
+      }
+    } catch (error) {
+      console.error('Failed to load van data:', error);
+      // Fallback if error
+      this.vanDisplayName = `${this.vanType} ${this.vanNumber}`;
+    }
+  }
+
+  /**
+   * Get the display name for a van
+   * For Rental vans, uses vanId (e.g., "Budget 1"); for EDV/CDV, uses type and number
+   * @param van The van object
+   * @returns The display name for the van
+   */
+  private getVanDisplayName(van: Van): string {
+    if (!van) return `${this.vanType} ${this.vanNumber}`;
+    
+    // For rental vans, use vanId property (e.g., "Budget 1")
+    const vanType = van.type ? van.type.toUpperCase() : '';
+    if (vanType === 'RENTAL') {
+      // Use vanId property first (the original user-entered value like "Budget 1")
+      if (van.vanId && String(van.vanId).trim()) {
+        return String(van.vanId).trim();
+      }
+      
+      // Fallback to docId (for new vans, docId is the sanitized vanId)
+      // Convert underscores back to spaces for better display
+      if (van.docId) {
+        return van.docId.replace(/_/g, ' ');
+      }
+      
+      // If no vanId/docId, use type and number
+      return `${van.type} ${van.number || 0}`;
+    }
+    
+    // For EDV/CDV, use type and number
+    return van.number != null ? `${van.type} ${van.number}` : `${van.type} Unknown`;
   }
 
   private checkForReturnNavigation() {

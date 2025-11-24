@@ -107,29 +107,16 @@ export class VanSelectionPage implements OnInit, OnDestroy {
       return;
     }
 
-    try {
-      // Start GPS tracking session for this van (tracks entire shift)
-      await this.shiftSession.startShift(van.docId);
-      
-      // Navigate to background tracking page (will show message and minimize)
-      this.router.navigate(['/background-tracking'], {
-        queryParams: {
-          vanType: van.type,
-          vanNumber: van.number.toString(),
-          vanId: van.docId
-        }
-      });
-    } catch (error) {
-      console.error('Failed to start shift:', error);
-      // Still navigate even if GPS fails
-      this.router.navigate(['/background-tracking'], {
-        queryParams: {
-          vanType: van.type,
-          vanNumber: van.number.toString(),
-          vanId: van.docId
-        }
-      });
-    }
+    // GPS tracking disabled - navigate directly to photo-capture
+    // TODO: Re-enable GPS tracking when needed
+    // await this.shiftSession.startShift(van.docId);
+    
+    // Navigate directly to photo-capture page
+    this.router.navigate(['/photo-capture', van.type, van.number.toString()], {
+      queryParams: {
+        vanId: van.docId
+      }
+    });
   }
 
   getVanTypes(): string[] {
@@ -218,6 +205,37 @@ export class VanSelectionPage implements OnInit, OnDestroy {
     }
     
     return 'assets/Rental.jpg'; // Default fallback for other makes
+  }
+
+  /**
+   * Get the display name for a van
+   * For Rental vans, uses vanId (e.g., "Budget 1"); for EDV/CDV, returns null to use number directly
+   * @param van The van object
+   * @returns The display name for rental vans, or null for EDV/CDV (which will use number)
+   */
+  getVanDisplayName(van: Van): string | null {
+    if (!van) return null;
+    
+    // Only apply special logic for rental vans
+    const vanType = van.type ? van.type.toUpperCase() : '';
+    if (vanType === 'RENTAL') {
+      // Use vanId property first (the original user-entered value like "Budget 1")
+      if (van.vanId && String(van.vanId).trim()) {
+        return String(van.vanId).trim();
+      }
+      
+      // Fallback to docId (for new vans, docId is the sanitized vanId)
+      // Convert underscores back to spaces for better display
+      if (van.docId) {
+        return van.docId.replace(/_/g, ' ');
+      }
+      
+      // If no vanId/docId, don't show number (which would be 0 for rentals)
+      return 'Unknown';
+    }
+    
+    // For EDV/CDV, return null so the template uses van.number directly
+    return null;
   }
 
 }

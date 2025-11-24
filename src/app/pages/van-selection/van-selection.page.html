@@ -37,7 +37,7 @@
                [class.disabled]="van.isGrounded"
                (click)="selectVan(van)">
             <div class="van-card-content">
-              <div class="van-number">{{ van.number }}</div>
+              <div class="van-number">{{ getVanDisplayName(van) ?? van.number }}</div>
               <div *ngIf="van.estimatedMiles" class="van-mileage">
                 <ion-icon name="speedometer"></ion-icon>
                 {{ van.estimatedMiles | number:'1.0-0' }} miles

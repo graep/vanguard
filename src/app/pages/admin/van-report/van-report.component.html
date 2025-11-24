@@ -375,10 +375,28 @@
   </div>
 
   <!-- Expanded Image - Separate element to break out of parent containers -->
-  <img *ngIf="expandedImage" 
-       class="expanded-photo" 
-       [src]="expandedImage"
-       (click)="toggleImageExpansion(expandedImage || '')" />
+  <div *ngIf="expandedImage" class="expanded-photo-container">
+    <img class="expanded-photo" 
+         [src]="expandedImage"
+         (click)="toggleImageExpansion(expandedImage || '')" />
+    
+    <!-- Navigation Arrows -->
+    <button *ngIf="canNavigateToPrevious()" 
+            class="nav-arrow nav-arrow-left"
+            (click)="navigateToPreviousPhoto(); $event.stopPropagation()"
+            aria-label="View previous photo">
+      <ion-icon name="chevron-back-outline"></ion-icon>
+      <span class="nav-label">Previous</span>
+    </button>
+    
+    <button *ngIf="canNavigateToCurrent()" 
+            class="nav-arrow nav-arrow-right"
+            (click)="navigateToCurrentPhoto(); $event.stopPropagation()"
+            aria-label="View current photo">
+      <ion-icon name="chevron-forward-outline"></ion-icon>
+      <span class="nav-label">Current</span>
+    </button>
+  </div>
 
   <!-- Unsure Photo Modal -->
   <div class="unsure-photo-modal" *ngIf="unsurePhotoModal">
