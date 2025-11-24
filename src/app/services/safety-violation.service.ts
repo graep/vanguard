@@ -16,14 +16,6 @@ export class SafetyViolationService {
     const violationsRef = collection(this.firestore, 'safetyViolations');
     const occurredAtTimestamp = Timestamp.fromDate(violation.occurredAt);
     
-    console.log('[SafetyViolationService] Adding violation:', {
-      userId: violation.userId,
-      violationType: violation.violationType,
-      occurredAt: violation.occurredAt.toISOString(),
-      occurredAtTimestamp: occurredAtTimestamp.toDate().toISOString(),
-      createdBy: violation.createdBy
-    });
-    
     const violationData: any = {
       userId: violation.userId,
       violationType: violation.violationType,
@@ -42,9 +34,7 @@ export class SafetyViolationService {
       violationData.vanId = violation.vanId;
     }
     
-    console.log('[SafetyViolationService] Saving violation data:', violationData);
     const docRef = await addDoc(violationsRef, violationData);
-    console.log('[SafetyViolationService] Violation saved with ID:', docRef.id);
     return docRef.id;
   }
 
@@ -112,10 +102,8 @@ export class SafetyViolationService {
           const start = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
           const end = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
           const inRange = violationDate >= start && violationDate <= end;
-          console.log('[SafetyViolationService] Violation date:', violationDate, 'in range:', inRange, 'start:', start, 'end:', end);
           return inRange;
         });
-        console.log('[SafetyViolationService] Filtered violations:', filtered.length, 'out of', violations.length);
         return filtered;
       }
       throw error;
@@ -136,9 +124,7 @@ export class SafetyViolationService {
     sunday.setDate(monday.getDate() + 6);
     sunday.setHours(23, 59, 59, 999);
 
-    console.log('[SafetyViolationService] Weekly range:', monday, 'to', sunday);
     const violations = await this.getUserViolationsInRange(userId, monday, sunday);
-    console.log('[SafetyViolationService] Found', violations.length, 'violations in week');
     return violations;
   }
 

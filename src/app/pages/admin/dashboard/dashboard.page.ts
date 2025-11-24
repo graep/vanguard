@@ -1,8 +1,7 @@
 // src/app/pages/admin/dashboard/dashboard.page.ts
-import { Component, OnInit, OnDestroy, AfterViewInit, NgZone, inject, ChangeDetectorRef, ElementRef, ViewChild } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit, NgZone, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { DragDropModule, CdkDragDrop, moveItemInArray, transferArrayItem, CdkDragStart, CdkDragEnd, CdkDragMove } from '@angular/cdk/drag-drop';
+import { DragDropModule, CdkDragDrop } from '@angular/cdk/drag-drop';
 import { 
   IonContent, 
   IonGrid, 
@@ -24,7 +23,6 @@ import { PlanningService } from '@app/services/planning.service';
 import { DailyPlan, getPlanStats } from '@app/models/planning.model';
 import { BreadcrumbService } from '@app/services/breadcrumb.service';
 import { AuthService, UserProfile } from '@app/services/auth.service';
-import { UserManagementService } from '@app/services/user-management.service';
 import { ToastController } from '@ionic/angular';
 import { Subscription, combineLatest, from, of } from 'rxjs';
 import { map, catchError, filter, take } from 'rxjs/operators';
@@ -97,7 +95,6 @@ interface StatisticsSection {
   standalone: true,
   imports: [
     CommonModule,
-    FormsModule,
     IonContent,
     IonIcon,
     IonSpinner,
@@ -199,19 +196,16 @@ export class DashboardPage implements OnInit, OnDestroy, AfterViewInit {
   private breadcrumbService = inject(BreadcrumbService);
   private authService = inject(AuthService);
   private modalCtrl = inject(ModalController);
-  private userManagementService = inject(UserManagementService);
   private toastCtrl = inject(ToastController);
   
   async ngOnInit() {
     this.breadcrumbService.clearTail();
-    console.log('=== ngOnInit() started ===');
     
     // Always wait for user to be authenticated - use a promise-based approach
     const loadPreferencesAndData = async () => {
       // Wait for user authentication
       let user = this.authService.currentUser$.value;
       if (!user) {
-        console.log('User not authenticated, waiting for auth...');
         // Wait for user to be authenticated
         await new Promise<void>((resolve) => {
           const userSub = this.authService.currentUser$.pipe(
@@ -226,10 +220,8 @@ export class DashboardPage implements OnInit, OnDestroy, AfterViewInit {
       }
       
       if (user) {
-        console.log('User authenticated:', user.uid);
         // Load preferences first
         await this.loadDashboardPreferences();
-        console.log('Preferences loading completed');
       }
       
       // Then load data (this will trigger initializeCards which uses the preferences)
@@ -287,7 +279,6 @@ export class DashboardPage implements OnInit, OnDestroy, AfterViewInit {
             this.users = users;
             this.todayPlan = plan;
             this.calculateAllStats();
-            console.log('Data loaded, initializing cards. _savedPreferences:', (this as any)._savedPreferences ? 'EXISTS' : 'NULL');
             this.initializeCards();
             this.isLoading = false;
           });
@@ -670,18 +661,8 @@ export class DashboardPage implements OnInit, OnDestroy, AfterViewInit {
     const computedStyle = window.getComputedStyle(gridContainer);
     const gridTemplateColumns = computedStyle.gridTemplateColumns;
     
-    console.log('=== Move Card Debug ===');
-    console.log('Card ID:', event.cardId);
-    console.log('Direction:', event.direction);
-    console.log('Current index:', cardIndex);
-    console.log('Container width:', containerWidth);
-    console.log('Min column width:', minColumnWidth, 'Gap:', gap);
-    console.log('Calculated gridColumns:', gridColumns);
-    console.log('Grid template columns (computed):', gridTemplateColumns);
-    console.log('Total cards:', this.allCards.length);
     
     if (gridColumns <= 0) {
-      console.log('ERROR: gridColumns <= 0, aborting');
       return;
     }
     
@@ -691,7 +672,6 @@ export class DashboardPage implements OnInit, OnDestroy, AfterViewInit {
     // Array index gridColumns = row 1, col 0 (second row, left)
     const currentRow = Math.floor(cardIndex / gridColumns);
     const currentCol = cardIndex % gridColumns;
-    console.log('Current position - Row:', currentRow, 'Col:', currentCol, '(index:', cardIndex + ')');
     
     let newIndex = cardIndex;
     
@@ -720,22 +700,14 @@ export class DashboardPage implements OnInit, OnDestroy, AfterViewInit {
     
     const newRow = Math.floor(newIndex / gridColumns);
     const newCol = newIndex % gridColumns;
-    console.log('New index:', newIndex);
-    console.log('New position - Row:', newRow, 'Col:', newCol, '(index:', newIndex + ')');
-    console.log('Row change:', newRow - currentRow, 'Col change:', newCol - currentCol);
-    console.log('Expected: Row change should be', event.direction === 'up' ? -1 : event.direction === 'down' ? 1 : 0);
-    console.log('Expected: Col change should be', event.direction === 'left' ? -1 : event.direction === 'right' ? 1 : 0);
     
     // Validate: if moving down from row 0, col 0, we should end up at row 1, col 0
     if (event.direction === 'down' && currentRow === 0 && currentCol === 0) {
-      console.log('VALIDATION: Moving down from (0,0) - should go to row 1, col 0');
-      console.log('  Calculated newIndex:', newIndex, 'which is row', newRow, 'col', newCol);
       if (newRow !== 1 || newCol !== 0) {
         console.error('  ERROR: Expected row 1, col 0 but got row', newRow, 'col', newCol);
         console.error('  This means gridColumns might be wrong. gridColumns =', gridColumns);
       }
     }
-    console.log('========================');
     
     // Only swap if the new index is different and valid
     if (newIndex !== cardIndex && newIndex >= 0 && newIndex < this.allCards.length) {
@@ -747,7 +719,6 @@ export class DashboardPage implements OnInit, OnDestroy, AfterViewInit {
       // Verify the swap worked correctly
       const verifyRow = Math.floor(newIndex / gridColumns);
       const verifyCol = newIndex % gridColumns;
-      console.log('After swap - Card at newIndex', newIndex, 'is now at Row:', verifyRow, 'Col:', verifyCol);
       
       // Update cardsBySection to reflect the new order
       this.syncCardsToSections();
@@ -820,7 +791,6 @@ export class DashboardPage implements OnInit, OnDestroy, AfterViewInit {
   private initializeCards(): void {
     // Prevent multiple initializations
     if ((this as any)._cardsInitialized) {
-      console.log('Cards already initialized, skipping');
       return;
     }
     
@@ -832,30 +802,25 @@ export class DashboardPage implements OnInit, OnDestroy, AfterViewInit {
     // Try to load card order from saved preferences first
     const savedPreferences = (this as any)._savedPreferences;
     if (savedPreferences) {
-      console.log('✅ Loading saved preferences:', savedPreferences);
       
       // Prefer flat order (exact display order) over section-based order
       if (savedPreferences.cardsOrder && Array.isArray(savedPreferences.cardsOrder) && savedPreferences.cardsOrder.length > 0) {
-        console.log('Loading card order from flat order:', savedPreferences.cardsOrder);
         this.loadCardOrderFromFlatOrder(savedPreferences.cardsOrder);
         // Mark that we have a saved order to prevent re-sorting
         (this as any)._hasSavedOrder = true;
       } else if (savedPreferences.cardsOrderBySection) {
-        console.log('Loading card order from section-based order');
         this.loadCardOrderFromPreferences(savedPreferences.cardsOrderBySection);
         // Rebuild allCards from cardsBySection to preserve order
         this.rebuildAllCardsFromSections();
         // Mark that we have a saved order to prevent re-sorting
         (this as any)._hasSavedOrder = true;
       } else {
-        console.log('No saved card order found, using default');
         this.loadCardOrder();
         this.updateAllCards();
       }
       
       // Load card colors if available (must be done after cards are loaded)
       if (savedPreferences.cardColors && Object.keys(savedPreferences.cardColors).length > 0) {
-        console.log('Loading card colors:', savedPreferences.cardColors);
         // Use setTimeout to ensure cards are fully initialized
         setTimeout(() => {
           this.loadCardColors(savedPreferences.cardColors);
@@ -865,9 +830,7 @@ export class DashboardPage implements OnInit, OnDestroy, AfterViewInit {
       // Mark as initialized and clear saved preferences after use
       (this as any)._cardsInitialized = true;
       (this as any)._savedPreferences = null;
-      console.log('✅ Cards initialized with saved preferences');
     } else {
-      console.log('No saved preferences found, loading from localStorage');
       this.loadCardOrder();
       this.updateAllCards();
       (this as any)._cardsInitialized = true;
@@ -878,7 +841,6 @@ export class DashboardPage implements OnInit, OnDestroy, AfterViewInit {
     // If we have a saved order, don't re-sort - preserve the exact order
     if ((this as any)._hasSavedOrder && this.allCards.length > 0) {
       // Just update card values without changing order
-      console.log('Skipping sort - preserving saved order');
       return;
     }
     
@@ -980,7 +942,6 @@ export class DashboardPage implements OnInit, OnDestroy, AfterViewInit {
       
       if (saved) {
         const savedOrder = JSON.parse(saved) as string[];
-        console.log('Loading card order from localStorage:', savedOrder);
         // Reorder all cards based on saved order
         const allCardsArray: StatCard[] = [];
         Object.values(this.cardsBySection).forEach((sectionCards: StatCard[]) => {
@@ -1216,8 +1177,6 @@ export class DashboardPage implements OnInit, OnDestroy, AfterViewInit {
       // Capture the EXACT current order of tiles as they appear on screen
       // Create a copy of allCards to preserve the exact order without any modifications
       const currentCardOrder = [...this.allCards].map(c => c.id);
-      console.log('Saving card order:', currentCardOrder);
-      console.log('Total cards:', this.allCards.length);
       
       // Collect all dashboard preferences including card colors
       const cardColors: Record<string, string> = {};
@@ -1226,7 +1185,6 @@ export class DashboardPage implements OnInit, OnDestroy, AfterViewInit {
           cardColors[card.id] = card.customColor;
         }
       });
-      console.log('Saving card colors:', cardColors);
       
       // Save the exact order as displayed (preserving current tile positions)
       // Include userId to ensure preferences are associated with the correct user
@@ -1241,17 +1199,8 @@ export class DashboardPage implements OnInit, OnDestroy, AfterViewInit {
         savedAt: new Date().toISOString()
       };
       
-      console.log('Saving preferences to Firestore for user:', user.uid);
-      
       // Save to Firestore user document (user-specific storage)
       const userRef = doc(this.firestore, 'users', user.uid);
-      console.log('Updating Firestore document at path:', userRef.path);
-      console.log('Preferences object structure:', {
-        userId: preferences.userId,
-        sectionsCount: preferences.sections?.length,
-        cardsOrderCount: preferences.cardsOrder?.length,
-        hasCardColors: !!preferences.cardColors && Object.keys(preferences.cardColors).length > 0
-      });
       
       await updateDoc(userRef, {
         dashboardPreferences: preferences
@@ -1262,15 +1211,8 @@ export class DashboardPage implements OnInit, OnDestroy, AfterViewInit {
         const verifySnap = await getDoc(userRef);
         if (verifySnap.exists()) {
           const savedData = verifySnap.data();
-          console.log('Verification - User document exists:', verifySnap.exists());
-          console.log('Verification - Document keys:', Object.keys(savedData));
           if (savedData['dashboardPreferences']) {
             const savedPrefs = savedData['dashboardPreferences'];
-            console.log('Verification - dashboardPreferences found:', {
-              userId: savedPrefs.userId,
-              cardsOrderCount: savedPrefs.cardsOrder?.length,
-              hasSectionsData: !!savedPrefs.sectionsData
-            });
           } else {
             console.warn('Verification - dashboardPreferences NOT found in saved document!');
           }
@@ -1281,16 +1223,12 @@ export class DashboardPage implements OnInit, OnDestroy, AfterViewInit {
         console.error('Error verifying save:', verifyError);
       }
       
-      console.log('Preferences saved to Firestore successfully');
-      
       // Also save to localStorage as backup with user-specific keys
       const userStoragePrefix = `dashboard_${user.uid}_`;
       localStorage.setItem(`${userStoragePrefix}${this.STORAGE_KEY_SECTIONS}`, JSON.stringify(preferences.sections));
       localStorage.setItem(`${userStoragePrefix}${this.STORAGE_KEY_SECTIONS_DATA}`, JSON.stringify(preferences.sectionsData));
       localStorage.setItem(`${userStoragePrefix}${this.STORAGE_KEY_CARDS}`, JSON.stringify(preferences.cardsOrder));
       localStorage.setItem(`${userStoragePrefix}statistics_cards_order_by_section`, JSON.stringify(preferences.cardsOrderBySection));
-      
-      console.log('Preferences also saved to localStorage');
       
       // Don't call updateAllCards() or saveCardOrder() here - we want to preserve the exact current state
       
@@ -1322,54 +1260,39 @@ export class DashboardPage implements OnInit, OnDestroy, AfterViewInit {
   }
   
   private async loadDashboardPreferences(): Promise<void> {
-    console.log('=== loadDashboardPreferences() called ===');
     const user = this.authService.currentUser$.value;
-    console.log('Current user:', user ? { uid: user.uid, email: user.email } : 'null');
     
     let preferences: any = null;
     
     // Try to load from Firestore first (user-specific preferences)
     if (user) {
       try {
-        console.log('Loading preferences from Firestore for user:', user.uid);
         const userRef = doc(this.firestore, 'users', user.uid);
-        console.log('User ref path:', userRef.path);
-        
         const userSnap = await getDoc(userRef);
-        console.log('User document exists:', userSnap.exists());
         
         if (userSnap.exists()) {
           const userData = userSnap.data();
-          console.log('User document data keys:', Object.keys(userData));
-          console.log('Full user data:', userData);
           
           if (userData && userData['dashboardPreferences']) {
             preferences = userData['dashboardPreferences'];
-            console.log('Found dashboard preferences:', preferences);
-            console.log('Preferences keys:', preferences ? Object.keys(preferences) : 'null');
             
             // Verify that preferences belong to the current user
             if (preferences.userId && preferences.userId !== user.uid) {
               console.warn('Dashboard preferences userId mismatch. Expected:', user.uid, 'Got:', preferences.userId);
               preferences = null; // Don't use preferences from wrong user
             } else {
-              console.log('Preferences validated for user:', user.uid);
             }
           } else {
-            console.log('No dashboardPreferences found in user document. Available keys:', Object.keys(userData || {}));
           }
         } else {
-          console.log('User document does not exist in Firestore');
         }
       } catch (error) {
         console.error('Error loading dashboard preferences from Firestore for user:', user.uid, error);
         console.error('Error details:', error);
       }
     } else {
-      console.log('No user authenticated, skipping Firestore load');
     }
     
-    console.log('Preferences loaded from Firestore:', preferences ? 'YES' : 'NO');
     
     // Load sections
     if (preferences?.sectionsData && Array.isArray(preferences.sectionsData)) {
@@ -1414,21 +1337,10 @@ export class DashboardPage implements OnInit, OnDestroy, AfterViewInit {
     
     // Store preferences for later use when cards are initialized
     if (preferences) {
-      console.log('✅ Storing preferences for card initialization');
-      console.log('Preferences structure:', {
-        hasCardsOrder: !!preferences.cardsOrder,
-        cardsOrderLength: preferences.cardsOrder?.length,
-        hasSectionsData: !!preferences.sectionsData,
-        hasCardColors: !!preferences.cardColors
-      });
       (this as any)._savedPreferences = preferences;
-      console.log('_savedPreferences set:', (this as any)._savedPreferences ? 'YES' : 'NO');
     } else {
-      console.log('❌ No preferences to store, _savedPreferences will remain null');
-      console.log('Will fall back to localStorage when initializing cards');
       (this as any)._savedPreferences = null;
     }
-    console.log('=== loadDashboardPreferences() completed ===');
   }
   
   private loadCardOrderFromPreferences(cardsOrderBySection: Record<string, string[]>): void {

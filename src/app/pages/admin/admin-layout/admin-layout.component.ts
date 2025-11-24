@@ -3,7 +3,7 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { IonicModule } from '@ionic/angular';
 import { ActivatedRoute, NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { NavbarComponent } from '../navbar/navbar.component';
-import { BreadcrumbItem, BreadcrumbComponent } from '@app/components/breadcrumb/breadcrumb.component';
+import { BreadcrumbItem } from '@app/components/breadcrumb/breadcrumb.component';
 import { PageHeaderComponent } from '@app/components/page-header/page-header.component';
 import { CommonModule } from '@angular/common';
 import { filter } from 'rxjs/operators';
@@ -14,7 +14,7 @@ import { NavbarStateService } from '@app/services/navbar-state.service';
 @Component({
   selector: 'app-admin-layout',
   standalone: true,
-  imports: [IonicModule, CommonModule, RouterOutlet, NavbarComponent, BreadcrumbComponent, PageHeaderComponent],
+  imports: [IonicModule, CommonModule, RouterOutlet, NavbarComponent, PageHeaderComponent],
   templateUrl: './admin-layout.component.html',
   styleUrls: ['./admin-layout.component.scss']
 })

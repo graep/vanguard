@@ -246,7 +246,6 @@ export class GlobalErrorHandlerService implements ErrorHandler {
             const deleteRequest = indexedDB.deleteDatabase(dbName);
             
             deleteRequest.onsuccess = () => {
-              console.log(`Deleted IndexedDB: ${dbName}`);
               resolveDelete();
             };
             

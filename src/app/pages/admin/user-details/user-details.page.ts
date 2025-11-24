@@ -380,7 +380,6 @@ export class UserDetailsPage implements OnInit {
 
   private async loadInspections(userId: string): Promise<void> {
     try {
-      console.log('[UserDetails] Loading inspections for user:', userId);
       const inspectionsRef = collection(this.firestore, 'inspections');
       const q = query(
         inspectionsRef,
@@ -389,7 +388,6 @@ export class UserDetailsPage implements OnInit {
       );
       
       const querySnapshot = await getDocs(q);
-      console.log('[UserDetails] Found', querySnapshot.docs.length, 'inspections');
       
       this.inspectionHistory = querySnapshot.docs.map(doc => {
         const data = doc.data();
@@ -416,7 +414,6 @@ export class UserDetailsPage implements OnInit {
         };
       });
       
-      console.log('[UserDetails] Processed', this.inspectionHistory.length, 'inspections');
     } catch (error: any) {
       console.error('[UserDetails] Error loading inspections:', error);
       console.error('[UserDetails] Error code:', error?.code);
@@ -460,7 +457,6 @@ export class UserDetailsPage implements OnInit {
           
           // Sort manually by date descending
           this.inspectionHistory.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-          console.log('[UserDetails] Loaded', this.inspectionHistory.length, 'inspections (without index)');
         } catch (fallbackError) {
           console.error('[UserDetails] Fallback query also failed:', fallbackError);
           this.inspectionHistory = [];
@@ -499,13 +495,8 @@ export class UserDetailsPage implements OnInit {
 
   private async loadSafetyViolations(userId: string): Promise<void> {
     try {
-      console.log('[UserDetails] Loading safety violations for user:', userId);
       // Load weekly violations
       this.weeklyViolations = await this.safetyViolationService.getWeeklyViolations(userId);
-      console.log('[UserDetails] Weekly violations loaded:', this.weeklyViolations.length);
-      this.weeklyViolations.forEach(v => {
-        console.log('[UserDetails] Violation:', v.violationType, 'on', v.occurredAt.toISOString());
-      });
       
       // Calculate violation counts for the week
       const now = new Date();
@@ -517,14 +508,12 @@ export class UserDetailsPage implements OnInit {
       sunday.setDate(monday.getDate() + 6);
       sunday.setHours(23, 59, 59, 999);
 
-      console.log('[UserDetails] Week range:', monday.toISOString(), 'to', sunday.toISOString());
 
       this.violationCounts = await this.safetyViolationService.getViolationCountsByType(
         userId,
         monday,
         sunday
       );
-      console.log('[UserDetails] Violation counts:', this.violationCounts);
     } catch (error: any) {
       console.error('[UserDetails] Error loading safety violations:', error);
       this.weeklyViolations = [];
@@ -597,13 +586,6 @@ export class UserDetailsPage implements OnInit {
         throw new Error('User not loaded');
       }
       
-      console.log('[UserDetails] Adding violation:', {
-        userId: this.user.uid,
-        violationType: data.violationType,
-        occurredAt: data.occurredAt.toISOString(),
-        createdBy: currentUser.uid,
-        notes: data.notes
-      });
       
       await this.safetyViolationService.addViolation({
         userId: this.user.uid,
@@ -613,10 +595,8 @@ export class UserDetailsPage implements OnInit {
         notes: data.notes
       });
 
-      console.log('[UserDetails] Violation added, reloading...');
       // Reload violations
       await this.loadSafetyViolations(this.user.uid);
-      console.log('[UserDetails] Reloaded violations:', this.weeklyViolations.length);
       if (this.showAllTimeViolations) {
         this.allTimeViolations = await this.safetyViolationService.getAllTimeViolations(this.user.uid);
       }

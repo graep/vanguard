@@ -1,6 +1,5 @@
 // src/app/pages/admin/fleet/fleet.page.ts
 import { Component, NgZone, OnInit, OnDestroy, inject } from '@angular/core';
-import { Auth } from '@angular/fire/auth';
 import {
   Firestore,
   collection,
@@ -11,17 +10,13 @@ import {
   IonContent,
   IonIcon,
   IonButton,
-  LoadingController,
   ToastController,
   ModalController
 } from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Van } from 'src/app/models/van.model';
 import { StatusCountBarComponent, StatusDataSource } from '@app/components/status-count-bar/status-count-bar.component';
-import { BreadcrumbItem } from '@app/components/breadcrumb/breadcrumb.component';
-import { NavService } from '@app/services/nav.service';
 import { VanService } from '@app/services/van.service';
 import { AddVanModalComponent } from '@app/components/add-van-modal/add-van-modal.component';
 import { BreadcrumbService } from '@app/services/breadcrumb.service';
@@ -33,7 +28,6 @@ import { Subscription } from 'rxjs';
   standalone: true,
   imports: [
     CommonModule, 
-    FormsModule,
     IonContent,
     IonIcon,
     IonButton,
@@ -64,42 +58,13 @@ export class FleetPage implements OnInit, OnDestroy {
     searchFields: ['docId', 'VIN', 'type', 'number']
   };
 
-  cdvDataSource: StatusDataSource = {
-    items: [],
-    statusField: 'isGrounded',
-    activeValue: false,
-    searchFields: ['docId', 'VIN', 'number'],
-    filterField: 'type',
-    filterValue: 'CDV'
-  };
-
-  edvDataSource: StatusDataSource = {
-    items: [],
-    statusField: 'isGrounded', 
-    activeValue: false,
-    searchFields: ['docId', 'VIN', 'number'],
-    filterField: 'type',
-    filterValue: 'EDV'
-  };
-
-  rentalDataSource: StatusDataSource = {
-    items: [],
-    statusField: 'isGrounded',
-    activeValue: false,
-    searchFields: ['docId', 'VIN', 'number'],
-    filterField: 'type',
-    filterValue: 'Rental'
-  };
 
   // Inject only what we need
   private route = inject(ActivatedRoute);
   private firestore = inject(Firestore);
   private router = inject(Router);
-  private auth = inject(Auth);
   private ngZone = inject(NgZone);
-  private navService = inject(NavService);
   private vanService = inject(VanService);
-  private loadingCtrl = inject(LoadingController);
   private toastCtrl = inject(ToastController);
   private modalCtrl = inject(ModalController);
   private breadcrumbService = inject(BreadcrumbService);
@@ -203,7 +168,6 @@ export class FleetPage implements OnInit, OnDestroy {
     
     if (data) {
       // Van was added successfully, the data will be automatically updated via the Firestore subscription
-      console.log('New van added:', data);
     }
   }
 
@@ -232,12 +196,6 @@ export class FleetPage implements OnInit, OnDestroy {
       });
       await toast.present();
     }
-  }
-
-  async logout(): Promise<void> {
-    await this.auth.signOut();
-    this.navService.enhancedLogout(); // Clear both app and browser history
-    this.router.navigate(['/login'], { replaceUrl: true });
   }
 
   /**

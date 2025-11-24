@@ -55,12 +55,10 @@ export class RecentSubmissionsModalComponent implements OnInit {
   }
 
   async view(item: Inspection) {
-    console.log('Viewing inspection:', item);
-    
     try { 
       await this.insp.markSeen(item.id); 
     } catch (error) {
-      console.log('Could not mark as seen:', error);
+      // Could not mark as seen
     }
     
     await this.modalCtrl.dismiss();

@@ -61,17 +61,12 @@ export class AppHeaderComponent {
   ) {}
 
   async goBack() {
-    console.log('[AppHeader] Back button pressed');
-    
     // Check if we're on the photo-capture page
     const currentUrl = this.router.url;
-    console.log('[AppHeader] Current URL:', currentUrl);
     
     if (currentUrl.includes('/photo-capture/')) {
-      console.log('[AppHeader] On photo-capture page - navigating to van-selection');
       this.router.navigate(['/van-selection']);
     } else {
-      console.log('[AppHeader] Using standard back navigation');
       this.location.back();
     }
   }

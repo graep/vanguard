@@ -514,11 +514,8 @@ export class IssuesTabComponent implements OnInit {
 
   private async loadIssueRecords() {
     try {
-      console.log('Loading issue records for vanId:', this.vanId);
-      
       // Get van data to determine vanType and vanNumber
       const vanData = await this.getVanData();
-      console.log('Van data:', vanData);
       
       if (!vanData) {
         console.error('Could not load van data');
@@ -531,12 +528,9 @@ export class IssuesTabComponent implements OnInit {
         vanData.vanNumber
       );
       
-      console.log('Approved inspections:', approvedInspections);
-
       // Convert approved inspection reports to issue records
       this.issueRecords = [];
       for (const inspection of approvedInspections) {
-        console.log('Processing inspection:', inspection.id, 'Status:', inspection.status, 'Report:', inspection.report);
         
         if (inspection.report && inspection.report.length > 0) {
           // Get submitter display name
@@ -552,7 +546,6 @@ export class IssuesTabComponent implements OnInit {
 
           // Convert each reported issue to an IssueRecord
           for (const reportedIssue of inspection.report) {
-            console.log('Converting issue:', reportedIssue);
             
             const issueRecord: IssueRecord = {
               id: `${inspection.id}_${reportedIssue.name}`,
@@ -572,7 +565,6 @@ export class IssuesTabComponent implements OnInit {
         }
       }
 
-      console.log('Final issue records:', this.issueRecords);
 
       // Sort by reported date (newest first)
       this.issueRecords.sort((a, b) => b.reportedDate.getTime() - a.reportedDate.getTime());

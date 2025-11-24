@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule }      from '@angular/common';
 import { FormsModule }       from '@angular/forms';
-import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import {
   IonContent,
   IonCheckbox,
@@ -39,7 +39,6 @@ interface IssueCategory {
   imports: [
     CommonModule,
     FormsModule,
-    RouterModule,
     IonContent,
     IonCheckbox,
     IonSelect,
@@ -489,7 +488,6 @@ export class UserReviewPage implements OnInit {
 
   /** User taps "Submit Review" */
   async submitReview() {
-    console.log('🔔 submitReview start — ID:', this.inspectionId);
 
     // Upload "Unsure" photo if it exists
     let unsurePhotoUrl: string | undefined;
@@ -501,7 +499,6 @@ export class UserReviewPage implements OnInit {
           'unsure',
           this.unsureIssue.capturedPhoto
         );
-        console.log('✅ Unsure photo uploaded:', unsurePhotoUrl);
       } catch (error) {
         console.error('❌ Failed to upload unsure photo:', error);
         // Continue without photo rather than failing the entire submission
@@ -532,21 +529,16 @@ export class UserReviewPage implements OnInit {
     try {
       // Step 1: Get mileage and update van
       const miles = this.gps.getMiles();
-      console.log('📊 Miles driven this shift:', miles);
-      
       // Update van mileage in Firestore
       if (miles > 0 && this.vanId) {
         await this.insp.updateVanMileage(this.vanId, miles);
-        console.log('✅ Van mileage updated');
       }
 
       // Step 2: merge report into the *same* document
       await this.insp.saveReport(this.inspectionId, reported);
-      console.log('✅ saveReport succeeded');
 
       // Step 3: Stop GPS tracking and shift session
       await this.shiftSession.stopShift('logout');
-      console.log('✅ Shift session ended');
 
       // show a toast immediately
       const toast = await this.toastCtrl.create({
@@ -559,7 +551,6 @@ export class UserReviewPage implements OnInit {
 
       // after 2s, logout & redirect
       setTimeout(async () => {
-        console.log('🔒 Logging out & navigating to /login');
         await this.auth.logout();
         this.navService.enhancedLogout(); // Clear both app and browser history
         await this.router.navigateByUrl('/login', { replaceUrl: true });

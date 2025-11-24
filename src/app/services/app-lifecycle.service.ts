@@ -72,22 +72,22 @@ export class AppLifecycleService {
   }
 
   private handleAppResume() {
+    // DISABLED: Inspection prompt disabled per user request
     // Check if we're in background tracking mode
-    const trackingData = localStorage.getItem('vanguard_background_tracking');
-    if (trackingData) {
-      try {
-        const data = JSON.parse(trackingData);
-        // Show inspection prompt
-        this.showInspectionPrompt(data);
-      } catch (error) {
-        console.error('Error parsing background tracking data:', error);
-      }
-    }
+    // const trackingData = localStorage.getItem('vanguard_background_tracking');
+    // if (trackingData) {
+    //   try {
+    //     const data = JSON.parse(trackingData);
+    //     // Show inspection prompt
+    //     this.showInspectionPrompt(data);
+    //   } catch (error) {
+    //     console.error('Error parsing background tracking data:', error);
+    //   }
+    // }
   }
 
   private handleAppPause() {
     // App went to background - GPS should continue tracking
-    console.log('App paused - GPS tracking continues in background');
   }
 
   private async showInspectionPrompt(vanData: { vanType: string; vanNumber: string; vanId: string }) {

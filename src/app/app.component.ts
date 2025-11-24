@@ -33,21 +33,10 @@ export class AppComponent implements OnInit, OnDestroy {
     (window as any).checkAuth = () => {
       const user = this.authService.currentUser$.value;
       const profile = this.authService.currentUserProfile$.value;
-      console.log('=== AUTH DEBUG INFO ===');
-      console.log('Firebase Auth User:', user ? {
-        uid: user.uid,
-        email: user.email,
-        displayName: user.displayName
-      } : 'Not logged in');
-      console.log('Firestore Profile:', profile);
-      console.log('Is Admin:', this.authService.isAdmin);
-      console.log('Is Owner:', this.authService.isOwner);
-      console.log('Roles:', profile?.roles || []);
+      // Auth debug info available via checkAuth() helper
       return { user, profile };
     };
-    if (isDevMode() || window.location.hostname === 'localhost') {
-      console.log('💡 Tip: Run checkAuth() in console to see current user info');
-    }
+    // Debug helper available: checkAuth() in console
   }
 
   private async initStatusBar() {
@@ -85,7 +74,7 @@ export class AppComponent implements OnInit, OnDestroy {
         .pipe(filter((evt): evt is VersionReadyEvent => evt.type === 'VERSION_READY'))
         .subscribe(() => {
           // Force immediate update when new version is ready
-          console.log('New version available, reloading...');
+          // New version available, reloading
           window.location.reload();
         });
     }

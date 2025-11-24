@@ -103,7 +103,6 @@ export class VanSelectionPage implements OnInit, OnDestroy {
   async selectVan(van: Van) {
     // Prevent selection of grounded vans
     if (van.isGrounded) {
-      console.log('Cannot select grounded van:', van.number);
       return;
     }
 

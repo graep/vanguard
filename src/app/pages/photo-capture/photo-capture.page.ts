@@ -1,22 +1,19 @@
 import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { ViewWillLeave } from '@ionic/angular';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, RouterModule, Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import {
   IonContent,
   IonButton,
   IonImg,
   IonLoading,
   IonIcon,
-  IonModal,
   ToastController,
   Platform
 } from '@ionic/angular/standalone';
 import { InspectionService } from 'src/app/services/inspection.service';
 import { Auth } from '@angular/fire/auth';
-import { getApp } from '@angular/fire/app';
 import { Firestore, doc, getDoc } from '@angular/fire/firestore';
-import { AppHeaderComponent } from '@app/components/app-header/app-header.component';
 import { NavService } from '@app/services/nav.service';
 import { AppLifecycleService } from '@app/services/app-lifecycle.service';
 import { FullscreenCameraComponent } from '@app/components/fullscreen-camera/fullscreen-camera.component';
@@ -35,7 +32,6 @@ import { Van } from '@app/models/van.model';
     IonButton,
     IonIcon,
     IonContent,
-    IonModal,
     CommonModule,
     FullscreenCameraComponent,
     PageHeaderComponent
@@ -67,7 +63,6 @@ export class PhotoCapturePage implements OnInit, OnDestroy, ViewWillLeave {
   isLoading = false;
   showCamera = false;
   currentSide = '';
-  showInspectionPrompt = false;
 
   get allPhotosTaken(): boolean {
     return this.sides.every((side) => !!this.photos[side]);
@@ -79,21 +74,6 @@ export class PhotoCapturePage implements OnInit, OnDestroy, ViewWillLeave {
 
   getProgressPercentage(): number {
     return (this.getCompletedCount() / this.sides.length) * 100;
-  }
-
-  getSideIcon(side: string): string {
-    switch (side) {
-      case 'front':
-        return 'arrow-forward';
-      case 'rear':
-        return 'arrow-back';
-      case 'driver':
-        return 'arrow-down';
-      case 'passenger':
-        return 'arrow-up';
-      default:
-        return 'camera';
-    }
   }
 
   getSideOverlayImage(side: string): string {
@@ -142,10 +122,11 @@ export class PhotoCapturePage implements OnInit, OnDestroy, ViewWillLeave {
     }
     
     // Check if we're coming from background tracking
-    const fromBackground = this.route.snapshot.queryParamMap.get('fromBackground') === 'true';
-    if (fromBackground) {
-      this.showInspectionPrompt = true;
-    }
+    // DISABLED: Inspection prompt disabled per user request
+    // const fromBackground = this.route.snapshot.queryParamMap.get('fromBackground') === 'true';
+    // if (fromBackground) {
+    //   this.showInspectionPrompt = true;
+    // }
     
     // Setup breadcrumb items
     this.breadcrumbItems = [
@@ -220,16 +201,12 @@ export class PhotoCapturePage implements OnInit, OnDestroy, ViewWillLeave {
     // Check if we have any photos and clear them when returning to the page
     const hasPhotos = Object.values(this.photos).some(photo => photo !== null);
     if (hasPhotos) {
-      console.log('Returning to photo capture page - clearing existing photos');
       this.clearAllPhotos();
     }
   }
 
   ionViewWillLeave() {
     // Clear photos when leaving the page
-    console.log('Leaving photo capture page - clearing photos');
-    console.log('Current URL:', window.location.pathname);
-    console.log('Navigation history:', this.navService);
     this.clearAllPhotos();
   }
 
@@ -238,7 +215,6 @@ export class PhotoCapturePage implements OnInit, OnDestroy, ViewWillLeave {
   }
 
   private clearAllPhotos() {
-    console.log('Clearing all photos');
     this.photos = {
       front: null,
       rear: null,
@@ -251,28 +227,21 @@ export class PhotoCapturePage implements OnInit, OnDestroy, ViewWillLeave {
 
   /** Shows the full-screen camera for the given side */
   takePhoto(side: string) {
-    console.log('takePhoto called for side:', side);
     this.currentSide = side;
     this.showCamera = true;
-    console.log('showCamera set to:', this.showCamera);
-    console.log('currentSide set to:', this.currentSide);
   }
 
   /** Handles photo captured from camera component */
   onPhotoCaptured(photo: string) {
-    console.log('onPhotoCaptured called for side:', this.currentSide);
     this.photos[this.currentSide] = photo;
     this.showCamera = false;
     this.currentSide = '';
-    console.log('showCamera set to false, camera hidden');
   }
 
   /** Handles camera cancellation */
   onCameraCancelled() {
-    console.log('onCameraCancelled called');
     this.showCamera = false;
     this.currentSide = '';
-    console.log('showCamera set to false, camera hidden');
   }
 
   private async showSuccessToast() {
@@ -286,10 +255,6 @@ export class PhotoCapturePage implements OnInit, OnDestroy, ViewWillLeave {
   }
 
   async submitAll() {
-    console.log('runtime bucket =', getApp().options.storageBucket);
-    console.log('uid at upload:', this.auth.currentUser?.uid);
-    console.log('auth state:', this.auth.currentUser);
-    
     // Check authentication before proceeding
     if (!this.auth.currentUser) {
       console.error('User not authenticated');
@@ -308,7 +273,6 @@ export class PhotoCapturePage implements OnInit, OnDestroy, ViewWillLeave {
       // 1. Upload all four photos and collect URLs
       const urls: Record<string, string> = {};
       for (const side of this.sides) {
-        console.log(`Uploading ${side} photo...`);
         const data = this.photos[side]!;
         try {
           urls[side] = await this.inspection.uploadPhoto(
@@ -317,7 +281,6 @@ export class PhotoCapturePage implements OnInit, OnDestroy, ViewWillLeave {
             side,
             data
           );
-          console.log(`${side} photo uploaded successfully:`, urls[side]);
         } catch (uploadError) {
           console.error(`Failed to upload ${side} photo:`, uploadError);
           const errorMessage = uploadError instanceof Error ? uploadError.message : String(uploadError);
@@ -326,13 +289,11 @@ export class PhotoCapturePage implements OnInit, OnDestroy, ViewWillLeave {
       }
 
       // 2. Save the inspection (photos) and grab its new Firestore ID
-      console.log('Saving inspection to Firestore...');
       const inspectionId = await this.inspection.saveInspection(
         this.vanType,
         this.vanNumber,
         urls
       );
-      console.log('Inspection saved with ID:', inspectionId);
 
       // 3. Hide the spinner
       this.isLoading = false;
@@ -356,11 +317,6 @@ export class PhotoCapturePage implements OnInit, OnDestroy, ViewWillLeave {
       
       // Type-safe error handling
       const error = e as any;
-      console.error('Error details:', {
-        message: error?.message,
-        code: error?.code,
-        stack: error?.stack
-      });
       this.isLoading = false;
       
       let errorMessage = 'Could not upload photos. Try again.';
@@ -381,32 +337,6 @@ export class PhotoCapturePage implements OnInit, OnDestroy, ViewWillLeave {
         position: 'top',
       });
       await errToast.present();
-    }
-  }
-  async startInspection() {
-    this.showInspectionPrompt = false;
-  }
-
-  async returnLater() {
-    // Close the modal
-    this.showInspectionPrompt = false;
-    
-    // Navigate back to background-tracking page
-    // This keeps the background tracking state active
-    // The prompt will show again when user returns to the app
-    const trackingData = this.appLifecycle.getBackgroundTrackingData();
-    if (trackingData) {
-      this.router.navigate(['/background-tracking'], {
-        queryParams: {
-          vanType: trackingData.vanType,
-          vanNumber: trackingData.vanNumber,
-          vanId: trackingData.vanId
-        },
-        replaceUrl: true
-      });
-    } else {
-      // Fallback: navigate to van selection
-      this.router.navigate(['/van-selection'], { replaceUrl: true });
     }
   }
 

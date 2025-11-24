@@ -69,7 +69,6 @@ export class ConfigService {
   private loadProductionConfig(): FirebaseConfig {
     // For now, use the same config as development since Firebase config is safe to expose
     // In a real enterprise app, you would load from environment variables
-    console.log('Loading production Firebase configuration');
     return {
       apiKey: "AIzaSyDFQZGnHK4z-P80XHo2kkkoHkJpwz2XDXQ",
       authDomain: "vanguard-f8b90.firebaseapp.com",
@@ -86,7 +85,6 @@ export class ConfigService {
     try {
       const envConfig = this.loadFromEnvironmentVariables();
       if (envConfig) {
-        console.log('Loaded Firebase config from environment variables');
         return envConfig;
       }
     } catch (error) {
@@ -97,7 +95,6 @@ export class ConfigService {
     try {
       const localConfig = this.loadLocalConfig();
       if (localConfig) {
-        console.log('Loaded Firebase config from local file');
         return localConfig;
       }
     } catch (error) {

@@ -91,7 +91,6 @@ export class AuthService {
       // IMPORTANT: Only create fallback if document truly doesn't exist
       // This prevents overwriting existing profiles due to race conditions or permission issues
       if (!profile && user && this.autoBackfillProfileIfMissing) {
-        console.log('[AuthService] Profile not found, checking if document exists before creating fallback...', user.uid);
         try {
           const ref = doc(this.firestore, 'users', user.uid);
           
@@ -116,12 +115,8 @@ export class AuthService {
               // Preserve admin/owner status from custom claims
               if (claims?.['admin'] === true) {
                 roles = ['admin', 'driver'];
-                console.log('[AuthService] ✅ Preserving admin status from custom claims');
               } else if (claims?.['owner'] === true) {
                 roles = ['owner', 'driver'];
-                console.log('[AuthService] ✅ Preserving owner status from custom claims');
-              } else {
-                console.log('[AuthService] ℹ️ No admin/owner custom claims found, using default driver role');
               }
             } catch (tokenError) {
               console.warn('[AuthService] Could not check custom claims:', tokenError);
@@ -150,12 +145,9 @@ export class AuthService {
             profile = await firstValueFrom(
               docData(ref).pipe(take(1), map(d => d as UserProfile))
             );
-            console.log('[AuthService] ✅ Created fallback profile for user:', user.uid, 'with roles:', roles);
           } else {
             // Document exists but wasn't returned initially - re-read it
             profile = snap.data() as UserProfile;
-            console.log('[AuthService] ✅ Profile found on second check (document exists):', user.uid);
-            console.log('[AuthService] Profile data:', profile);
           }
         } catch (e: any) {
           console.error('[AuthService] ❌ Profile backfill check failed:', e);

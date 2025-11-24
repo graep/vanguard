@@ -91,7 +91,6 @@ export class NavbarComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    console.log('NavbarComponent ngOnDestroy called');
     this.subs.forEach(s => s.unsubscribe());
   }
 

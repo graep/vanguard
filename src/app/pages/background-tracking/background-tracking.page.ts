@@ -33,7 +33,6 @@ export class BackgroundTrackingPage implements OnInit {
     // Show message for 3 seconds, then the user can switch apps
     // The app lifecycle service will handle navigation when they return
     setTimeout(() => {
-      console.log('Background tracking initialized. User can now switch apps.');
     }, 3000);
   }
 
@@ -46,7 +45,6 @@ export class BackgroundTrackingPage implements OnInit {
       startedAt: Date.now()
     }));
     
-    console.log('GPS tracking started. App will continue tracking in background.');
     
     // Try to minimize the app on Android
     if (this.platform.is('capacitor') && this.platform.is('android')) {
@@ -71,7 +69,6 @@ export class BackgroundTrackingPage implements OnInit {
         return;
       }
     } catch (error) {
-      console.log('Could not minimize app programmatically:', error);
       // User will need to press home button manually
     }
   }

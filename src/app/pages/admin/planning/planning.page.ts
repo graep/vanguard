@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, Renderer2, ElementRef, ViewChild, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, Renderer2, ViewChild, ChangeDetectorRef, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonicModule, LoadingController, ToastController, ModalController } from '@ionic/angular';
@@ -95,7 +95,6 @@ export class PlanningPage implements OnInit, OnDestroy {
   private toastCtrl = inject(ToastController);
   private router = inject(Router);
   private renderer = inject(Renderer2);
-  private elementRef = inject(ElementRef);
   private cdr = inject(ChangeDetectorRef);
   
   ngOnInit() {
@@ -112,7 +111,6 @@ export class PlanningPage implements OnInit, OnDestroy {
     // Also trigger after a short delay as fallback
     setTimeout(() => {
       if (!this.dailyPlan && !this.isLoading) {
-        console.log('[Planning] Fallback: Triggering daily plan load after timeout');
         this.loadDailyPlan();
       }
     }, 1000);
@@ -213,17 +211,8 @@ export class PlanningPage implements OnInit, OnDestroy {
           return a.number - b.number;
         });
         
-        // Log vans loaded
-        console.log('[Planning] Loaded', this.allVans.length, 'active vans');
-        console.log('[Planning] Van types:', Array.from(new Set(this.allVans.map(v => v.type))));
-        console.log('[Planning] Van order after sorting:');
-        for (const van of this.allVans) {
-          console.log(`  ${van.type} ${van.number} (docId: ${van.docId})`);
-        }
-        
         // Trigger daily plan load when vans are ready (only if not already loading)
         if (!this.dailyPlan && !this.isLoading) {
-          console.log('[Planning] Vans loaded, triggering daily plan load');
           this.loadDailyPlan();
         }
       },
@@ -255,7 +244,6 @@ export class PlanningPage implements OnInit, OnDestroy {
           .map(user => this.authService.getDisplayName(user as UserProfile))
           .sort();
         
-        console.log('[Planning] Loaded', this.driverNames.length, 'active drivers');
       },
       error: (error) => {
         console.error('Error loading users:', error);
@@ -273,7 +261,6 @@ export class PlanningPage implements OnInit, OnDestroy {
       let waited = 0;
       
       while (this.allVans.length === 0 && waited < maxWaitTime) {
-        console.log('[Planning] Waiting for vans to load...', waited, 'ms');
         await new Promise(resolve => setTimeout(resolve, checkInterval));
         waited += checkInterval;
       }
@@ -298,20 +285,9 @@ export class PlanningPage implements OnInit, OnDestroy {
       
       this.dailyPlan = plan;
       
-      // Log assignments for debugging
-      console.log('[Planning] Loaded plan with', plan.assignments?.length || 0, 'assignments');
-      if (plan.assignments && plan.assignments.length > 0) {
-        const assignedCount = plan.assignments.filter(a => a.driverName && a.driverName.trim() !== '').length;
-        console.log('[Planning] Assigned count:', assignedCount, 'out of', plan.assignments.length);
-        plan.assignments.forEach((a, i) => {
-          console.log(`[Planning] Assignment ${i}: id=${a.id}, driverName="${a.driverName}", vanId=${a.vanId}`);
-        });
-      }
-      
       // Calculate stats (grouped for display)
       this.groupedAssignments = groupAssignmentsByType(plan.assignments);
       this.stats = getPlanStats(plan);
-      console.log('[Planning] Stats calculated:', this.stats);
       
       // Update cached properties
       this.updateCachedProperties();
@@ -1341,7 +1317,6 @@ export class PlanningPage implements OnInit, OnDestroy {
       const activeVansCount = this.allVans.length;
       const routesToFill = Math.min(this.numberOfRoutes, activeVansCount);
       
-      console.log(`[Generate Routes] Creating ${this.numberOfRoutes} routes with ${routesToFill} active vans`);
       
       for (let i = 0; i < this.numberOfRoutes; i++) {
         let vanId = '';
@@ -1355,9 +1330,7 @@ export class PlanningPage implements OnInit, OnDestroy {
           vanType = (van.type || 'CDV') as VehicleType;
           vanNumber = van.number || i + 1;
           
-          console.log(`[Generate Routes] Slot ${i + 1}: Assigned ${vanType} ${vanNumber} (vanId: ${vanId})`);
         } else {
-          console.log(`[Generate Routes] Slot ${i + 1}: Empty (no van available)`);
         }
         
         const assignment: DriverAssignment = {
@@ -1558,7 +1531,6 @@ export class PlanningPage implements OnInit, OnDestroy {
         }
         
         if (assignmentToSave.id) {
-          console.log('[Planning] Saving assignment:', assignmentId, 'Driver:', assignmentToSave.driverName);
           await this.planningService.updateAssignment(
             this.selectedDate,
             assignmentToSave.id,

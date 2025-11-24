@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Firestore, collection, doc, setDoc, getDoc, deleteDoc, query, where, getDocs, updateDoc } from '@angular/fire/firestore';
 import { Observable, from, map, catchError, of } from 'rxjs';
-import { DriverAssignment, DailyPlan, createUnassignedSlot } from '../models/planning.model';
+import { DriverAssignment, DailyPlan } from '../models/planning.model';
 
 @Injectable({
   providedIn: 'root'
@@ -17,20 +17,18 @@ export class PlanningService {
     const planRef = doc(this.firestore, 'dailyPlans', planId);
 
     try {
-      console.log('[PlanningService] getOrCreateDailyPlan - Starting');
-      console.log('[PlanningService] getOrCreateDailyPlan - Date:', date, 'Plan ID:', planId);
-      console.log('[PlanningService] getOrCreateDailyPlan - Active vans:', activeVans.length);
+      
+      
+      
       
       // First, check if a plan exists with this ID
-      console.log('[PlanningService] getOrCreateDailyPlan - Calling getDoc...');
+      
       const planSnap = await getDoc(planRef);
-      console.log('[PlanningService] getOrCreateDailyPlan - getDoc completed');
-      console.log('[PlanningService] getOrCreateDailyPlan - Plan exists:', planSnap.exists());
 
       if (planSnap.exists()) {
-        console.log('[PlanningService] getOrCreateDailyPlan - Existing plan found, returning it');
+        
         const existingPlan = planSnap.data() as DailyPlan;
-        console.log('[PlanningService] getOrCreateDailyPlan - Plan has', existingPlan.assignments?.length || 0, 'assignments');
+        
         
         // Ensure the plan ID matches the date (in case of any inconsistencies)
         if (existingPlan.id !== planId) {
@@ -88,19 +86,19 @@ export class PlanningService {
         // Delete duplicate plans
         for (const plan of plans) {
           if (plan.id !== planId) {
-            console.log('[PlanningService] Deleting duplicate plan with ID:', plan.id);
+            
             await deleteDoc(doc(this.firestore, 'dailyPlans', plan.id));
           }
         }
         
-        console.log('[PlanningService] Consolidated plan has', targetPlan.assignments.length, 'assignments');
+        
         return targetPlan;
       }
 
-      console.log('[PlanningService] getOrCreateDailyPlan - Creating new plan with', activeVans.length, 'active vans');
-      console.log('[PlanningService] getOrCreateDailyPlan - Vans in order:');
+      
+      
       activeVans.forEach((van, idx) => {
-        console.log(`  ${idx + 1}. ${van.type} ${van.number} (docId: ${van.docId})`);
+        // Van processing
       });
       
       // Create new plan with assignments pre-filled ONLY with active vans
@@ -118,10 +116,9 @@ export class PlanningService {
         };
         assignments.push(slot);
         
-        console.log(`[PlanningService] getOrCreateDailyPlan - Created slot for ${slot.vanType} ${slot.vanNumber} (vanId: ${slot.vanId})`);
       });
       
-      console.log(`[PlanningService] getOrCreateDailyPlan - Created ${assignments.length} assignments for ${activeVans.length} active vans`);
+      
 
       const now = new Date();
       const newPlan: DailyPlan = {
@@ -132,9 +129,9 @@ export class PlanningService {
         updatedAt: now,
       };
 
-      console.log('[PlanningService] getOrCreateDailyPlan - Saving new plan to Firestore...');
+      
       await setDoc(planRef, newPlan);
-      console.log('[PlanningService] getOrCreateDailyPlan - Plan saved successfully');
+      
       
       return newPlan;
     } catch (error: any) {

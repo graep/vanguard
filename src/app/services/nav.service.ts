@@ -79,13 +79,9 @@ export class NavService {
 
   /** Get the last safe URL for the current user to navigate back to */
   getLastSafeUrl(isAdmin: boolean): string {
-    console.log('[NavService] Getting safe URL for isAdmin:', isAdmin);
-    console.log('[NavService] Current navigation history:', this.navigationHistory);
-    
     // If no history or only current page, use safe default
     if (this.navigationHistory.length <= 1) {
       const defaultUrl = isAdmin ? '/admin' : '/van-selection';
-      console.log('[NavService] No history available, using default:', defaultUrl);
       return defaultUrl;
     }
     
@@ -94,23 +90,18 @@ export class NavService {
       const url = this.navigationHistory[i];
       const isAdminUrl = url.includes('/admin');
       
-      console.log('[NavService] Checking URL:', url, 'isAdminUrl:', isAdminUrl);
-      
       // If it's an admin URL and user is not admin, skip it
       if (isAdminUrl && !isAdmin) {
-        console.log('[NavService] Skipping admin URL for non-admin user');
         continue;
       }
       
       // If user is admin, they can go back to any URL
       // If user is not admin, they can only go back to non-admin URLs
-      console.log('[NavService] Found safe URL:', url);
       return url;
     }
     
     // Default fallback if no safe URL found - ALWAYS use role-appropriate default
     const fallbackUrl = isAdmin ? '/admin' : '/van-selection';
-    console.log('[NavService] No safe URL found, using fallback:', fallbackUrl);
     return fallbackUrl;
   }
 
@@ -141,12 +132,9 @@ export class NavService {
 
   /** Call on logout so next login will replace again. */
   reset() {
-    console.log('[NavService] Resetting navigation service - clearing history');
-    console.log('[NavService] Previous history:', this.navigationHistory);
     sessionStorage.removeItem(KEY);
     sessionStorage.removeItem(HISTORY_KEY);
     this.navigationHistory = [];
-    console.log('[NavService] History cleared');
   }
 
   /** Clear all navigation history - use when user reaches login page */
@@ -159,30 +147,21 @@ export class NavService {
   private setupBrowserHistoryListener() {
     // Listen for popstate events (browser back/forward)
     window.addEventListener('popstate', (event) => {
-      console.log('[NavService] Browser navigation detected:', window.location.pathname);
-      console.log('[NavService] Event state:', event.state);
-      console.log('[NavService] Current user roles:', this.currentUserRoles);
-      
       // Check if the target URL requires admin access
       const targetUrl = window.location.pathname;
       const requiresAdmin = targetUrl.includes('/admin');
-      
-      console.log('[NavService] Target URL:', targetUrl, 'Requires admin:', requiresAdmin);
       
       if (requiresAdmin && !(this.currentUserRoles.includes('admin') || this.currentUserRoles.includes('owner'))) {
         console.warn('[NavService] Blocking unauthorized admin access via browser navigation');
         // Replace the current history entry to prevent going back to admin
         window.history.replaceState(null, '', '/van-selection');
         this.router.navigateByUrl('/van-selection', { replaceUrl: true });
-      } else {
-        console.log('[NavService] Allowing navigation to:', targetUrl);
       }
     });
   }
 
   /** Clear browser history by replacing current state */
   private clearBrowserHistory() {
-    console.log('[NavService] Clearing browser history on logout');
     
     // Replace current history state to prevent back navigation
     window.history.replaceState(null, '', '/login');
@@ -197,7 +176,6 @@ export class NavService {
 
   /** Enhanced logout method that clears both app and browser history */
   enhancedLogout() {
-    console.log('[NavService] Enhanced logout - clearing all history');
     this.clearBrowserHistory();
     this.reset();
   }
@@ -325,41 +303,30 @@ export class NavService {
     this.navigationHistory = this.navigationHistory.filter((url, index, array) => {
       // Remove duplicates
       if (array.indexOf(url) !== index) {
-        console.log('[NavService] Removing duplicate URL:', url);
         return false;
       }
       
       // Remove invalid URLs
       if (!url || url === '/' || url === '') {
-        console.log('[NavService] Removing invalid URL:', url);
         return false;
       }
       
       return true;
     });
     
-    if (this.navigationHistory.length !== originalLength) {
-      console.log('[NavService] Cleaned navigation history:', this.navigationHistory);
-    }
   }
 
   /** Setup Simple History API manipulation for PWA back button handling */
   private setupSimpleHistoryAPI() {
-    console.log('[NavService] Setting up simple History API manipulation');
-    
     // Push initial state if needed
     if (window.history.length === 1) {
-      console.log('[NavService] Pushing initial dummy state');
       window.history.pushState({ navServiceDummy: true }, '', window.location.href);
     }
 
     // Simple popstate handling
     window.addEventListener('popstate', (event) => {
-      console.log('[NavService] Simple History API popstate event');
-      
       // If it's our dummy state, handle it
       if (event.state && event.state.navServiceDummy) {
-        console.log('[NavService] Dummy state popped - handling back button');
         event.preventDefault();
         this.handleBackButton();
         

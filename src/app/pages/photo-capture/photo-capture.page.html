@@ -1,25 +1,4 @@
 <ion-content class="photo-capture-content">
-  <!-- Inspection Prompt Modal -->
-  <ion-modal [isOpen]="showInspectionPrompt" [backdropDismiss]="false">
-    <ng-template>
-      <div class="inspection-prompt">
-        <div class="prompt-content">
-          <ion-icon name="checkmark-circle" class="prompt-icon"></ion-icon>
-          <h2>Ready for Inspection?</h2>
-          <p>GPS tracking is active. Are you ready to start your vehicle inspection?</p>
-          <div class="prompt-buttons">
-            <ion-button expand="block" (click)="startInspection()" color="primary">
-              Start Inspection
-            </ion-button>
-            <ion-button expand="block" (click)="returnLater()" fill="outline" color="medium">
-              Return Later
-            </ion-button>
-          </div>
-        </div>
-      </div>
-    </ng-template>
-  </ion-modal>
-
   <!-- Page Header with Breadcrumb and Logout -->
   <app-page-header 
     [breadcrumbItems]="breadcrumbItems" 

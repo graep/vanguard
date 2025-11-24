@@ -73,26 +73,15 @@ export class InspectionService {
     side: string, 
     dataUrl: string
   ): Promise<string> {
-    console.log(`[InspectionService] Starting upload for ${side} photo`);
-    
     // Check authentication first
     const ownerUid = this.auth.currentUser?.uid;
     if (!ownerUid) {
       console.error('[InspectionService] User not authenticated');
       throw new Error('Not authenticated - please log in again');
     }
-    
-    console.log(`[InspectionService] User authenticated: ${ownerUid}`);
-    console.log(`[InspectionService] Auth state:`, {
-      uid: this.auth.currentUser?.uid,
-      email: this.auth.currentUser?.email,
-      emailVerified: this.auth.currentUser?.emailVerified,
-      isAnonymous: this.auth.currentUser?.isAnonymous
-    });
 
     const fileName = `${side}_${Date.now()}.jpg`;
     const path = `inspections/${vanType}/${vanNumber}/${fileName}`;
-    console.log(`[InspectionService] Upload path: ${path}`);
     
     const storageRef = ref(this.storage, path);
 
@@ -100,23 +89,10 @@ export class InspectionService {
       const blob = await (await fetch(dataUrl)).blob();
       const contentType = blob.type?.startsWith('image/') ? blob.type : 'image/jpeg';
       
-      console.log(`[InspectionService] Blob size: ${blob.size} bytes, type: ${contentType}`);
-      
       if (blob.size >= 8 * 1024 * 1024) {
         throw new Error('Image is larger than 8 MB.');
       }
 
-      console.log(`[InspectionService] Uploading to Firebase Storage...`);
-      console.log(`[InspectionService] Upload details:`, {
-        path,
-        blobSize: blob.size,
-        contentType,
-        ownerUid,
-        vanType,
-        vanNumber,
-        side
-      });
-      
       const snap = await uploadBytes(storageRef, blob, {
         contentType,
         customMetadata: { 
@@ -128,9 +104,7 @@ export class InspectionService {
         },
       });
 
-      console.log(`[InspectionService] Upload successful, getting download URL...`);
       const downloadURL = await getDownloadURL(snap.ref);
-      console.log(`[InspectionService] Download URL obtained: ${downloadURL}`);
       
       return downloadURL;
     } catch (error) {
@@ -191,13 +165,11 @@ export class InspectionService {
 
   /** Admin actions */
   async approveInspection(id: string): Promise<void> {
-    console.log('Approving inspection:', id);
     await updateDoc(doc(this.firestore, 'inspections', id), {
       status: 'approved',
       reviewedAt: serverTimestamp(),
       rejectReason: null,
     });
-    console.log('Inspection approved successfully:', id);
   }
 
   async rejectInspection(id: string, reason?: string): Promise<void> {
@@ -401,7 +373,6 @@ export class InspectionService {
   /** Get all approved inspections for a specific van */
   async getApprovedInspectionsByVan(vanType: string, vanNumber: string): Promise<Inspection[]> {
     const normalizedVanNumber = this.normalizeVanNumber(vanNumber);
-    console.log('Querying approved inspections for:', { vanType, vanNumber, normalizedVanNumber });
     
     const q = query(
       this.col,
@@ -417,7 +388,6 @@ export class InspectionService {
       ...doc.data()
     })) as Inspection[];
     
-    console.log('Found approved inspections:', inspections);
     return inspections;
   }
 
@@ -472,7 +442,6 @@ export class InspectionService {
         report: updatedReport
       });
       
-      console.log('Issue marked as resolved:', { inspectionId, issueName });
     } catch (error) {
       console.error('Failed to mark issue as resolved:', error);
       throw error;
@@ -486,7 +455,6 @@ export class InspectionService {
       await updateDoc(vanRef, {
         estimatedMiles: increment(miles)
       });
-      console.log('Van mileage updated:', { vanId, miles });
     } catch (error) {
       console.error('Failed to update van mileage:', error);
       throw error;
