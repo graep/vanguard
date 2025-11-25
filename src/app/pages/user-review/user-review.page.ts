@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule }      from '@angular/common';
 import { FormsModule }       from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -49,13 +49,17 @@ interface IssueCategory {
     PageHeaderComponent
   ]
 })
-export class UserReviewPage implements OnInit {
+export class UserReviewPage implements OnInit, OnDestroy {
   vanType    = '';
   vanNumber  = '';
   vanId      = ''; // NEW: Store the van document ID
   photoUrls: Record<string,string> = {};
   noIssues   = false;
   inspectionId = '';
+  
+  // Track if any form element is currently focused to prevent accidental category toggles
+  private formElementFocused = false;
+  private formInteractionTimeout: any = null;
 
   // Unsure category (separate from main categories)
   unsureIssue = {
@@ -75,81 +79,73 @@ export class UserReviewPage implements OnInit {
       details: '',
       severity: 'high',
       subcategories: [
-        'Seat Belts & Airbags',
-        'Alarm / Immobilizer',
-        'Cameras & Sensors',
-        'Emergency Lighting',
+        'Seat Belts',
+        'Alarm / Security System',
+        'Backup Camera / Sensors',
+        'Emergency Lights',
         'Fire Extinguisher'
       ],
       selectedSubcategory: ''
     },
     {
-      name: 'Powertrain',
+      name: 'Engine & Transmission',
       hasIssue: false,
       details: '',
       severity: 'high',
       subcategories: [
-        'Engine',
-        'Transmission',
-        'Differential',
-        'Drivetrain'
+        'Engine Problems',
+        'Transmission Issues',
+        'Won\'t Start / Hard to Start'
       ],
       selectedSubcategory: ''
     },
     {
-      name: 'Chassis & Running Gear',
+      name: 'Brakes, Steering & Suspension',
       hasIssue: false,
       details: '',
       severity: 'high',
       subcategories: [
-        'Suspension',
         'Brakes',
         'Steering',
-        'Axles',
+        'Suspension / Ride Quality',
         'Wheels & Tires'
       ],
       selectedSubcategory: ''
     },
     {
-      name: 'Electrical & Electronics',
+      name: 'Electrical',
       hasIssue: false,
       details: '',
       severity: 'high',
       subcategories: [
-        'Battery / Charging',
-        'Wiring Harness',
-        'Lighting',
-        'Sensors & Gauges',
-        'Control Modules'
+        'Battery / Won\'t Start',
+        'Lights Not Working',
+        'Dashboard Warnings / Gauges'
       ],
       selectedSubcategory: ''
     },
     {
-      name: 'Fluids & Maintenance',
+      name: 'Fluids & Leaks',
       hasIssue: false,
       details: '',
       severity: 'medium',
       subcategories: [
-        'Engine Oil & Filter',
-        'Coolant / Radiator',
-        'Brake Fluid',
-        'Transmission Fluid',
-        'Fuel System',
-        'Air / Cabin Filters'
+        'Oil Leak',
+        'Coolant Leak',
+        'Brake Fluid Leak',
+        'Low Fluid Levels'
       ],
       selectedSubcategory: ''
     },
     {
-      name: 'HVAC & Comfort',
+      name: 'Heating & Cooling',
       hasIssue: false,
       details: '',
       severity: 'medium',
       subcategories: [
-        'Air Conditioning',
-        'Heating',
-        'Ventilation',
-        'Thermostat / Controls',
-        'Insulation & Seals'
+        'Air Conditioning Not Working',
+        'Heater Not Working',
+        'Temperature Controls'
       ],
       selectedSubcategory: ''
     },
@@ -159,13 +155,14 @@ export class UserReviewPage implements OnInit {
       details: '',
       severity: 'low',
       subcategories: [
-        'Doors & Hinges',
-        'Windows & Glass',
-        'Exterior Panels',
-        'Seats & Upholstery',
-        'Dashboard & Trim'
+        'Doors Won\'t Open/Close',
+        'Windows / Windshield',
+        'Body Damage / Dents',
+        'Seats / Interior Damage',
+        'Side skirt panel(s) / Plastic Trim'
       ],
-      selectedSubcategory: ''
+      selectedSubcategory: '',
+      allowPhotoCapture: true
     }
   ];
 
@@ -177,141 +174,85 @@ export class UserReviewPage implements OnInit {
       details: '',
       severity: 'high',
       subcategories: [
-        'Seat Belts & Airbags',
-        'Alarm / Immobilizer',
-        'Cameras & Sensors',
-        'Emergency Lighting',
-        'Fire Extinguisher',
-        'High-Voltage Safety Systems',
-        'Battery Fire Safety / Thermal Runaway Protection'
+        'Seat Belts',
+        'Alarm / Security System',
+        'Backup Camera / Sensors',
+        'Emergency Lights',
+        'Fire Extinguisher'
       ],
       selectedSubcategory: ''
     },
     {
-      name: 'Electric Powertrain',
+      name: 'Electric Motor & Power',
       hasIssue: false,
       details: '',
       severity: 'high',
       subcategories: [
-        'Electric Motor(s)',
-        'Reduction Gear / Drive Unit',
-        'Inverter & Power Electronics',
-        'Onboard Charger',
-        'High-Voltage Cabling & Connectors',
-        'Regenerative Braking System',
-        'Drive Control Modules',
-        'Cooling System for Powertrain Components'
+        'Electric Motor Problems',
+        'Power Loss / Reduced Performance',
+        'Won\'t Start / Drive'
       ],
       selectedSubcategory: ''
     },
     {
-      name: 'Chassis & Running Gear',
+      name: 'Brakes, Steering & Suspension',
       hasIssue: false,
       details: '',
       severity: 'high',
       subcategories: [
-        'Suspension',
-        'Brakes (including regen brake blending)',
-        'Steering (electronic power steering)',
-        'Axles',
-        'Wheels & Tires',
-        'Weight Distribution / Handling Issues',
-        'HV Cable Routing & Protection under chassis'
+        'Brakes',
+        'Steering',
+        'Suspension / Ride Quality',
+        'Wheels & Tires'
       ],
       selectedSubcategory: ''
     },
     {
-      name: 'Electrical & Electronics',
+      name: 'Battery & Charging',
       hasIssue: false,
       details: '',
       severity: 'high',
       subcategories: [
-        '12V Battery / Low Voltage System',
-        'High Voltage Battery System',
-        'Wiring Harness',
-        'Lighting',
-        'Sensors & Gauges',
-        'Control Modules (ECUs / BMS / VCU / MCU)',
-        'Battery Management System (BMS)',
-        'Thermal Management System',
-        'DC-DC Converter',
-        'HV Junction Box / Contactors',
-        'Charging Port & Lock Mechanism'
+        'Battery Won\'t Charge',
+        'Charging Port Issues',
+        'Battery Warning Lights',
+        'Range / Battery Life Problems'
       ],
       selectedSubcategory: ''
     },
     {
-      name: 'Charging & Energy Management',
+      name: 'Electrical Systems',
       hasIssue: false,
       details: '',
       severity: 'high',
       subcategories: [
-        'Charging Port & Connector Integrity',
-        'Charge Port Door & Locking Mechanism',
-        'Onboard Charger Malfunctions',
-        'EVSE Compatibility',
-        'Charging Speed / Communication Errors',
-        'AC vs DC Fast Charging Issues',
-        'Vehicle-to-Grid / Vehicle-to-Load Systems',
-        'Software Updates affecting charging logic'
+        'Lights Not Working',
+        'Dashboard Warnings / Gauges',
+        'Electrical Problems'
       ],
       selectedSubcategory: ''
     },
     {
-      name: 'Structural & Safety Integration',
-      hasIssue: false,
-      details: '',
-      severity: 'high',
-      subcategories: [
-        'Battery Enclosure & Mounting Integrity',
-        'Crash Protection for HV Components',
-        'Underbody Shielding',
-        'HV Isolation Faults'
-      ],
-      selectedSubcategory: ''
-    },
-    {
-      name: 'Fluids & Maintenance',
+      name: 'Heating & Cooling',
       hasIssue: false,
       details: '',
       severity: 'medium',
       subcategories: [
-        'Brake Fluid',
-        'Coolant / Radiator',
-        'Windshield Washer Fluid',
-        'Thermal Cooling System Maintenance',
-        'Gear Reduction Oil'
+        'Air Conditioning Not Working',
+        'Heater Not Working',
+        'Temperature Controls'
       ],
       selectedSubcategory: ''
     },
     {
-      name: 'HVAC & Comfort',
+      name: 'Software & Display',
       hasIssue: false,
       details: '',
       severity: 'medium',
       subcategories: [
-        'Air Conditioning',
-        'Heating',
-        'Ventilation',
-        'Thermostat / Controls',
-        'Insulation & Seals',
-        'Heat Pump System',
-        'Battery Preconditioning HVAC Integration'
-      ],
-      selectedSubcategory: ''
-    },
-    {
-      name: 'Software & Connectivity',
-      hasIssue: false,
-      details: '',
-      severity: 'medium',
-      subcategories: [
-        'Infotainment & OTA Update Failures',
-        'Drive Mode / Range Estimation Errors',
-        'BMS or ECU Firmware Bugs',
-        'Connectivity with Mobile Apps',
-        'Driver Assistance Systems (ADAS)',
-        'Energy Usage Monitoring / Trip Logs'
+        'Screen / Display Issues',
+        'App Connectivity Problems',
+        'System Errors / Warnings'
       ],
       selectedSubcategory: ''
     },
@@ -321,16 +262,14 @@ export class UserReviewPage implements OnInit {
       details: '',
       severity: 'low',
       subcategories: [
-        'Doors & Hinges',
-        'Windows & Glass',
-        'Exterior Panels',
-        'Seats & Upholstery',
-        'Dashboard & Trim',
-        'Frunk Components',
-        'Access Panels for HV Disconnects',
-        'Acoustic Insulation'
+        'Doors Won\'t Open/Close',
+        'Windows / Windshield',
+        'Body Damage / Dents',
+        'Seats / Interior Damage',
+        'Side skirt panel(s) / Plastic Trim'
       ],
-      selectedSubcategory: ''
+      selectedSubcategory: '',
+      allowPhotoCapture: true
     }
   ];
 
@@ -357,6 +296,11 @@ export class UserReviewPage implements OnInit {
     this.vanId     = this.route.snapshot.queryParamMap.get('vanId')     || ''; // NEW: Get van document ID
     this.inspectionId = this.route.snapshot.queryParamMap.get('inspectionId') ?? '';
 
+    // If no inspectionId, clear all form data (user might have navigated here without proper flow)
+    if (!this.inspectionId) {
+      this.clearAllFormData();
+    }
+
     // Setup breadcrumb items
     this.breadcrumbItems = [
       { label: 'Van Selection', url: '/van-selection', icon: 'car' },
@@ -367,6 +311,47 @@ export class UserReviewPage implements OnInit {
     // Read photo URLs passed in navigation state
     const nav = this.router.getCurrentNavigation();
     this.photoUrls = (nav?.extras.state as any)?.photoUrls || {};
+  }
+  
+  /** Clear all form data - called on logout and when inspectionId is missing */
+  private clearAllFormData(): void {
+    // Reset all CDV/LMR categories
+    this.cdvLmrCategories.forEach(cat => {
+      cat.hasIssue = false;
+      cat.details = '';
+      cat.selectedSubcategory = '';
+      cat.capturedPhoto = undefined;
+    });
+    
+    // Reset all EDV categories
+    this.edvCategories.forEach(cat => {
+      cat.hasIssue = false;
+      cat.details = '';
+      cat.selectedSubcategory = '';
+      cat.capturedPhoto = undefined;
+    });
+    
+    // Reset unsure issue
+    this.unsureIssue.hasIssue = false;
+    this.unsureIssue.details = '';
+    this.unsureIssue.capturedPhoto = undefined;
+    
+    // Reset no issues flag
+    this.noIssues = false;
+    
+    // Clear form element focus state
+    this.formElementFocused = false;
+    if (this.formInteractionTimeout) {
+      clearTimeout(this.formInteractionTimeout);
+      this.formInteractionTimeout = null;
+    }
+  }
+  
+  ngOnDestroy() {
+    // Clean up timeout to prevent memory leaks
+    if (this.formInteractionTimeout) {
+      clearTimeout(this.formInteractionTimeout);
+    }
   }
 
   /** true if at least one category is checked */
@@ -381,27 +366,26 @@ export class UserReviewPage implements OnInit {
 
   getCategoryIcon(categoryName: string): string {
     switch (categoryName) {
-      case 'Powertrain':
-      case 'Electric Powertrain':
+      case 'Engine & Transmission':
+      case 'Electric Motor & Power':
         return 'settings';
-      case 'Chassis & Running Gear':
+      case 'Brakes, Steering & Suspension':
         return 'car';
-      case 'Electrical & Electronics':
+      case 'Electrical':
+      case 'Electrical Systems':
         return 'flash';
-      case 'HVAC & Comfort':
+      case 'Heating & Cooling':
         return 'thermometer';
       case 'Body & Interior':
         return 'cube';
       case 'Safety & Security':
         return 'shield-checkmark';
-      case 'Fluids & Maintenance':
+      case 'Fluids & Leaks':
         return 'water';
-      case 'Charging & Energy Management':
+      case 'Battery & Charging':
         return 'battery-charging';
-      case 'Software & Connectivity':
+      case 'Software & Display':
         return 'laptop';
-      case 'Structural & Safety Integration':
-        return 'construct';
       case 'Unsure':
         return 'help-circle';
       default:
@@ -410,6 +394,12 @@ export class UserReviewPage implements OnInit {
   }
 
   toggleCategory(category: IssueCategory): void {
+    // Prevent toggling if a form element is focused or was recently interacted with
+    // This prevents the checkbox from being unchecked when the keyboard appears on mobile
+    if (this.formElementFocused) {
+      return;
+    }
+    
     category.hasIssue = !category.hasIssue;
     
     // Clear details and subcategory when unchecking
@@ -418,6 +408,25 @@ export class UserReviewPage implements OnInit {
       category.selectedSubcategory = '';
       category.capturedPhoto = undefined;
     }
+  }
+  
+  onFormElementFocus(): void {
+    this.formElementFocused = true;
+    // Clear any existing timeout
+    if (this.formInteractionTimeout) {
+      clearTimeout(this.formInteractionTimeout);
+    }
+  }
+  
+  onFormElementBlur(): void {
+    // Add a small delay before allowing category toggles again
+    // This prevents accidental toggles when the keyboard closes and causes layout shifts
+    if (this.formInteractionTimeout) {
+      clearTimeout(this.formInteractionTimeout);
+    }
+    this.formInteractionTimeout = setTimeout(() => {
+      this.formElementFocused = false;
+    }, 300);
   }
 
   toggleNoIssues(): void {
@@ -488,6 +497,18 @@ export class UserReviewPage implements OnInit {
 
   /** User taps "Submit Review" */
   async submitReview() {
+    // Validate inspectionId before proceeding
+    if (!this.inspectionId || this.inspectionId.trim() === '') {
+      console.error('❌ submitReview failed: inspectionId is missing');
+      const errToast = await this.toastCtrl.create({
+        message:  'Invalid inspection. Please start a new inspection.',
+        color:    'danger',
+        duration: 3000,
+        position: 'top'
+      });
+      await errToast.present();
+      return;
+    }
 
     // Upload "Unsure" photo if it exists
     let unsurePhotoUrl: string | undefined;
@@ -505,25 +526,75 @@ export class UserReviewPage implements OnInit {
       }
     }
 
+    // Upload category photos
+    const categoryPhotoUrls: Record<string, string> = {};
+    for (const category of this.issueCategories) {
+      if (category.hasIssue && category.capturedPhoto) {
+        try {
+          const photoUrl = await this.insp.uploadPhoto(
+            this.vanType,
+            this.vanNumber,
+            `${category.name.toLowerCase().replace(/\s+/g, '-')}-${category.selectedSubcategory?.toLowerCase().replace(/\s+/g, '-') || 'general'}`,
+            category.capturedPhoto
+          );
+          categoryPhotoUrls[category.name] = photoUrl;
+        } catch (error) {
+          console.error(`❌ Failed to upload photo for ${category.name}:`, error);
+          // Continue without photo rather than failing the entire submission
+        }
+      }
+    }
+
+    // Helper function to remove undefined values from an object
+    const removeUndefined = (obj: any): any => {
+      const cleaned: any = {};
+      for (const key in obj) {
+        if (obj[key] !== undefined) {
+          cleaned[key] = obj[key];
+        }
+      }
+      return cleaned;
+    };
+
     // build the report payload
     const reported: ReportedIssue[] = this.noIssues
       ? []
       : [
           ...this.issueCategories
             .filter(c => c.hasIssue)
-            .map(c => ({
-              name:        c.name,
-              subcategory: c.selectedSubcategory,
-              details:     c.details,
-              severity:    c.severity || 'medium'
-            })),
-          ...(this.unsureIssue.hasIssue ? [{
-            name:        'Unsure',
-            subcategory: '',
-            details:     this.unsureIssue.details,
-            severity:    'medium' as const,
-            photoUrl:    unsurePhotoUrl
-          }] : [])
+            .map(c => {
+              const issue: any = {
+                name:        c.name,
+                details:     c.details,
+                severity:    c.severity || 'medium'
+              };
+              
+              // Only include subcategory if it exists and is not empty
+              if (c.selectedSubcategory && c.selectedSubcategory.trim() !== '') {
+                issue.subcategory = c.selectedSubcategory;
+              }
+              
+              // Only include photoUrl if it exists
+              if (categoryPhotoUrls[c.name]) {
+                issue.photoUrl = categoryPhotoUrls[c.name];
+              }
+              
+              return issue;
+            }),
+          ...(this.unsureIssue.hasIssue ? [(() => {
+            const issue: any = {
+              name:        'Unsure',
+              details:     this.unsureIssue.details,
+              severity:    'medium' as const
+            };
+            
+            // Only include photoUrl if it exists
+            if (unsurePhotoUrl) {
+              issue.photoUrl = unsurePhotoUrl;
+            }
+            
+            return issue;
+          })()] : [])
         ];
 
     try {
@@ -531,14 +602,27 @@ export class UserReviewPage implements OnInit {
       const miles = this.gps.getMiles();
       // Update van mileage in Firestore
       if (miles > 0 && this.vanId) {
-        await this.insp.updateVanMileage(this.vanId, miles);
+        try {
+          await this.insp.updateVanMileage(this.vanId, miles);
+        } catch (mileageError) {
+          console.error('❌ Failed to update mileage:', mileageError);
+          // Continue with submission even if mileage update fails
+        }
       }
 
       // Step 2: merge report into the *same* document
       await this.insp.saveReport(this.inspectionId, reported);
 
       // Step 3: Stop GPS tracking and shift session
-      await this.shiftSession.stopShift('logout');
+      try {
+        await this.shiftSession.stopShift('logout');
+      } catch (shiftError) {
+        console.error('❌ Failed to stop shift session:', shiftError);
+        // Continue even if shift session stop fails
+      }
+
+      // Clear all form data after successful submission
+      this.clearAllFormData();
 
       // show a toast immediately
       const toast = await this.toastCtrl.create({
@@ -556,12 +640,24 @@ export class UserReviewPage implements OnInit {
         await this.router.navigateByUrl('/login', { replaceUrl: true });
       }, 2000);
 
-    } catch (e) {
+    } catch (e: any) {
       console.error('❌ submitReview failed', e);
+      const errorMessage = e?.message || 'Unknown error occurred';
+      const errorCode = e?.code || 'unknown';
+      
+      let userMessage = 'Could not submit review. Try again.';
+      if (errorCode === 'permission-denied') {
+        userMessage = 'Permission denied. Please check your access.';
+      } else if (errorCode === 'not-found') {
+        userMessage = 'Inspection not found. Please start a new inspection.';
+      } else if (errorMessage.includes('inspectionId') || errorMessage.includes('inspection')) {
+        userMessage = 'Invalid inspection. Please start a new inspection.';
+      }
+      
       const errToast = await this.toastCtrl.create({
-        message:  'Could not submit review. Try again.',
+        message:  userMessage,
         color:    'danger',
-        duration: 2000,
+        duration: 3000,
         position: 'top'
       });
       await errToast.present();
@@ -569,6 +665,9 @@ export class UserReviewPage implements OnInit {
   }
 
   async logout() {
+    // Clear all form data before logging out
+    this.clearAllFormData();
+    
     await this.auth.logout();
     this.navService.enhancedLogout(); // Clear both app and browser history
     await this.router.navigateByUrl('/login', { replaceUrl: true });

@@ -66,7 +66,9 @@
             [(ngModel)]="unsureIssue.details"
             placeholder="Describe what you observed or are concerned about"
             auto-grow="true"
-            class="details-textarea">
+            class="details-textarea"
+            (ionFocus)="onFormElementFocus()"
+            (ionBlur)="onFormElementBlur()">
           </ion-textarea>
         </div>
 
@@ -138,7 +140,7 @@
           </div>
 
           <!-- Issue Details (shown when category is selected) -->
-          <div class="issue-details" *ngIf="cat.hasIssue">
+          <div class="issue-details" *ngIf="cat.hasIssue" (click)="$event.stopPropagation()">
             <!-- Subcategory Selection -->
             <div class="subcategory-section" *ngIf="cat.subcategories?.length">
               <label class="form-label">Which area?</label>
@@ -146,7 +148,9 @@
                 [(ngModel)]="cat.selectedSubcategory"
                 placeholder="Select specific area"
                 class="subcategory-select"
-                (click)="$event.stopPropagation()">
+                (click)="$event.stopPropagation()"
+                (ionFocus)="onFormElementFocus()"
+                (ionBlur)="onFormElementBlur()">
                 <ion-select-option
                   *ngFor="let sub of cat.subcategories"
                   [value]="sub">
@@ -163,8 +167,48 @@
                 [placeholder]="'Describe issues with ' + (cat.selectedSubcategory || cat.name)"
                 auto-grow="true"
                 class="details-textarea"
-                (click)="$event.stopPropagation()">
+                (click)="$event.stopPropagation()"
+                (ionFocus)="onFormElementFocus()"
+                (ionBlur)="onFormElementBlur()">
               </ion-textarea>
+            </div>
+
+            <!-- Photo Capture Section -->
+            <div class="photo-capture-section" *ngIf="cat.allowPhotoCapture">
+              <label class="form-label">Take a photo (optional)</label>
+              
+              <!-- Photo Display Area -->
+              <div class="photo-display-area" *ngIf="cat.capturedPhoto; else noCategoryPhotoTemplate">
+                <div class="photo-container">
+                  <img [src]="cat.capturedPhoto" alt="Captured issue photo" class="issue-photo">
+                  <div class="photo-overlay">
+                    <ion-button
+                      fill="solid"
+                      class="retake-button"
+                      (click)="capturePhoto(cat)">
+                      <ion-icon name="camera" slot="start"></ion-icon>
+                      Retake
+                    </ion-button>
+                    <ion-button
+                      fill="clear"
+                      class="delete-button"
+                      (click)="removePhoto(cat)">
+                      <ion-icon name="trash"></ion-icon>
+                    </ion-button>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- No Photo Template -->
+              <ng-template #noCategoryPhotoTemplate>
+                <ion-button
+                  fill="outline"
+                  class="photo-capture-button"
+                  (click)="capturePhoto(cat)">
+                  <ion-icon name="camera" slot="start"></ion-icon>
+                  Take Photo
+                </ion-button>
+              </ng-template>
             </div>
           </div>
         </div>
