@@ -75,19 +75,19 @@ export class GlobalErrorHandlerService implements ErrorHandler {
     }
 
     // Handle Firebase authentication errors
-    if (error?.code?.startsWith('auth/')) {
+    if (error?.code && typeof error.code === 'string' && error.code.startsWith('auth/')) {
       this.handleAuthError(error, router);
       return;
     }
 
     // Handle Firebase Firestore errors
-    if (error?.code?.startsWith('firestore/')) {
+    if (error?.code && typeof error.code === 'string' && error.code.startsWith('firestore/')) {
       this.handleFirestoreError(error);
       return;
     }
 
     // Handle Firebase Storage errors
-    if (error?.code?.startsWith('storage/')) {
+    if (error?.code && typeof error.code === 'string' && error.code.startsWith('storage/')) {
       this.handleStorageError(error);
       return;
     }

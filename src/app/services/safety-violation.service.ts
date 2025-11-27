@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, NgZone } from '@angular/core';
 import { Firestore, collection, collectionData, doc, addDoc, query, where, orderBy, Timestamp, getDocs } from '@angular/fire/firestore';
 import { Observable, map } from 'rxjs';
 import { SafetyViolation, SafetyViolationType } from '../models/safety-violation.model';
@@ -8,6 +8,7 @@ import { SafetyViolation, SafetyViolationType } from '../models/safety-violation
 })
 export class SafetyViolationService {
   private firestore = inject(Firestore);
+  private ngZone = inject(NgZone);
 
   /**
    * Add a new safety violation
@@ -77,7 +78,8 @@ export class SafetyViolationService {
     );
 
     try {
-      const querySnapshot = await getDocs(q);
+      // Wrap in NgZone to ensure Firebase API is called within injection context
+      const querySnapshot = await this.ngZone.run(() => getDocs(q));
       return querySnapshot.docs.map(doc => {
         const data = doc.data();
         return this.mapViolation({ id: doc.id, ...data });
@@ -85,13 +87,14 @@ export class SafetyViolationService {
     } catch (error: any) {
       // If index is missing, try without date range
       if (error?.code === 'failed-precondition') {
-        const allViolations = await getDocs(
+        // Wrap in NgZone to ensure Firebase API is called within injection context
+        const allViolations = await this.ngZone.run(() => getDocs(
           query(
             violationsRef,
             where('userId', '==', userId),
             orderBy('occurredAt', 'desc')
           )
-        );
+        ));
         const violations = allViolations.docs.map(doc => {
           const data = doc.data();
           return this.mapViolation({ id: doc.id, ...data });

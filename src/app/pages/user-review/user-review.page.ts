@@ -461,6 +461,8 @@ export class UserReviewPage implements OnInit, OnDestroy {
       // Use the camera service for proper camera functionality
       const { Camera, CameraResultType, CameraSource } = await import('@capacitor/camera');
       
+      // Note: Flash control may not be available in all Capacitor Camera versions
+      // The native camera UI will handle flash settings based on device capabilities
       const image = await Camera.getPhoto({
         quality: 90,
         allowEditing: false,

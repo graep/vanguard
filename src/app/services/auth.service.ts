@@ -1,5 +1,5 @@
 // src/app/services/auth.service.ts
-import { Injectable } from '@angular/core';
+import { Injectable, NgZone } from '@angular/core';
 import {
   Auth,
   User,
@@ -26,6 +26,7 @@ import {
   take,
   map,
   firstValueFrom,
+  from,
 } from 'rxjs';
 
 // ---------- Roles & Profile Model ----------
@@ -58,7 +59,8 @@ export class AuthService {
 
   constructor(
     private auth: Auth,
-    private firestore: Firestore
+    private firestore: Firestore,
+    private ngZone: NgZone
   ) {
     // Persist session
     setPersistence(this.auth as any, browserLocalPersistence);
@@ -98,7 +100,8 @@ export class AuthService {
           // Wait a bit first to allow any pending writes to complete
           await new Promise(resolve => setTimeout(resolve, 500));
           
-          const snap = await getDoc(ref);
+          // Wrap in NgZone to ensure Firebase API is called within injection context
+          const snap = await this.ngZone.run(() => getDoc(ref));
           
           // Only create fallback if document truly doesn't exist
           if (!snap.exists()) {

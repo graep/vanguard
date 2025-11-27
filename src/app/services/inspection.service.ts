@@ -243,9 +243,9 @@ export class InspectionService {
       ? query(base, where('seen', '==', false)) 
       : base;
     
-    // Wrap in NgZone to fix the warning
+    // Wrap in NgZone to fix the warning - ensure collectionData is called within injection context
     return new Observable(observer => {
-      const unsubscribe = collectionData(q, { idField: 'id' }).subscribe({
+      const unsubscribe = this.ngZone.run(() => collectionData(q, { idField: 'id' })).subscribe({
         next: (data) => {
           this.ngZone.run(() => {
             observer.next(data as Inspection[]);
@@ -290,9 +290,9 @@ export class InspectionService {
       limit(pageSize)
     );
 
-    // Wrap both observables in NgZone
+    // Wrap both observables in NgZone - ensure collectionData is called within injection context
     const today$ = new Observable<Inspection[]>(observer => {
-      const unsubscribe = collectionData(qToday, { idField: 'id' }).subscribe({
+      const unsubscribe = this.ngZone.run(() => collectionData(qToday, { idField: 'id' })).subscribe({
         next: (data) => {
           this.ngZone.run(() => observer.next(data as Inspection[]));
         },
@@ -304,7 +304,7 @@ export class InspectionService {
     });
 
     const yest$ = new Observable<Inspection[]>(observer => {
-      const unsubscribe = collectionData(qYestUnseen, { idField: 'id' }).subscribe({
+      const unsubscribe = this.ngZone.run(() => collectionData(qYestUnseen, { idField: 'id' })).subscribe({
         next: (data) => {
           this.ngZone.run(() => observer.next(data as Inspection[]));
         },
@@ -342,9 +342,9 @@ export class InspectionService {
               ? query(this.col, orderBy('createdAt', 'desc'), limit(max))
               : query(this.col, where('createdBy', '==', user.uid), orderBy('createdAt', 'desc'), limit(max));
             
-            // Wrap in NgZone
+            // Wrap in NgZone - ensure collectionData is called within injection context
             return new Observable<Inspection[]>(observer => {
-              const unsubscribe = collectionData(q, { idField: 'id' }).subscribe({
+              const unsubscribe = this.ngZone.run(() => collectionData(q, { idField: 'id' })).subscribe({
                 next: (data) => {
                   this.ngZone.run(() => {
                     observer.next(data as Inspection[]);

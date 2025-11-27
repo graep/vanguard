@@ -15,6 +15,8 @@ import {
   IonSegmentButton,
   IonIcon,
 } from '@ionic/angular/standalone';
+import { addIcons } from 'ionicons';
+import { eye, eyeOff } from 'ionicons/icons';
 
 type LoginMode = 'driver' | 'admin';
 
@@ -31,16 +33,28 @@ type LoginMode = 'driver' | 'admin';
     IonInput,
     IonSegment,
     IonSegmentButton,
+    IonIcon,
     ReactiveFormsModule,
     CommonModule,
   ],
 })
 export class LoginPage {
+  showPassword = true;
+
   form = this.fb.group({
     mode: ['driver' as LoginMode, Validators.required],
     email: ['', [Validators.required, Validators.email]],
     password: ['', Validators.required],
   });
+
+  constructor(
+    private fb: FormBuilder,
+    private auth: AuthService,
+    private router: Router,
+    private toastCtrl: ToastController
+  ) {
+    addIcons({ eye, eyeOff });
+  }
 
   // Routes based on user role
   private routeByMode: Record<LoginMode, string> = {
@@ -48,12 +62,9 @@ export class LoginPage {
     admin: '/admin',
   };
 
-  constructor(
-    private fb: FormBuilder,
-    private auth: AuthService,
-    private router: Router,
-    private toastCtrl: ToastController
-  ) {}
+  togglePasswordVisibility() {
+    this.showPassword = !this.showPassword;
+  }
 
   async submit() {
   if (this.form.invalid) return;

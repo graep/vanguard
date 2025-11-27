@@ -1,5 +1,5 @@
 // src/app/pages/admin/admin-layout/admin-layout.component.ts
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { IonicModule } from '@ionic/angular';
 import { ActivatedRoute, NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { NavbarComponent } from '../navbar/navbar.component';
@@ -28,7 +28,8 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
     private router: Router,
     private route: ActivatedRoute,
     private breadcrumbService: BreadcrumbService,
-    private navbarState: NavbarStateService
+    private navbarState: NavbarStateService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -38,7 +39,13 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
       .subscribe(() => this.buildBreadcrumbs(this.breadcrumbService.getTail()));
 
     this.tailSub = this.breadcrumbService.tail$
-      .subscribe((tail) => this.buildBreadcrumbs(tail));
+      .subscribe((tail) => {
+        // Defer breadcrumb update to avoid ExpressionChangedAfterItHasBeenCheckedError
+        setTimeout(() => {
+          this.buildBreadcrumbs(tail);
+          this.cdr.markForCheck();
+        }, 0);
+      });
 
     // Track navbar collapsed state to apply padding classes
     this.navbarState.isCollapsed$.subscribe(v => this.isCollapsed = v);

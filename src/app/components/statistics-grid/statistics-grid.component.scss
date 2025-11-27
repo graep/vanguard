@@ -12,11 +12,14 @@
   padding: 0; // Padding handled by parent container
   justify-content: center; // Center the grid
   
-  // Tablet: 431px to 768px - auto-fill columns with fixed 175px width
-  @media (min-width: 431px) {
-    grid-template-columns: repeat(auto-fill, 175px);
+  // Tablet and above: 430px and above - auto-fill columns with fixed 200px width, max 5 columns
+  @media (min-width: 430px) {
+    grid-template-columns: repeat(auto-fill, 200px);
+    grid-auto-rows: 200px; // Base row height for 1x1 tiles
     gap: 15px;
-    justify-content: flex-start; // Start from left on larger screens
+    justify-content: center; // Center the grid
+    max-width: calc(200px * 5 + 15px * 4); // Max width for 5 columns: 1000px + 60px = 1060px
+    margin: 0 auto; // Center the container
   }
   
   // Desktop: 769px and above - same setup
@@ -48,6 +51,10 @@
   
   &.edit-mode {
     min-height: 175px;
+    
+    @media (min-width: 430px) {
+      min-height: 200px;
+    }
   }
   
   // Grid tile base styles
@@ -67,6 +74,11 @@
       width: 175px;
       height: 175px;
       
+      @media (min-width: 430px) {
+        width: 200px;
+        height: 200px;
+      }
+      
       .stat-card {
         min-height: 175px;
         max-height: 175px;
@@ -77,6 +89,13 @@
         flex-shrink: 0;
         box-sizing: border-box;
         
+        @media (min-width: 430px) {
+          min-height: 200px;
+          max-height: 200px;
+          height: 200px;
+          width: 200px;
+        }
+        
         ion-card-content {
           flex: 1;
           display: flex;
@@ -86,15 +105,16 @@
       }
     }
     
-    // 2x1 tiles - Fill 2 columns (mobile: 2 × 175px + gap, desktop: 2 × 175px + gap)
+    // 2x1 tiles - Fill 2 columns (mobile: 2 × 175px + gap, desktop: 2 × 200px + gap)
     &.grid-tile-2x1 {
       grid-column: span 2; // Always spans 2 columns
       grid-row: span 1;
       width: calc(175px * 2 + 0.625rem); // 2 columns + 1 gap
       height: 175px;
       
-      @media (min-width: 431px) {
-        width: calc(175px * 2 + 15px); // 2 columns + 1 gap on larger screens
+      @media (min-width: 430px) {
+        width: calc(200px * 2 + 15px); // 2 columns + 1 gap on larger screens
+        height: 200px;
       }
       
       .stat-card {
@@ -106,6 +126,12 @@
         flex-direction: column;
         flex-shrink: 0;
         box-sizing: border-box;
+        
+        @media (min-width: 430px) {
+          min-height: 200px;
+          max-height: 200px;
+          height: 200px;
+        }
         
         ion-card-content {
           flex: 1;
@@ -123,9 +149,9 @@
       width: calc(175px * 2 + 0.625rem); // 2 columns + 1 gap
       height: calc(175px * 2 + 0.625rem); // 2 rows + 1 gap
       
-      @media (min-width: 431px) {
-        width: calc(175px * 2 + 15px); // 2 columns + 1 gap on larger screens
-        height: calc(175px * 2 + 15px); // 2 rows + 1 gap on larger screens
+      @media (min-width: 430px) {
+        width: calc(200px * 2 + 15px); // 2 columns + 1 gap on larger screens
+        height: calc(200px * 2 + 15px); // 2 rows + 1 gap on larger screens
       }
       
       .stat-card {
@@ -137,8 +163,8 @@
         flex-shrink: 0;
         box-sizing: border-box;
         
-        @media (min-width: 431px) {
-          min-height: calc(175px * 2 + 15px);
+        @media (min-width: 430px) {
+          min-height: calc(200px * 2 + 15px);
         }
         
         ion-card-content {
@@ -170,6 +196,10 @@
     // Ensure placeholder cards are visible
     &:has(.cdk-drag-placeholder) {
       min-height: 175px;
+      
+      @media (min-width: 430px) {
+        min-height: 200px;
+      }
     }
   }
 }

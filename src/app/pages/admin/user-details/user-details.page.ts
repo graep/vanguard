@@ -1,5 +1,5 @@
 // src/app/pages/admin/user-details/user-details.page.ts
-import { Component, OnInit, inject, ViewEncapsulation } from '@angular/core';
+import { Component, OnInit, inject, ViewEncapsulation, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
@@ -60,6 +60,7 @@ export class UserDetailsPage implements OnInit {
   private inspectionService = inject(InspectionService);
   private safetyViolationService = inject(SafetyViolationService);
   private modalCtrl = inject(ModalController);
+  private ngZone = inject(NgZone);
 
   user: UserProfile | null = null;
   loading = true;
@@ -68,7 +69,8 @@ export class UserDetailsPage implements OnInit {
   tabs = [
     { id: 'overview', label: 'Overview', icon: 'person' },
     { id: 'activity', label: 'Activity', icon: 'time' },
-    { id: 'permissions', label: 'Permissions', icon: 'shield-checkmark' }
+    { id: 'permissions', label: 'Permissions', icon: 'shield-checkmark' },
+    { id: 'schedule', label: 'Schedule', icon: 'calendar' }
   ];
 
   // Placeholder data for Overview tab
@@ -100,8 +102,19 @@ export class UserDetailsPage implements OnInit {
     'Weaving': 0
   };
 
+  isMobile = false;
+  private resizeListener?: () => void;
+
   async ngOnInit() {
     this.loading = true;
+    // Check if mobile (430px and below)
+    this.isMobile = window.innerWidth <= 430;
+    
+    // Listen for window resize to update mobile state
+    this.resizeListener = () => {
+      this.isMobile = window.innerWidth <= 430;
+    };
+    window.addEventListener('resize', this.resizeListener);
     // Only set a placeholder if no tail was primed by the previous page
     if (!this.breadcrumbService.getTail()?.length) {
       this.breadcrumbService.setTail([
@@ -137,11 +150,15 @@ export class UserDetailsPage implements OnInit {
 
   ngOnDestroy(): void {
     // Intentionally do not clear breadcrumb here to avoid flicker when navigating
+    if (this.resizeListener) {
+      window.removeEventListener('resize', this.resizeListener);
+    }
   }
 
   private async loadUserData(userId: string) {
     const userDocRef = doc(this.firestore, 'users', userId);
-    const userDoc = await getDoc(userDocRef);
+    // Wrap in NgZone to ensure Firebase API is called within injection context
+    const userDoc = await this.ngZone.run(() => getDoc(userDocRef));
     
     if (userDoc.exists()) {
       this.user = { uid: userDoc.id, ...userDoc.data() } as UserProfile;
@@ -387,7 +404,8 @@ export class UserDetailsPage implements OnInit {
         orderBy('createdAt', 'desc')
       );
       
-      const querySnapshot = await getDocs(q);
+      // Wrap in NgZone to ensure Firebase API is called within injection context
+      const querySnapshot = await this.ngZone.run(() => getDocs(q));
       
       this.inspectionHistory = querySnapshot.docs.map(doc => {
         const data = doc.data();
@@ -634,7 +652,7 @@ export class UserDetailsPage implements OnInit {
       'Distraction': 'phone-portrait',
       'Stop Sign': 'stop',
       'Follow Distance': 'car',
-      'Red Light': 'traffic-light',
+      'Red Light': 'warning',
       'Seatbelt': 'shield',
       'Hard Turn': 'arrow-redo',
       'Roadside': 'warning',

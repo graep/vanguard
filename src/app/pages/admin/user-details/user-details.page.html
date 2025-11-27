@@ -12,11 +12,11 @@
   <!-- Main -->
   <div *ngIf="user" class="user-details-container">
     <ion-card class="user-header-card" 
-      [style.background]="'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)'"
-      [style.borderRadius]="'10px'"
-      [style.backdropFilter]="'blur(10px)'"
-      [style.border]="'1px solid rgba(255, 255, 255, 0.1)'"
-      [style.boxShadow]="'0 8px 32px rgba(0, 0, 0, 0.3)'"
+      [style.background]="!isMobile ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)' : 'transparent'"
+      [style.borderRadius]="!isMobile ? '10px' : '0'"
+      [style.backdropFilter]="!isMobile ? 'blur(10px)' : 'none'"
+      [style.border]="!isMobile ? '1px solid rgba(255, 255, 255, 0.1)' : 'none'"
+      [style.boxShadow]="!isMobile ? '0 8px 32px rgba(0, 0, 0, 0.3)' : 'none'"
       [style.transition]="'all 0.3s ease'">
       <ion-card-content>
         <div class="user-header">
@@ -146,7 +146,7 @@
       [style.boxShadow]="'0 8px 32px rgba(0, 0, 0, 0.3)'"
       [style.transition]="'all 0.3s ease'"
       [style.marginTop]="'20px'">
-      <div class="history-container">
+      <div class="user-history-container">
         <ion-card-header>
           <ion-card-title>User Information</ion-card-title>
         </ion-card-header>
@@ -211,15 +211,6 @@
                   </div>
                 </div>
                 
-                <div class="stat-card">
-                  <div class="stat-icon">
-                    <ion-icon name="document"></ion-icon>
-                  </div>
-                  <div class="stat-info">
-                    <div class="stat-value">{{ overviewStats.notesAdded }}</div>
-                    <div class="stat-label">Notes Added</div>
-                  </div>
-                </div>
               </div>
 
               <!-- Safety Violations Section -->
@@ -521,6 +512,15 @@
                     </div>
                   </ng-template>
                 </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Schedule Tab -->
+          <div *ngIf="activeTab === 'schedule'" class="tab-panel">
+            <div class="schedule-content">
+              <div class="empty-state-small">
+                <p>Schedule information coming soon</p>
               </div>
             </div>
           </div>

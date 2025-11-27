@@ -9,6 +9,37 @@ import {
 import { addIcons } from 'ionicons';
 import { camera, close, refresh } from 'ionicons/icons';
 
+// Type definitions for ImageCapture API
+interface PhotoSettings {
+  fillLightMode?: 'auto' | 'off' | 'flash' | 'torch';
+  imageWidth?: number;
+  imageHeight?: number;
+  redEyeReduction?: boolean;
+}
+
+declare global {
+  interface Window {
+    ImageCapture: {
+      new (videoTrack: MediaStreamTrack): ImageCapture;
+    };
+  }
+  
+  class ImageCapture {
+    constructor(videoTrack: MediaStreamTrack);
+    takePhoto(photoSettings?: PhotoSettings): Promise<Blob>;
+    getPhotoCapabilities(): Promise<PhotoCapabilities>;
+    getPhotoSettings(): Promise<PhotoSettings>;
+    track: MediaStreamTrack;
+  }
+  
+  interface PhotoCapabilities {
+    fillLightMode: string[];
+    imageWidth: { min: number; max: number; step: number };
+    imageHeight: { min: number; max: number; step: number };
+    redEyeReduction: 'never' | 'always' | 'controllable';
+  }
+}
+
 @Component({
   selector: 'app-fullscreen-camera',
   templateUrl: './fullscreen-camera.component.html',
@@ -29,6 +60,7 @@ export class FullscreenCameraComponent implements OnInit, OnDestroy, OnChanges, 
   @ViewChild('canvasElement', { static: false }) canvasElement!: ElementRef<HTMLCanvasElement>;
 
   private stream?: MediaStream;
+  private imageCapture?: ImageCapture;
   isCapturing = false;
   capturedImage: string | null = null;
   private streamCheckInterval: any = null;
@@ -137,6 +169,18 @@ export class FullscreenCameraComponent implements OnInit, OnDestroy, OnChanges, 
       }
       
       this.stream = await navigator.mediaDevices.getUserMedia(constraints);
+      
+      // Create ImageCapture instance for flash control
+      if (this.stream && 'ImageCapture' in window) {
+        try {
+          const videoTrack = this.stream.getVideoTracks()[0];
+          if (videoTrack) {
+            this.imageCapture = new ImageCapture(videoTrack);
+          }
+        } catch (error) {
+          console.warn('ImageCapture not supported, flash control unavailable:', error);
+        }
+      }
       
       if (this.videoElement?.nativeElement) {
         this.videoElement.nativeElement.srcObject = this.stream;
@@ -322,6 +366,29 @@ export class FullscreenCameraComponent implements OnInit, OnDestroy, OnChanges, 
 
     this.isCapturing = true;
 
+    // Try to use ImageCapture API with flash if available
+    if (this.imageCapture && 'ImageCapture' in window) {
+      try {
+        // Set flash mode to 'flash' for single flash on capture
+        const photoSettings: PhotoSettings = {
+          fillLightMode: 'flash'
+        };
+        
+        const blob = await this.imageCapture.takePhoto(photoSettings);
+        const imageDataUrl = await this.blobToDataURL(blob);
+        this.capturedImage = imageDataUrl;
+        
+        // Stop the camera stream
+        this.stopCamera();
+        this.isCapturing = false;
+        return;
+      } catch (error) {
+        console.warn('ImageCapture with flash failed, falling back to canvas method:', error);
+        // Fall through to canvas method
+      }
+    }
+
+    // Fallback to canvas method if ImageCapture is not available or fails
     const video = this.videoElement.nativeElement;
     const canvas = this.canvasElement.nativeElement;
     const context = canvas.getContext('2d');
@@ -361,6 +428,15 @@ export class FullscreenCameraComponent implements OnInit, OnDestroy, OnChanges, 
     this.stopCamera();
 
     this.isCapturing = false;
+  }
+
+  private blobToDataURL(blob: Blob): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
   }
 
   retakePhoto() {
