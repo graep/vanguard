@@ -1,0 +1,79 @@
+<div class="daily-controls-container">
+  <!-- Date Info Display (Top Left) -->
+  <div class="date-info-container">
+    <div class="totals-container">
+      <div class="total-container">
+        <span class="total-number">{{ getDayOfMonth() }}</span>
+      </div>
+      <div class="day-label">Day</div>
+    </div>
+  </div>
+
+  <!-- Date Controls Row -->
+  <div class="controls-row date-row">
+    <div class="date-controls">
+      <div class="date-buttons">
+        <ion-button 
+          fill="outline" 
+          size="small"
+          [class.selected]="isTodaySelected"
+          (click)="onSelectToday()">
+          Today
+        </ion-button>
+        <ion-button 
+          fill="outline" 
+          size="small"
+          [class.selected]="isTomorrowSelected"
+          (click)="onSelectTomorrow()">
+          Tomorrow
+        </ion-button>
+      </div>
+      <div class="date-input-wrapper" (click)="onOpenDatePicker()">
+        <input 
+          #dateInput
+          type="date" 
+          [value]="selectedDate"
+          (change)="onDateChange($event)"
+          (click)="$event.stopPropagation()"
+          class="date-input"
+        />
+      </div>
+    </div>
+  </div>
+
+  <!-- Route Generation Row -->
+  <div class="controls-row route-row">
+    <label class="control-label">Generate Routes</label>
+    <div class="route-controls">
+      <ion-button
+        fill="solid"
+        color="primary"
+        size="small"
+        [disabled]="isSaving || !numberOfRoutes || numberOfRoutes <= 0"
+        (click)="onGenerateRoutes()">
+        <ion-icon name="add-circle-outline" slot="start"></ion-icon>
+        Generate
+      </ion-button>
+      <ion-button 
+        *ngIf="hasCheckedAssignments"
+        fill="solid" 
+        color="success"
+        size="small"
+        [disabled]="isSaving"
+        (click)="onSubmitChecked()">
+        <ion-icon name="save" slot="start"></ion-icon>
+        Save {{ checkedCount }}
+      </ion-button>
+      <div class="input-wrapper">
+        <ion-input
+          type="number"
+          [value]="numberOfRoutes"
+          (ionInput)="onNumberOfRoutesChange($any($event.detail.value))"
+          placeholder="# of routes"
+          min="1">
+        </ion-input>
+      </div>
+    </div>
+  </div>
+</div>
+

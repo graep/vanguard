@@ -18,6 +18,9 @@ import {
   getPlanStats,
   isAssignmentUnassigned,
 } from '../../../models/planning.model';
+import { DailyViewControlsComponent } from '../../../components/daily-view-controls/daily-view-controls.component';
+import { WeeklyViewControlsComponent } from '../../../components/weekly-view-controls/weekly-view-controls.component';
+import { MonthlyViewControlsComponent } from '../../../components/monthly-view-controls/monthly-view-controls.component';
 
 interface EditState {
   assignment: DriverAssignment;
@@ -27,7 +30,14 @@ interface EditState {
 @Component({
   selector: 'app-planning',
   standalone: true,
-  imports: [CommonModule, FormsModule, IonicModule],
+  imports: [
+    CommonModule, 
+    FormsModule, 
+    IonicModule, 
+    DailyViewControlsComponent,
+    WeeklyViewControlsComponent,
+    MonthlyViewControlsComponent
+  ],
   templateUrl: './planning.page.html',
   styleUrls: ['./planning.page.scss'],
 })
@@ -39,6 +49,8 @@ export class PlanningPage implements OnInit, OnDestroy {
   // Data
   allVans: Van[] = [];
   dailyPlan: DailyPlan | null = null;
+  weeklyPlans: Map<string, DailyPlan> = new Map(); // Cache for weekly plans
+  monthlyPlans: Map<string, DailyPlan> = new Map(); // Cache for monthly plans
   userProfile: UserProfile | null = null;
   
   // Grouped assignments by vehicle type
@@ -62,6 +74,7 @@ export class PlanningPage implements OnInit, OnDestroy {
   activeDriverField: string | null = null; // Track which assignment field is currently active
   checkedAssignments: Set<string> = new Set(); // Track which assignments are checked
   isGroupedByWave = false; // Track if grouping by wave is enabled
+  viewMode: 'daily' | 'weekly' | 'monthly' = 'daily'; // View mode: daily, weekly, or monthly
   
   // Dropdown portal state
   dropdownElement: HTMLElement | null = null;
@@ -93,6 +106,7 @@ export class PlanningPage implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private loadingCtrl = inject(LoadingController);
   private toastCtrl = inject(ToastController);
+  private modalCtrl = inject(ModalController);
   private router = inject(Router);
   private renderer = inject(Renderer2);
   private cdr = inject(ChangeDetectorRef);
@@ -322,6 +336,227 @@ export class PlanningPage implements OnInit, OnDestroy {
     }
   }
   
+  private async loadWeeklyPlans(): Promise<void> {
+    this.isLoading = true;
+    this.weeklyPlans.clear();
+    
+    try {
+      // Parse date string (YYYY-MM-DD) to avoid timezone issues
+      const [year, month, day] = this.selectedDate.split('-').map(Number);
+      const selectedDateObj = new Date(year, month - 1, day);
+      const dayOfWeek = selectedDateObj.getDay(); // 0 = Sunday, 1 = Monday, etc.
+      const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // Adjust to get Monday
+      const mondayDate = new Date(selectedDateObj);
+      mondayDate.setDate(selectedDateObj.getDate() + mondayOffset);
+      
+      // Calculate end date (Sunday, 6 days after Monday)
+      const sundayDate = new Date(mondayDate);
+      sundayDate.setDate(mondayDate.getDate() + 6);
+      
+      // Format dates as YYYY-MM-DD
+      const formatDate = (date: Date): string => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      };
+      
+      const startDate = formatDate(mondayDate);
+      const endDate = formatDate(sundayDate);
+      
+      // Load plans for the week
+      const plans = await this.planningService.getPlansForDateRange(startDate, endDate);
+      
+      // Store plans in map by date
+      plans.forEach(plan => {
+        this.weeklyPlans.set(plan.date, plan);
+      });
+      
+      // Create empty plans for missing dates
+      for (let i = 0; i < 7; i++) {
+        const currentDate = new Date(mondayDate);
+        currentDate.setDate(mondayDate.getDate() + i);
+        const dateStr = formatDate(currentDate);
+        
+        if (!this.weeklyPlans.has(dateStr)) {
+          // Create empty plan for this date
+          const emptyPlan: DailyPlan = {
+            id: dateStr,
+            date: dateStr,
+            assignments: [],
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          };
+          this.weeklyPlans.set(dateStr, emptyPlan);
+        }
+      }
+      
+    } catch (error: any) {
+      console.error('Error loading weekly plans:', error);
+      this.showToast('Failed to load weekly plans', 'danger');
+    } finally {
+      this.isLoading = false;
+    }
+  }
+  
+  private async loadMonthlyPlans(): Promise<void> {
+    this.isLoading = true;
+    this.monthlyPlans.clear();
+    
+    try {
+      // Parse date string (YYYY-MM-DD) to avoid timezone issues
+      const [year, month, day] = this.selectedDate.split('-').map(Number);
+      const firstDay = new Date(year, month - 1, 1);
+      
+      // Calculate end date (last day of month)
+      const lastDay = new Date(year, month, 0);
+      
+      // Format dates as YYYY-MM-DD
+      const formatDate = (date: Date): string => {
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const d = String(date.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+      };
+      
+      const startDate = formatDate(firstDay);
+      const endDate = formatDate(lastDay);
+      
+      // Load plans for the month
+      const plans = await this.planningService.getPlansForDateRange(startDate, endDate);
+      
+      // Store plans in map by date
+      plans.forEach(plan => {
+        this.monthlyPlans.set(plan.date, plan);
+      });
+      
+    } catch (error: any) {
+      console.error('Error loading monthly plans:', error);
+      this.showToast('Failed to load monthly plans', 'danger');
+    } finally {
+      this.isLoading = false;
+    }
+  }
+  
+  getWeekDays(): string[] {
+    if (!this.selectedDate) {
+      console.warn('getWeekDays: selectedDate is empty');
+      return [];
+    }
+    
+    try {
+      // Parse date string (YYYY-MM-DD) to avoid timezone issues
+      const [year, month, day] = this.selectedDate.split('-').map(Number);
+      const selectedDateObj = new Date(year, month - 1, day);
+      const dayOfWeek = selectedDateObj.getDay();
+      const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+      const mondayDate = new Date(selectedDateObj);
+      mondayDate.setDate(selectedDateObj.getDate() + mondayOffset);
+      
+      const formatDate = (date: Date): string => {
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const d = String(date.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+      };
+      
+      const days: string[] = [];
+      for (let i = 0; i < 7; i++) {
+        const currentDate = new Date(mondayDate);
+        currentDate.setDate(mondayDate.getDate() + i);
+        days.push(formatDate(currentDate));
+      }
+      console.log('getWeekDays returning:', days);
+      return days;
+    } catch (error) {
+      console.error('Error in getWeekDays:', error);
+      return [];
+    }
+  }
+  
+  getWeekDayLabel(date: string): string {
+    const [year, month, day] = date.split('-').map(Number);
+    const dateObj = new Date(year, month - 1, day);
+    return dateObj.toLocaleDateString('en-US', { weekday: 'short' });
+  }
+  
+  getWeekDayFullLabel(date: string): string {
+    const [year, month, day] = date.split('-').map(Number);
+    const dateObj = new Date(year, month - 1, day);
+    return dateObj.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+  }
+  
+  getMonthlyDays(): Array<{ date: string; isEmpty: boolean }> {
+    if (!this.selectedDate) {
+      console.warn('getMonthlyDays: selectedDate is empty');
+      return [];
+    }
+    
+    try {
+      // Parse date string (YYYY-MM-DD) to avoid timezone issues
+      const [year, month, day] = this.selectedDate.split('-').map(Number);
+      const firstDay = new Date(year, month - 1, 1);
+      const lastDay = new Date(year, month, 0);
+      
+      // Get day of week for first day (0 = Sunday, 1 = Monday, etc.)
+      const firstDayOfWeek = firstDay.getDay();
+      
+      const formatDate = (date: Date): string => {
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const d = String(date.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+      };
+      
+      const days: Array<{ date: string; isEmpty: boolean }> = [];
+      
+      // Add empty cells for days before the first day of the month
+      for (let i = 0; i < firstDayOfWeek; i++) {
+        days.push({ date: '', isEmpty: true });
+      }
+      
+      // Add all days of the month
+      for (let i = 1; i <= lastDay.getDate(); i++) {
+        const currentDate = new Date(year, month - 1, i);
+        days.push({ date: formatDate(currentDate), isEmpty: false });
+      }
+      
+      console.log('getMonthlyDays returning:', days.length, 'days');
+      return days;
+    } catch (error) {
+      console.error('Error in getMonthlyDays:', error);
+      return [];
+    }
+  }
+  
+  getMonthlyDayLabel(date: string): string {
+    const [year, month, day] = date.split('-').map(Number);
+    return String(day);
+  }
+  
+  getMonthlyDayOfWeek(date: string): string {
+    const [year, month, day] = date.split('-').map(Number);
+    const dateObj = new Date(year, month - 1, day);
+    return dateObj.toLocaleDateString('en-US', { weekday: 'short' });
+  }
+  
+  getPlanForDate(date: string): DailyPlan | null {
+    if (this.viewMode === 'weekly') {
+      return this.weeklyPlans.get(date) || null;
+    } else if (this.viewMode === 'monthly') {
+      return this.monthlyPlans.get(date) || null;
+    }
+    return this.dailyPlan;
+  }
+  
+  getAssignedCount(date: string): number {
+    const plan = this.getPlanForDate(date);
+    if (!plan || !plan.assignments) {
+      return 0;
+    }
+    return plan.assignments.filter(a => !this.isUnassigned(a)).length;
+  }
+  
   // Get active vans for a specific type
   getVansForType(type: string): Van[] {
     return this.allVans.filter(van => van.type === type);
@@ -351,6 +586,40 @@ export class PlanningPage implements OnInit, OnDestroy {
     return this.hasVan(assignment) || assignment.id !== undefined;
   }
   
+  // ========== View Mode Management ==========
+  
+  async setViewMode(mode: 'daily' | 'weekly' | 'monthly'): Promise<void> {
+    if (this.viewMode === mode) return; // Prevent reload if already in this mode
+    
+    this.viewMode = mode;
+    
+    // Force change detection immediately so the view structure renders
+    this.cdr.detectChanges();
+    
+    // Load data asynchronously
+    if (mode === 'weekly') {
+      await this.loadWeeklyPlans();
+    } else if (mode === 'monthly') {
+      await this.loadMonthlyPlans();
+    } else {
+      if (!this.dailyPlan) {
+        await this.loadDailyPlan();
+      }
+    }
+    
+    // Force change detection after data loads
+    this.cdr.detectChanges();
+  }
+  
+  getCardTitle(): string {
+    if (this.viewMode === 'weekly') {
+      return 'Weekly Assignments';
+    } else if (this.viewMode === 'monthly') {
+      return 'Monthly Assignments';
+    }
+    return 'Daily Assignments';
+  }
+  
   // ========== Date Management ==========
   
   onDateChange(event: any): void {
@@ -359,7 +628,13 @@ export class PlanningPage implements OnInit, OnDestroy {
       this.selectedDate = newDate;
       this.currentDate = new Date(newDate);
       this._cachedFormattedDate = ''; // Clear cache
-      this.loadDailyPlan();
+      if (this.viewMode === 'weekly') {
+        this.loadWeeklyPlans();
+      } else if (this.viewMode === 'monthly') {
+        this.loadMonthlyPlans();
+      } else {
+        this.loadDailyPlan();
+      }
     }
   }
   
@@ -374,13 +649,25 @@ export class PlanningPage implements OnInit, OnDestroy {
   selectToday(): void {
     this.selectedDate = this.planningService.getTodayDate();
     this.currentDate = new Date();
-    this.loadDailyPlan();
+    if (this.viewMode === 'weekly') {
+      this.loadWeeklyPlans();
+    } else if (this.viewMode === 'monthly') {
+      this.loadMonthlyPlans();
+    } else {
+      this.loadDailyPlan();
+    }
   }
   
   selectTomorrow(): void {
     this.selectedDate = this.planningService.getTomorrowDate();
     this.currentDate = new Date(this.selectedDate);
-    this.loadDailyPlan();
+    if (this.viewMode === 'weekly') {
+      this.loadWeeklyPlans();
+    } else if (this.viewMode === 'monthly') {
+      this.loadMonthlyPlans();
+    } else {
+      this.loadDailyPlan();
+    }
   }
   
   openDatePicker(): void {
@@ -1263,6 +1550,14 @@ export class PlanningPage implements OnInit, OnDestroy {
     return assignment.id || `assignment-${index}`;
   }
   
+  trackByDate(index: number, date: string): string {
+    return date;
+  }
+  
+  trackByMonthlyDay(index: number, day: { date: string; isEmpty: boolean }): string {
+    return day.isEmpty ? `empty-${index}` : day.date;
+  }
+  
   // ========== Print Functionality ==========
   
   printPlan(): void {
@@ -1291,6 +1586,7 @@ export class PlanningPage implements OnInit, OnDestroy {
     });
     await toast.present();
   }
+
   
   // ========== Generate Routes ==========
   

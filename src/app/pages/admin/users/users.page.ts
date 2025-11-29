@@ -1,4 +1,4 @@
-import { Component, OnInit, HostListener, ElementRef } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
@@ -9,45 +9,35 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { UserProfile, Role, AuthService } from '../../../services/auth.service';
 import { UserManagementService } from '../../../services/user-management.service';
 import { BreadcrumbService } from '../../../services/breadcrumb.service';
-
-interface Counts {
-  total: number;
-  active: number;
-  drivers: number;
-  admins: number;
-  owners: number;
-}
+import { UsersControlContainerComponent, UserCounts } from '../../../components/users-control-container/users-control-container.component';
 
 @Component({
   selector: 'app-users',
   standalone: true,
-  imports: [CommonModule, FormsModule, IonicModule],
+  imports: [CommonModule, FormsModule, IonicModule, UsersControlContainerComponent],
   templateUrl: './users.page.html',
   styleUrls: ['./users.page.scss'],
 })
 export class UsersPage implements OnInit {
-  // Filter dropdown state
-  isFilterDropdownOpen: boolean = false;
+  // Filter state
   selectedRoleFilters: Set<string> = new Set();
   selectedStatusFilters: Set<string> = new Set();
   private filters$ = new BehaviorSubject<{ roles: Set<string>, statuses: Set<string> }>({ roles: new Set(), statuses: new Set() });
   
   // Search state
-  searchValue: string = '';
   private search$ = new BehaviorSubject<string>('');
 
   // Streams
   allUsers$!: Observable<UserProfile[]>;
   filteredUsers$!: Observable<UserProfile[]>;
-  counts$!: Observable<Counts>;
+  counts$!: Observable<UserCounts>;
   
   constructor(
     private userManagement: UserManagementService,
     private authService: AuthService,
     private router: Router,
     private route: ActivatedRoute,
-    private breadcrumbService: BreadcrumbService,
-    private elementRef: ElementRef
+    private breadcrumbService: BreadcrumbService
   ) {}
 
   ngOnInit() {
@@ -106,32 +96,18 @@ export class UsersPage implements OnInit {
     );
   }
 
-  // Filter dropdown handlers
-  toggleFilterDropdown(): void {
-    this.isFilterDropdownOpen = !this.isFilterDropdownOpen;
+  // Component event handlers
+  onSearchChange(searchValue: string): void {
+    this.search$.next(searchValue);
   }
 
-  toggleRoleFilter(role: string): void {
-    if (this.selectedRoleFilters.has(role)) {
-      this.selectedRoleFilters.delete(role);
-    } else {
-      this.selectedRoleFilters.add(role);
-    }
+  onRoleFiltersChange(roleFilters: Set<string>): void {
+    this.selectedRoleFilters = roleFilters;
     this.applyFilters();
   }
 
-  toggleStatusFilter(status: string): void {
-    if (this.selectedStatusFilters.has(status)) {
-      this.selectedStatusFilters.delete(status);
-    } else {
-      this.selectedStatusFilters.add(status);
-    }
-    this.applyFilters();
-  }
-
-  clearAllFilters(): void {
-    this.selectedRoleFilters.clear();
-    this.selectedStatusFilters.clear();
+  onStatusFiltersChange(statusFilters: Set<string>): void {
+    this.selectedStatusFilters = statusFilters;
     this.applyFilters();
   }
 
@@ -145,34 +121,6 @@ export class UsersPage implements OnInit {
 
   get hasActiveFilters(): boolean {
     return this.selectedRoleFilters.size > 0 || this.selectedStatusFilters.size > 0;
-  }
-
-  get activeFilterCount(): number {
-    return this.selectedRoleFilters.size + this.selectedStatusFilters.size;
-  }
-
-  @HostListener('document:click', ['$event'])
-  onDocumentClick(event: MouseEvent): void {
-    if (this.isFilterDropdownOpen && !this.elementRef.nativeElement.contains(event.target)) {
-      this.isFilterDropdownOpen = false;
-    }
-  }
-  
-  // Search handlers
-  onSearchChange(event: Event) {
-    const value = (event.target as HTMLInputElement).value;
-    this.searchValue = value;
-    this.search$.next(value);
-  }
-  
-  clearSearch() {
-    this.searchValue = '';
-    this.search$.next('');
-  }
-  
-  // Progress bar calculation
-  getProgressWidth(count: number, total: number): number {
-    return total > 0 ? (count / total) * 100 : 0;
   }
 
   // Helpers

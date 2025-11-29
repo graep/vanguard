@@ -1,6 +1,15 @@
 import { Component, Input, OnInit, inject, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { IonicModule, ModalController, ToastController } from '@ionic/angular';
+import { 
+  IonButton,
+  IonIcon,
+  IonCard,
+  IonCardContent,
+  IonChip,
+  IonLabel,
+  ModalController, 
+  ToastController 
+} from '@ionic/angular/standalone';
 import { AddIssueModalComponent } from './add-issue-modal.component';
 import { InspectionService, Inspection } from 'src/app/services/inspection.service';
 import { AuthService } from 'src/app/services/auth.service';
@@ -23,7 +32,15 @@ interface IssueRecord {
 @Component({
   selector: 'app-issues-tab',
   standalone: true,
-  imports: [CommonModule, IonicModule],
+  imports: [
+    CommonModule,
+    IonButton,
+    IonIcon,
+    IonCard,
+    IonCardContent,
+    IonChip,
+    IonLabel
+  ],
   template: `
     <div class="issues-tab-content">
       <div class="section-header">

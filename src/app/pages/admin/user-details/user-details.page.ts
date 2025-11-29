@@ -26,6 +26,7 @@ import { SafetyViolation, SafetyViolationType, SAFETY_VIOLATION_TYPES } from '..
 import { AddSafetyViolationModalComponent } from '../../../components/add-safety-violation-modal/add-safety-violation-modal.component';
 import { ModalController } from '@ionic/angular/standalone';
 import { Timestamp } from 'firebase/firestore';
+import { UserScheduleCalendarComponent } from '../../../components/user-schedule-calendar/user-schedule-calendar.component';
 
 @Component({
   selector: 'app-user-details',
@@ -42,7 +43,8 @@ import { Timestamp } from 'firebase/firestore';
     IonButton,
     IonIcon,
     IonChip,
-    IonLabel
+    IonLabel,
+    UserScheduleCalendarComponent
   ],
   templateUrl: './user-details.page.html',
   styleUrls: ['./user-details.page.scss'],

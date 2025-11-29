@@ -1,14 +1,14 @@
 <ion-content class="planning-content">
   <div class="content-container">
     
-    <!-- Loading State -->
-    <div *ngIf="isLoading" class="loading-container">
+    <!-- Loading State (only for daily view) -->
+    <div *ngIf="isLoading && viewMode === 'daily'" class="loading-container">
       <ion-spinner color="success"></ion-spinner>
       <p>Loading daily plan...</p>
     </div>
     
     <!-- Main Content -->
-    <div *ngIf="!isLoading && dailyPlan" class="planning-container">
+    <div class="planning-container">
       
       <!-- Page Header -->
       <div class="page-header">
@@ -18,97 +18,44 @@
             <p class="page-subtitle">{{ getFormattedDate() }}</p>
           </div>
           <div class="controls-container">
-            <ion-card class="controls-card">
-              <ion-card-content>
-                <div class="controls-content">
-                  <!-- Top Row: Stats and Print -->
-                  <div class="controls-row top-row">
-                    <ion-chip [color]="stats.totalUnassigned > 0 ? 'danger' : 'success'" class="stats-chip">
-                      <ion-icon [name]="stats.totalUnassigned > 0 ? 'alert-circle' : 'checkmark-circle'"></ion-icon>
-                      <ion-label>
-                        {{ stats.totalAssigned }}/{{ stats.totalAssigned + stats.totalUnassigned }} Assigned
-                      </ion-label>
-                    </ion-chip>
-                    <ion-button
-                      fill="outline"
-                      size="small"
-                      color="primary"
-                      (click)="printPlan()"
-                      class="print-button">
-                      <ion-icon name="print-outline" slot="start"></ion-icon>
-                      Print
-                    </ion-button>
-                  </div>
-                  
-                  <!-- Middle Row: Date Controls -->
-                  <div class="controls-row date-row">
-                    <label class="control-label">Date</label>
-                    <div class="date-controls">
-                      <div class="date-buttons">
-                        <ion-button 
-                          fill="outline" 
-                          size="small"
-                          [class.selected]="isTodaySelected()"
-                          (click)="selectToday()">
-                          Today
-                        </ion-button>
-                        <ion-button 
-                          fill="outline" 
-                          size="small"
-                          [class.selected]="isTomorrowSelected()"
-                          (click)="selectTomorrow()">
-                          Tomorrow
-                        </ion-button>
-                      </div>
-                      <div class="date-input-wrapper" (click)="openDatePicker()">
-                        <input 
-                          type="date" 
-                          #dateInput
-                          [value]="selectedDate"
-                          (change)="onDateChange($event)"
-                          (click)="$event.stopPropagation()"
-                          class="date-input"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <!-- Bottom Row: Route Generation Controls -->
-                  <div class="controls-row route-row">
-                    <label class="control-label">Generate Routes</label>
-                    <div class="route-controls">
-                      <ion-button
-                        fill="solid"
-                        color="primary"
-                        size="small"
-                        [disabled]="isSaving || !numberOfRoutes || numberOfRoutes <= 0"
-                        (click)="generateRoutes()">
-                        <ion-icon name="add-circle-outline" slot="start"></ion-icon>
-                        Generate
-                      </ion-button>
-                      <ion-button 
-                        *ngIf="hasCheckedAssignments()"
-                        fill="solid" 
-                        color="success"
-                        size="small"
-                        [disabled]="isSaving"
-                        (click)="submitCheckedAssignments()">
-                        <ion-icon name="save" slot="start"></ion-icon>
-                        Save {{ getCheckedCount() }}
-                      </ion-button>
-                      <div class="input-with-label">
-                        <ion-input
-                          type="number"
-                          [(ngModel)]="numberOfRoutes"
-                          placeholder="# of routes"
-                          min="1">
-                        </ion-input>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </ion-card-content>
-            </ion-card>
+            <!-- Daily View Controls -->
+            <app-daily-view-controls
+              *ngIf="viewMode === 'daily'"
+              [selectedDate]="selectedDate"
+              [numberOfRoutes]="numberOfRoutes"
+              [isSaving]="isSaving"
+              [hasCheckedAssignments]="hasCheckedAssignments()"
+              [checkedCount]="getCheckedCount()"
+              [isTodaySelected]="isTodaySelected()"
+              [isTomorrowSelected]="isTomorrowSelected()"
+              (dateChange)="onDateChange($event)"
+              (selectToday)="selectToday()"
+              (selectTomorrow)="selectTomorrow()"
+              (openDatePicker)="openDatePicker()"
+              (generateRoutes)="generateRoutes()"
+              (submitChecked)="submitCheckedAssignments()"
+              (numberOfRoutesChange)="numberOfRoutes = +$event">
+            </app-daily-view-controls>
+
+            <!-- Weekly View Controls -->
+            <app-weekly-view-controls
+              *ngIf="viewMode === 'weekly'"
+              [selectedDate]="selectedDate"
+              [isTodaySelected]="isTodaySelected()"
+              (dateChange)="onDateChange($event)"
+              (selectToday)="selectToday()"
+              (openDatePicker)="openDatePicker()">
+            </app-weekly-view-controls>
+
+            <!-- Monthly View Controls -->
+            <app-monthly-view-controls
+              *ngIf="viewMode === 'monthly'"
+              [selectedDate]="selectedDate"
+              [isTodaySelected]="isTodaySelected()"
+              (dateChange)="onDateChange($event)"
+              (selectToday)="selectToday()"
+              (openDatePicker)="openDatePicker()">
+            </app-monthly-view-controls>
           </div>
         </div>
       </div>
@@ -119,21 +66,53 @@
           <div class="card-header-content">
             <ion-card-title>
               <ion-icon name="grid-outline"></ion-icon>
-              Daily Assignments ({{ dailyPlan.assignments.length }} Routes)
+              {{ getCardTitle() }}
             </ion-card-title>
-            <ion-button 
-              *ngIf="hasMultipleWavesAssigned()"
-              fill="outline"
-              size="small"
-              color="primary"
-              (click)="toggleWaveGrouping()">
-              <ion-icon [name]="isGroupedByWave ? 'eye-off-outline' : 'layers-outline'" slot="start"></ion-icon>
-              {{ isGroupedByWave ? 'Ungroup' : 'Group' }}
-            </ion-button>
+            <div class="header-actions">
+              <!-- View Mode Tabs -->
+              <ion-segment [value]="viewMode" (ionChange)="setViewMode($any($event.detail.value))" class="view-mode-tabs">
+                <ion-segment-button value="daily">
+                  <ion-label>Daily</ion-label>
+                </ion-segment-button>
+                <ion-segment-button value="weekly">
+                  <ion-label>Weekly</ion-label>
+                </ion-segment-button>
+                <ion-segment-button value="monthly">
+                  <ion-label>Monthly</ion-label>
+                </ion-segment-button>
+              </ion-segment>
+              <!-- Print Button -->
+              <ion-button 
+                fill="clear"
+                size="small"
+                color="primary"
+                (click)="printPlan()"
+                class="print-button">
+                <ion-icon name="print-outline"></ion-icon>
+              </ion-button>
+              <ion-button 
+                *ngIf="viewMode === 'daily' && hasMultipleWavesAssigned()"
+                fill="outline"
+                size="small"
+                color="primary"
+                (click)="toggleWaveGrouping()">
+                <ion-icon [name]="isGroupedByWave ? 'eye-off-outline' : 'layers-outline'" slot="start"></ion-icon>
+                {{ isGroupedByWave ? 'Ungroup' : 'Group' }}
+              </ion-button>
+            </div>
           </div>
         </ion-card-header>
         <ion-card-content>
-          <div class="assignment-table">
+          <!-- Daily View -->
+          <div *ngIf="viewMode === 'daily'">
+            <div *ngIf="!dailyPlan && !isLoading" class="empty-state">
+              <p>No daily plan available. Please select a date.</p>
+            </div>
+            <div *ngIf="isLoading && viewMode === 'daily'" class="loading-container">
+              <ion-spinner color="success"></ion-spinner>
+              <p>Loading daily plan...</p>
+            </div>
+            <div *ngIf="dailyPlan && !isLoading" class="assignment-table">
             <div class="table-header">
               <div class="col-checkbox">
                 <ion-checkbox 
@@ -150,6 +129,16 @@
               <div class="col-pad">Pad</div>
               <div class="col-notes">Notes</div>
               <div class="col-clear"></div>
+              <div class="col-stats">
+                <ion-chip 
+                  [color]="stats.totalUnassigned > 0 ? 'danger' : 'success'" 
+                  class="stats-chip">
+                  <ion-icon [name]="stats.totalUnassigned > 0 ? 'alert-circle' : 'checkmark-circle'"></ion-icon>
+                  <ion-label>
+                    {{ stats.totalAssigned }}/{{ stats.totalAssigned + stats.totalUnassigned }} Assigned
+                  </ion-label>
+                </ion-chip>
+              </div>
             </div>
             <div class="table-body" [class.dropdown-active]="isDropdownActive()">
               <ng-container *ngFor="let group of getGroupedAssignmentsByWave(); let groupIndex = index; trackBy: trackByGroupIndex">
@@ -328,9 +317,80 @@
                     <ion-icon name="close"></ion-icon>
                   </ion-button>
                 </div>
+                
+                <!-- Stats column (empty for rows) -->
+                <div class="col-stats"></div>
                 </div>
               </ng-container>
             </div>
+          </div>
+          </div>
+          
+          <!-- Weekly View -->
+          <div *ngIf="viewMode === 'weekly'" class="weekly-view">
+            <div *ngIf="isLoading" class="loading-container">
+              <ion-spinner color="success"></ion-spinner>
+              <p>Loading weekly plans...</p>
+            </div>
+            <ng-container *ngIf="!isLoading">
+              <div class="weekly-header">
+                <div class="week-day-header" *ngFor="let day of getWeekDays(); trackBy: trackByDate">
+                  <div class="day-label">{{ getWeekDayLabel(day) }}</div>
+                  <div class="day-date">{{ getWeekDayFullLabel(day) }}</div>
+                </div>
+              </div>
+              <div class="weekly-content">
+                <div class="week-day-column" *ngFor="let day of getWeekDays(); trackBy: trackByDate">
+                  <div class="day-assignments">
+                    <ng-container *ngIf="getPlanForDate(day)?.assignments && getPlanForDate(day)!.assignments.length > 0">
+                      <div 
+                        *ngFor="let assignment of getPlanForDate(day)!.assignments; trackBy: trackByAssignmentId"
+                        class="assignment-card"
+                        [class.unassigned]="isUnassigned(assignment)">
+                        <div class="assignment-van">{{ assignment.vanType }} {{ assignment.vanNumber }}</div>
+                        <div class="assignment-driver">{{ assignment.driverName || 'Unassigned' }}</div>
+                        <div class="assignment-route" *ngIf="assignment.routeNumber">{{ assignment.routeNumber }}</div>
+                      </div>
+                    </ng-container>
+                    <div *ngIf="!getPlanForDate(day) || !getPlanForDate(day)?.assignments || getPlanForDate(day)!.assignments.length === 0" class="no-assignments">
+                      No assignments
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </ng-container>
+          </div>
+          
+          <!-- Monthly View -->
+          <div *ngIf="viewMode === 'monthly'" class="monthly-view">
+            <div *ngIf="isLoading" class="loading-container">
+              <ion-spinner color="success"></ion-spinner>
+              <p>Loading monthly plans...</p>
+            </div>
+            <ng-container *ngIf="!isLoading">
+              <div class="monthly-header">
+                <div class="month-day-header" *ngFor="let dayLabel of ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']">
+                  {{ dayLabel }}
+                </div>
+              </div>
+              <div class="monthly-grid">
+                <div 
+                  class="month-day-cell"
+                  [class.empty]="day.isEmpty"
+                  [class.today]="!day.isEmpty && day.date === getTodayDateString()"
+                  *ngFor="let day of getMonthlyDays(); trackBy: trackByMonthlyDay">
+                  <div *ngIf="!day.isEmpty" class="day-content">
+                    <div class="day-number">{{ getMonthlyDayLabel(day.date) }}</div>
+                    <div class="day-assignments-count">
+                      {{ (getPlanForDate(day.date)?.assignments?.length || 0) }} route(s)
+                    </div>
+                    <div class="day-assigned-count" *ngIf="getPlanForDate(day.date)">
+                      {{ getAssignedCount(day.date) }} assigned
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </ng-container>
           </div>
         </ion-card-content>
       </ion-card>

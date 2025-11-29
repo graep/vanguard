@@ -1,13 +1,29 @@
 import { Component, Input, OnInit, OnChanges, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { IonicModule, ToastController, AlertController } from '@ionic/angular';
+import { 
+  IonButton,
+  IonIcon,
+  IonTextarea,
+  IonCard,
+  IonCardContent,
+  ToastController, 
+  AlertController 
+} from '@ionic/angular/standalone';
 import { NotesHistoryService, NoteEntry } from '../../../../services/notes-history.service';
 
 @Component({
   selector: 'app-notes-tab',
   standalone: true,
-  imports: [CommonModule, FormsModule, IonicModule],
+  imports: [
+    CommonModule, 
+    FormsModule,
+    IonButton,
+    IonIcon,
+    IonTextarea,
+    IonCard,
+    IonCardContent
+  ],
   template: `
     <div class="notes-tab-content">
       <div class="section-header">

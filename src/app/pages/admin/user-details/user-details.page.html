@@ -519,9 +519,7 @@
           <!-- Schedule Tab -->
           <div *ngIf="activeTab === 'schedule'" class="tab-panel">
             <div class="schedule-content">
-              <div class="empty-state-small">
-                <p>Schedule information coming soon</p>
-              </div>
+              <app-user-schedule-calendar *ngIf="user" [userId]="user.uid"></app-user-schedule-calendar>
             </div>
           </div>
 

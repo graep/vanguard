@@ -1,7 +1,23 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { IonicModule, ModalController, ToastController } from '@ionic/angular';
+import { 
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonButtons,
+  IonButton,
+  IonIcon,
+  IonContent,
+  IonItem,
+  IonLabel,
+  IonSelect,
+  IonSelectOption,
+  IonTextarea,
+  IonChip,
+  ModalController, 
+  ToastController 
+} from '@ionic/angular/standalone';
 
 interface IssueCategory {
   name: string;
@@ -19,7 +35,23 @@ interface NewIssue {
 @Component({
   selector: 'app-add-issue-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, IonicModule],
+  imports: [
+    CommonModule, 
+    FormsModule,
+    IonHeader,
+    IonToolbar,
+    IonTitle,
+    IonButtons,
+    IonButton,
+    IonIcon,
+    IonContent,
+    IonItem,
+    IonLabel,
+    IonSelect,
+    IonSelectOption,
+    IonTextarea,
+    IonChip
+  ],
   template: `
     <ion-header>
       <ion-toolbar>

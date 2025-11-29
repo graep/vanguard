@@ -1,0 +1,331 @@
+.calendar-container {
+  padding: 1rem;
+  background: transparent;
+}
+
+.calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  gap: 1rem;
+
+  .month-year-label {
+    flex: 1;
+    text-align: center;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #ffffff;
+    margin: 0;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  ion-button {
+    --color: #ffffff;
+    --color-hover: rgba(255, 255, 255, 0.8);
+  }
+}
+
+.calendar-actions {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1rem;
+
+  ion-button {
+    --color: #3b82f6;
+    --border-color: #3b82f6;
+  }
+}
+
+.loading-state {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+  padding: 2rem;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.weekday-header {
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.7);
+  padding: 0.5rem 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.calendar-day {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.5rem;
+  position: relative;
+  transition: all 0.2s ease;
+  cursor: pointer;
+
+  &:hover {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+    border-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+  }
+
+  &.current-month {
+    .day-number {
+      color: #ffffff;
+      font-weight: 500;
+    }
+  }
+
+  &.clickable {
+    cursor: pointer;
+    
+    &:active {
+      transform: scale(0.95);
+    }
+
+    &.selected {
+      border-color: rgba(59, 130, 246, 0.5);
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(59, 130, 246, 0.08) 100%);
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+    }
+  }
+
+  &:not(.current-month) {
+    opacity: 0.4;
+    
+    .day-number {
+      color: rgba(255, 255, 255, 0.5);
+    }
+  }
+
+  &.today {
+    border: 2px solid #3b82f6;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(59, 130, 246, 0.1) 100%);
+    
+    .day-number {
+      color: #3b82f6;
+      font-weight: 700;
+    }
+  }
+
+  &.work-day {
+    background: linear-gradient(135deg, rgba(76, 175, 80, 0.2) 0%, rgba(76, 175, 80, 0.1) 100%);
+    border-color: rgba(76, 175, 80, 0.3);
+    
+    .day-number {
+      color: #4CAF50;
+      font-weight: 600;
+    }
+
+    &.today {
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.3) 0%, rgba(76, 175, 80, 0.2) 100%);
+      border-color: #3b82f6;
+    }
+  }
+
+  .day-number {
+    font-size: 0.9rem;
+    line-height: 1;
+  }
+
+  .work-indicator {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    font-size: 0.75rem;
+    color: #4CAF50;
+    filter: drop-shadow(0 1px 2px rgba(76, 175, 80, 0.5));
+  }
+}
+
+.calendar-legend {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  .legend-color {
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+
+    &.work-day {
+      background: linear-gradient(135deg, rgba(76, 175, 80, 0.2) 0%, rgba(76, 175, 80, 0.1) 100%);
+      border-color: rgba(76, 175, 80, 0.3);
+    }
+
+    &.today {
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(59, 130, 246, 0.1) 100%);
+      border-color: #3b82f6;
+    }
+  }
+}
+
+@media (max-width: 430px) {
+  .calendar-container {
+    padding: 0.5rem;
+  }
+
+  .calendar-grid {
+    gap: 0.25rem;
+  }
+
+  .calendar-day {
+    padding: 0.25rem;
+    
+    .day-number {
+      font-size: 0.75rem;
+    }
+
+    .work-indicator {
+      font-size: 0.6rem;
+      top: 1px;
+      right: 1px;
+    }
+  }
+
+  .weekday-header {
+    font-size: 0.7rem;
+    padding: 0.25rem 0;
+  }
+
+  .month-year-label {
+    font-size: 1rem !important;
+  }
+}
+
+.day-dropdown {
+  position: absolute;
+  z-index: 1000;
+  min-width: 220px;
+  background: linear-gradient(135deg, rgba(30, 30, 30, 0.95) 0%, rgba(20, 20, 20, 0.95) 100%);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  padding: 0.75rem;
+  animation: dropdownFadeIn 0.2s ease-out;
+
+  .dropdown-header {
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .dropdown-date {
+    margin: 0;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.8);
+    text-align: center;
+    font-weight: 500;
+  }
+
+  .dropdown-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .dropdown-action {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: transparent;
+    color: #ffffff;
+
+    ion-icon {
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+
+    span {
+      flex: 1;
+      text-align: left;
+    }
+
+    &.assign {
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(59, 130, 246, 0.1) 100%);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      color: #60a5fa;
+
+      &:hover {
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.3) 0%, rgba(59, 130, 246, 0.2) 100%);
+        transform: translateY(-1px);
+      }
+    }
+
+    &.remove {
+      background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(239, 68, 68, 0.1) 100%);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #f87171;
+
+      &:hover {
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.3) 0%, rgba(239, 68, 68, 0.2) 100%);
+        transform: translateY(-1px);
+      }
+    }
+
+    &.cancel {
+      color: rgba(255, 255, 255, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.05);
+        color: rgba(255, 255, 255, 0.8);
+      }
+    }
+
+    &:active {
+      transform: scale(0.98);
+    }
+  }
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.calendar-container {
+  position: relative;
+}
+

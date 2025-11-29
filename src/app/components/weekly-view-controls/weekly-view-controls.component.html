@@ -1,0 +1,37 @@
+<div class="weekly-controls-container">
+  <!-- Date Info Display (Top Left) -->
+  <div class="date-info-container">
+    <div class="totals-container">
+      <div class="total-container">
+        <span class="total-number">{{ getWeekOfYear() }}</span>
+      </div>
+      <div class="week-label">Week</div>
+    </div>
+  </div>
+
+  <!-- Date Controls Row -->
+  <div class="controls-row date-row">
+    <div class="date-controls">
+      <div class="date-buttons">
+        <ion-button 
+          fill="outline" 
+          size="small"
+          [class.selected]="isTodaySelected"
+          (click)="onSelectToday()">
+          Today
+        </ion-button>
+      </div>
+      <div class="date-input-wrapper" (click)="onOpenDatePicker()">
+        <input 
+          #dateInput
+          type="date" 
+          [value]="selectedDate"
+          (change)="onDateChange($event)"
+          (click)="$event.stopPropagation()"
+          class="date-input"
+        />
+      </div>
+    </div>
+  </div>
+</div>
+

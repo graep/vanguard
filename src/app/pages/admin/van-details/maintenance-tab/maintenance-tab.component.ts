@@ -1,6 +1,13 @@
 import { Component, Input, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { IonicModule } from '@ionic/angular';
+import { 
+  IonCard,
+  IonCardContent,
+  IonIcon,
+  IonChip,
+  IonLabel,
+  IonButton
+} from '@ionic/angular/standalone';
 import { Firestore, doc, getDoc } from '@angular/fire/firestore';
 
 interface MaintenanceRecord {
@@ -18,7 +25,15 @@ interface MaintenanceRecord {
 @Component({
   selector: 'app-maintenance-tab',
   standalone: true,
-  imports: [CommonModule, IonicModule],
+  imports: [
+    CommonModule,
+    IonCard,
+    IonCardContent,
+    IonIcon,
+    IonChip,
+    IonLabel,
+    IonButton
+  ],
   templateUrl: './maintenance-tab.component.html',
   styleUrls: ['./maintenance-tab.component.scss']
 })

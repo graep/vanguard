@@ -1,0 +1,200 @@
+<ion-content class="work-blocks-page">
+  <div class="page-container">
+    <!-- Header -->
+    <div class="page-header">
+      <h1>Work Blocks</h1>
+      <ion-button 
+        *ngIf="!showCreateForm"
+        color="primary" 
+        (click)="openCreateForm()">
+        <ion-icon name="add" slot="start"></ion-icon>
+        Create Work Block
+      </ion-button>
+      <ion-button 
+        *ngIf="showCreateForm"
+        fill="outline" 
+        (click)="closeForm()">
+        <ion-icon name="close" slot="start"></ion-icon>
+        Cancel
+      </ion-button>
+    </div>
+
+    <!-- Create/Edit Form -->
+    <ion-card *ngIf="showCreateForm" class="form-card">
+      <ion-card-header>
+        <ion-card-title>
+          {{ editingBlock ? 'Edit Work Block' : 'Create Work Block' }}
+        </ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <div class="form-group">
+          <ion-item>
+            <ion-label position="stacked">Name *</ion-label>
+            <ion-input 
+              [(ngModel)]="formData.name" 
+              placeholder="e.g., Route, Dispatch, Route/Dispatch"
+              required>
+            </ion-input>
+          </ion-item>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <ion-item>
+              <ion-label position="stacked">Start Time *</ion-label>
+              <ion-input 
+                type="time"
+                [(ngModel)]="formData.startTime" 
+                placeholder="08:00"
+                required>
+              </ion-input>
+            </ion-item>
+          </div>
+
+          <div class="form-group">
+            <ion-item>
+              <ion-label position="stacked">End Time *</ion-label>
+              <ion-input 
+                type="time"
+                [(ngModel)]="formData.endTime" 
+                placeholder="17:00"
+                required>
+              </ion-input>
+            </ion-item>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <ion-item>
+            <ion-label position="stacked">Color</ion-label>
+            <ion-input 
+              type="color"
+              [(ngModel)]="formData.color">
+            </ion-input>
+          </ion-item>
+        </div>
+
+        <div class="form-group">
+          <ion-label>Duties</ion-label>
+          <div class="duties-input">
+            <ion-item>
+              <ion-input 
+                [(ngModel)]="newDuty" 
+                placeholder="Enter a duty"
+                (keyup.enter)="addDuty()">
+              </ion-input>
+              <ion-button 
+                slot="end" 
+                fill="clear" 
+                (click)="addDuty()"
+                [disabled]="!newDuty.trim()">
+                <ion-icon name="add"></ion-icon>
+              </ion-button>
+            </ion-item>
+          </div>
+          <div class="duties-list" *ngIf="formData.duties.length > 0">
+            <ion-chip 
+              *ngFor="let duty of formData.duties; let i = index"
+              color="primary">
+              {{ duty }}
+              <ion-icon name="close-circle" (click)="removeDuty(i)"></ion-icon>
+            </ion-chip>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <ion-button 
+            expand="block" 
+            color="primary"
+            (click)="saveWorkBlock()">
+            <ion-icon name="checkmark" slot="start"></ion-icon>
+            {{ editingBlock ? 'Update' : 'Create' }} Work Block
+          </ion-button>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Work Blocks List -->
+    <div *ngIf="!showCreateForm">
+      <div *ngIf="isLoading" class="loading-state">
+        <ion-spinner></ion-spinner>
+        <p>Loading work blocks...</p>
+      </div>
+
+      <div *ngIf="!isLoading && workBlocks.length === 0" class="empty-state">
+        <ion-icon name="calendar-outline"></ion-icon>
+        <h2>No Work Blocks</h2>
+        <p>Create your first work block to get started</p>
+        <ion-button color="primary" (click)="openCreateForm()">
+          <ion-icon name="add" slot="start"></ion-icon>
+          Create Work Block
+        </ion-button>
+      </div>
+
+      <div *ngIf="!isLoading && workBlocks.length > 0" class="work-blocks-grid">
+        <ion-card *ngFor="let block of workBlocks" class="work-block-card">
+          <ion-card-header>
+            <div class="card-header-content">
+              <div class="block-title">
+                <div 
+                  class="color-indicator" 
+                  [style.background-color]="block.color || '#3b82f6'">
+                </div>
+                <ion-card-title>{{ block.name }}</ion-card-title>
+              </div>
+              <div class="card-actions">
+                <ion-button 
+                  fill="clear" 
+                  size="small"
+                  (click)="openEditForm(block)">
+                  <ion-icon name="create-outline"></ion-icon>
+                </ion-button>
+                <ion-button 
+                  fill="clear" 
+                  size="small"
+                  color="danger"
+                  (click)="deleteWorkBlock(block)">
+                  <ion-icon name="trash-outline"></ion-icon>
+                </ion-button>
+              </div>
+            </div>
+          </ion-card-header>
+          <ion-card-content>
+            <div class="block-details">
+              <div class="time-info">
+                <div class="time-item">
+                  <ion-icon name="time-outline"></ion-icon>
+                  <span class="time-label">Start:</span>
+                  <span class="time-value">{{ formatTime(block.startTime) }}</span>
+                </div>
+                <div class="time-item">
+                  <ion-icon name="time-outline"></ion-icon>
+                  <span class="time-label">End:</span>
+                  <span class="time-value">{{ formatTime(block.endTime) }}</span>
+                </div>
+                <div class="time-item">
+                  <ion-icon name="hourglass-outline"></ion-icon>
+                  <span class="time-label">Duration:</span>
+                  <span class="time-value">{{ getDuration(block.startTime, block.endTime) }}</span>
+                </div>
+              </div>
+
+              <div class="duties-section" *ngIf="block.duties && block.duties.length > 0">
+                <h4>Duties:</h4>
+                <div class="duties-list">
+                  <ion-chip 
+                    *ngFor="let duty of block.duties"
+                    [style.background-color]="block.color || '#3b82f6'"
+                    [style.color]="'#ffffff'">
+                    {{ duty }}
+                  </ion-chip>
+                </div>
+              </div>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      </div>
+    </div>
+  </div>
+</ion-content>
+

@@ -1,0 +1,256 @@
+.work-blocks-page {
+  --background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+}
+
+.page-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+
+  h1 {
+    color: #ffffff;
+    font-size: 2rem;
+    font-weight: 600;
+    margin: 0;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+}
+
+.form-card {
+  margin-bottom: 2rem;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+
+  ion-card-header {
+    padding-bottom: 1rem;
+  }
+
+  ion-card-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1a1a1a;
+  }
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+
+  ion-label {
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 0.5rem;
+  }
+
+  ion-item {
+    --background: transparent;
+    --border-color: rgba(0, 0, 0, 0.1);
+    margin-bottom: 0.5rem;
+  }
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.duties-input {
+  margin-bottom: 1rem;
+
+  ion-item {
+    --padding-start: 0;
+  }
+}
+
+.duties-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+
+  ion-chip {
+    margin: 0;
+    font-size: 0.9rem;
+  }
+}
+
+.form-actions {
+  margin-top: 2rem;
+}
+
+.loading-state,
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+  color: #ffffff;
+
+  ion-spinner {
+    margin-bottom: 1rem;
+  }
+
+  ion-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    opacity: 0.7;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  p {
+    opacity: 0.9;
+    margin-bottom: 1.5rem;
+  }
+}
+
+.work-blocks-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.work-block-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+  }
+
+  ion-card-header {
+    padding-bottom: 1rem;
+  }
+
+  .card-header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .block-title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex: 1;
+  }
+
+  .color-indicator {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 2px solid rgba(0, 0, 0, 0.1);
+    flex-shrink: 0;
+  }
+
+  ion-card-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin: 0;
+  }
+
+  .card-actions {
+    display: flex;
+    gap: 0.25rem;
+  }
+}
+
+.block-details {
+  .time-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  }
+
+  .time-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.95rem;
+
+    ion-icon {
+      font-size: 1.1rem;
+      color: #667eea;
+    }
+
+    .time-label {
+      font-weight: 500;
+      color: #666;
+      min-width: 70px;
+    }
+
+    .time-value {
+      font-weight: 600;
+      color: #1a1a1a;
+    }
+  }
+
+  .duties-section {
+    h4 {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #666;
+      margin: 0 0 0.75rem 0;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .duties-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .page-container {
+    padding: 1rem 0.5rem;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+
+    h1 {
+      font-size: 1.5rem;
+    }
+  }
+
+  .work-blocks-grid {
+    grid-template-columns: 1fr;
+  }
+}
+

@@ -249,6 +249,73 @@ service cloud.firestore {
       allow delete: if hasAdminRole();
     }
 
+    // User Schedules collection - Schedule management
+    match /userSchedules/{userId} {
+      // Helper to check if user has admin role in their profile
+      function hasAdminRole() {
+        return signedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid)) 
+          && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.roles.hasAny(['admin', 'owner']);
+      }
+      
+      // Admins can read all schedules, users can read their own
+      allow read: if signedIn() && (hasAdminRole() || request.auth.uid == userId);
+      
+      // Only admins can create and update schedules
+      allow create, update: if hasAdminRole()
+        && request.resource.data.keys().hasAll(['userId', 'workDays', 'updatedAt'])
+        && request.resource.data.userId is string
+        && request.resource.data.userId == userId
+        && request.resource.data.workDays is list
+        && (!('createdAt' in request.resource.data) || request.resource.data.createdAt is timestamp)
+        && request.resource.data.updatedAt is timestamp
+        && (!('updatedBy' in request.resource.data) || request.resource.data.updatedBy is string);
+      
+      // Only admins can delete schedules
+      allow delete: if hasAdminRole();
+    }
+
+    // Work Blocks collection - Work block templates
+    match /workBlocks/{blockId} {
+      // Helper to check if user has admin role in their profile
+      function hasAdminRole() {
+        return signedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid)) 
+          && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.roles.hasAny(['admin', 'owner']);
+      }
+      
+      // All signed-in users can read work blocks
+      allow read: if signedIn();
+      
+      // Only admins can create, update, and delete work blocks
+      allow create: if hasAdminRole()
+        && request.resource.data.keys().hasAll(['name', 'startTime', 'endTime', 'duties', 'createdAt', 'updatedAt'])
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.name.size() <= 100
+        && request.resource.data.startTime is string
+        && request.resource.data.startTime.matches('^([01]?[0-9]|2[0-3]):[0-5][0-9]$')
+        && request.resource.data.endTime is string
+        && request.resource.data.endTime.matches('^([01]?[0-9]|2[0-3]):[0-5][0-9]$')
+        && request.resource.data.duties is list
+        && request.resource.data.createdAt is timestamp
+        && request.resource.data.updatedAt is timestamp
+        && (!('color' in request.resource.data) || (request.resource.data.color is string && request.resource.data.color.matches('^#[0-9A-Fa-f]{6}$')))
+        && (!('createdBy' in request.resource.data) || request.resource.data.createdBy is string);
+      
+      allow update: if hasAdminRole()
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.name.size() <= 100
+        && request.resource.data.startTime is string
+        && request.resource.data.startTime.matches('^([01]?[0-9]|2[0-3]):[0-5][0-9]$')
+        && request.resource.data.endTime is string
+        && request.resource.data.endTime.matches('^([01]?[0-9]|2[0-3]):[0-5][0-9]$')
+        && request.resource.data.duties is list
+        && request.resource.data.updatedAt is timestamp
+        && (!('color' in request.resource.data) || (request.resource.data.color is string && request.resource.data.color.matches('^#[0-9A-Fa-f]{6}$')));
+      
+      allow delete: if hasAdminRole();
+    }
+
     // Default deny for all other collections
     match /{document=**} {
       allow read, write: if false;

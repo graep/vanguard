@@ -1,0 +1,87 @@
+<div class="calendar-container">
+  <div class="calendar-header">
+    <ion-button fill="clear" size="small" (click)="previousMonth()">
+      <ion-icon name="chevron-back" slot="icon-only"></ion-icon>
+    </ion-button>
+    <h3 class="month-year-label">{{ getMonthYearLabel() }}</h3>
+    <ion-button fill="clear" size="small" (click)="nextMonth()">
+      <ion-icon name="chevron-forward" slot="icon-only"></ion-icon>
+    </ion-button>
+  </div>
+  
+  <div class="calendar-actions">
+    <ion-button fill="outline" size="small" (click)="goToToday()">
+      <ion-icon name="calendar" slot="start"></ion-icon>
+      Today
+    </ion-button>
+  </div>
+
+  <div *ngIf="isLoading" class="loading-state">
+    <ion-spinner></ion-spinner>
+  </div>
+
+  <div *ngIf="!isLoading" class="calendar-grid">
+    <!-- Week day headers -->
+    <div class="weekday-header" *ngFor="let day of weekDays">
+      {{ day }}
+    </div>
+    
+    <!-- Calendar days -->
+    <div 
+      *ngFor="let day of calendarDays"
+      class="calendar-day"
+      [class.current-month]="day.isCurrentMonth"
+      [class.today]="day.isToday"
+      [class.work-day]="day.isWorkDay && day.isCurrentMonth"
+      [class.clickable]="day.isCurrentMonth"
+      [class.selected]="selectedDay?.dateString === day.dateString"
+      (click)="onDayClick($event, day)">
+      <span class="day-number">{{ day.dayOfMonth }}</span>
+      <ion-icon *ngIf="day.isWorkDay && day.isCurrentMonth" name="checkmark-circle" class="work-indicator"></ion-icon>
+    </div>
+  </div>
+
+  <!-- Dropdown Menu -->
+  <div 
+    *ngIf="selectedDay && dropdownPosition" 
+    class="day-dropdown"
+    [style.top.px]="dropdownPosition.top"
+    [style.left.px]="dropdownPosition.left">
+    <div class="dropdown-header">
+      <p class="dropdown-date">{{ getFormattedDate(selectedDay.dateString) }}</p>
+    </div>
+    <div class="dropdown-actions">
+      <button 
+        *ngIf="!selectedDay.isWorkDay"
+        class="dropdown-action assign"
+        (click)="handleAssignWork()">
+        <ion-icon name="checkmark-circle"></ion-icon>
+        <span>Assign to Work</span>
+      </button>
+      <button 
+        *ngIf="selectedDay.isWorkDay"
+        class="dropdown-action remove"
+        (click)="handleRemoveWork()">
+        <ion-icon name="close-circle"></ion-icon>
+        <span>Remove from Work</span>
+      </button>
+      <button 
+        class="dropdown-action cancel"
+        (click)="closeDropdown()">
+        <span>Cancel</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="calendar-legend">
+    <div class="legend-item">
+      <div class="legend-color work-day"></div>
+      <span>Work Day</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-color today"></div>
+      <span>Today</span>
+    </div>
+  </div>
+</div>
+
