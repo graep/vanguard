@@ -1,0 +1,452 @@
+<ion-content>
+  <div class="content-container">
+    
+    <!-- Reports Section - Moved to top -->
+    <div class="reports-section">
+      <div class="reports-header">
+        <h1 class="section-title reports-title">Reports</h1>
+      </div>
+      
+      <!-- Mobile Reports Layout: Both in one box -->
+      <div class="reports-mobile">
+        <div class="report-group-box">
+          <div class="report-group-content">
+            <!-- Previous Report -->
+            <div class="report-wrapper" *ngIf="previousInspection || prevReportItems?.length">
+              <h3 class="report-section-label">Previous</h3>
+              <div class="report-card-layout">
+                <div class="report-header-section">
+                  <div class="report-meta" *ngIf="previousInspection">
+                    <div class="submitter-info" *ngIf="previousSubmitterId; else noPreviousUser">
+                      <ion-icon name="person-outline"></ion-icon>
+                      <span class="clickable-name" (click)="viewUser(previousSubmitterId)">{{ previousSubmitterName }}</span>
+                    </div>
+                    <ng-template #noPreviousUser>
+                      <div class="submitter-info">
+                        <ion-icon name="person-outline"></ion-icon>
+                        <span>{{ previousSubmitterName }}</span>
+                      </div>
+                    </ng-template>
+                    <div class="submission-date" *ngIf="previousInspection.createdAt?.toDate">
+                      <ion-icon name="calendar-outline"></ion-icon>
+                      <span>{{ previousInspection.createdAt.toDate() | date:'medium' }}</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="report-items-section">
+                  <ng-container *ngIf="prevReportItems?.length; else noPrev">
+                    <ion-list>
+                      <ion-item *ngFor="let r of prevReportItems; let i = index" class="report-item">
+                        <ion-label>
+                          <div class="report-header">
+                            <div class="report-name">{{ r.name }} <span class="muted" *ngIf="r.subcategory">/ {{ r.subcategory }}</span></div>
+                            <div class="severity-badge" [class]="'severity-' + (r.severity || 'low')">
+                              {{ (r.severity || 'low') | titlecase }}
+                            </div>
+                          </div>
+                          <div class="report-details">{{ r.details }}</div>
+                          <!-- Unsure Photo Link -->
+                          <div class="unsure-photo-link" *ngIf="r.name === 'Unsure' && r.photoUrl">
+                            <ion-button 
+                              fill="clear" 
+                              size="small" 
+                              color="primary"
+                              (click)="viewUnsurePhoto(r.photoUrl, r.details)">
+                              <ion-icon name="camera" slot="start"></ion-icon>
+                              View Photo
+                            </ion-button>
+                          </div>
+                        </ion-label>
+                      </ion-item>
+                    </ion-list>
+                  </ng-container>
+                  <ng-template #noPrev>
+                    <ion-text color="medium">No previous report.</ion-text>
+                  </ng-template>
+                </div>
+              </div>
+            </div>
+            <!-- Chevron Down Arrow -->
+            <div class="chevron-down-container" *ngIf="(previousInspection || prevReportItems?.length) && (currentInspection || currReportItems?.length)">
+              <ion-icon class="chevron-down" name="chevron-down-outline" aria-hidden="true"></ion-icon>
+            </div>
+            <!-- Current Report -->
+            <div class="report-wrapper" *ngIf="currentInspection || currReportItems?.length">
+              <h3 class="report-section-label">Current</h3>
+              <div class="report-card-layout">
+                <div class="report-header-section">
+                  <div class="report-meta" *ngIf="currentInspection">
+                    <div class="submitter-info" *ngIf="currentSubmitterId; else noCurrentUser">
+                      <ion-icon name="person-outline"></ion-icon>
+                      <span class="clickable-name" (click)="viewUser(currentSubmitterId)">{{ currentSubmitterName }}</span>
+                    </div>
+                    <ng-template #noCurrentUser>
+                      <div class="submitter-info">
+                        <ion-icon name="person-outline"></ion-icon>
+                        <span>{{ currentSubmitterName }}</span>
+                      </div>
+                    </ng-template>
+                    <div class="submission-date" *ngIf="currentInspection.createdAt?.toDate">
+                      <ion-icon name="calendar-outline"></ion-icon>
+                      <span>{{ currentInspection.createdAt.toDate() | date:'medium' }}</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="report-items-section">
+                  <ng-container *ngIf="currReportItems?.length; else noCurr">
+                    <ion-list>
+                      <ion-item *ngFor="let r of currReportItems; let i = index" class="report-item">
+                        <ion-label>
+                          <div class="report-header">
+                            <div class="report-name">{{ r.name }} <span class="muted" *ngIf="r.subcategory">/ {{ r.subcategory }}</span></div>
+                            <div class="severity-badge" [class]="'severity-' + (r.severity || 'low')">
+                              {{ (r.severity || 'low') | titlecase }}
+                            </div>
+                          </div>
+                          <div class="report-details">{{ r.details }}</div>
+                          <!-- Unsure Photo Link -->
+                          <div class="unsure-photo-link" *ngIf="r.name === 'Unsure' && r.photoUrl">
+                            <ion-button 
+                              fill="clear" 
+                              size="small" 
+                              color="primary"
+                              (click)="viewUnsurePhoto(r.photoUrl, r.details)">
+                              <ion-icon name="camera" slot="start"></ion-icon>
+                              View Photo
+                            </ion-button>
+                          </div>
+                        </ion-label>
+                      </ion-item>
+                    </ion-list>
+                  </ng-container>
+                  <ng-template #noCurr>
+                    <ion-text color="medium">No current report.</ion-text>
+                  </ng-template>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Desktop Reports Layout: Side by side -->
+      <div class="reports-desktop">
+        <ion-grid>
+          <ion-row class="reports-row">
+            <!-- Previous Report - Left -->
+            <ion-col size="12" sizeMd="12">
+              <ion-card class="report-card">
+                <ion-card-content>
+                  <div class="report-card-layout">
+                    <div class="report-header-section">
+                      <div class="report-meta" *ngIf="previousInspection">
+                        <div class="submitter-info" *ngIf="previousSubmitterId; else noPreviousUserDesktop">
+                          <ion-icon name="person-outline"></ion-icon>
+                          <span class="clickable-name" (click)="viewUser(previousSubmitterId)">{{ previousSubmitterName }}</span>
+                        </div>
+                        <ng-template #noPreviousUserDesktop>
+                          <div class="submitter-info">
+                            <ion-icon name="person-outline"></ion-icon>
+                            <span>{{ previousSubmitterName }}</span>
+                          </div>
+                        </ng-template>
+                        <div class="submission-date" *ngIf="previousInspection.createdAt?.toDate">
+                          <ion-icon name="calendar-outline"></ion-icon>
+                          <span>{{ previousInspection.createdAt.toDate() | date:'medium' }}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="report-items-section">
+                      <ng-container *ngIf="prevReportItems?.length; else noPrev">
+                        <ion-list>
+                          <ion-item *ngFor="let r of prevReportItems; let i = index" class="report-item">
+                            <ion-label>
+                              <div class="report-header">
+                                <div class="report-name">{{ r.name }} <span class="muted" *ngIf="r.subcategory">/ {{ r.subcategory }}</span></div>
+                                <div class="severity-badge" [class]="'severity-' + (r.severity || 'low')">
+                                  {{ (r.severity || 'low') | titlecase }}
+                                </div>
+                              </div>
+                              <div class="report-details">{{ r.details }}</div>
+                              <!-- Unsure Photo Link -->
+                              <div class="unsure-photo-link" *ngIf="r.name === 'Unsure' && r.photoUrl">
+                                <ion-button 
+                                  fill="clear" 
+                                  size="small" 
+                                  color="primary"
+                                  (click)="viewUnsurePhoto(r.photoUrl, r.details)">
+                                  <ion-icon name="camera" slot="start"></ion-icon>
+                                  View Photo
+                                </ion-button>
+                              </div>
+                            </ion-label>
+                          </ion-item>
+                        </ion-list>
+                      </ng-container>
+                      <ng-template #noPrev>
+                        <ion-text color="medium">No previous report.</ion-text>
+                      </ng-template>
+                    </div>
+                  </div>
+                </ion-card-content>
+              </ion-card>
+            </ion-col>
+
+            <!-- Arrow Containers (desktop only) - Always visible between reports -->
+            <ion-col size="12" sizeMd="12" class="report-arrow-containers-col">
+              <div class="report-arrow-containers">
+                <!-- Always show at least one arrow, or match number of report items -->
+                <ng-container *ngFor="let r of (longerReportItems.length > 0 ? longerReportItems : [1]); let i = index">
+                  <div class="report-arrow-container">
+                    <ion-icon class="arrow" name="chevron-forward-outline" aria-hidden="true"></ion-icon>
+                  </div>
+                </ng-container>
+              </div>
+            </ion-col>
+
+            <!-- Current Report - Right -->
+            <ion-col size="12" sizeMd="12">
+              <ion-card class="report-card">
+                <ion-card-content>
+                  <div class="report-card-layout">
+                    <div class="report-header-section">
+                      <div class="report-meta" *ngIf="currentInspection">
+                        <div class="submitter-info" *ngIf="currentSubmitterId; else noCurrentUserDesktop">
+                          <ion-icon name="person-outline"></ion-icon>
+                          <span class="clickable-name" (click)="viewUser(currentSubmitterId)">{{ currentSubmitterName }}</span>
+                        </div>
+                        <ng-template #noCurrentUserDesktop>
+                          <div class="submitter-info">
+                            <ion-icon name="person-outline"></ion-icon>
+                            <span>{{ currentSubmitterName }}</span>
+                          </div>
+                        </ng-template>
+                        <div class="submission-date" *ngIf="currentInspection.createdAt?.toDate">
+                          <ion-icon name="calendar-outline"></ion-icon>
+                          <span>{{ currentInspection.createdAt.toDate() | date:'medium' }}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="report-items-section">
+                      <ng-container *ngIf="currReportItems?.length; else noCurr">
+                        <ion-list>
+                          <ion-item *ngFor="let r of currReportItems; let i = index" class="report-item">
+                            <ion-label>
+                              <div class="report-header">
+                                <div class="report-name">{{ r.name }} <span class="muted" *ngIf="r.subcategory">/ {{ r.subcategory }}</span></div>
+                                <div class="severity-badge" [class]="'severity-' + (r.severity || 'low')">
+                                  {{ (r.severity || 'low') | titlecase }}
+                                </div>
+                              </div>
+                              <div class="report-details">{{ r.details }}</div>
+                              <!-- Unsure Photo Link -->
+                              <div class="unsure-photo-link" *ngIf="r.name === 'Unsure' && r.photoUrl">
+                                <ion-button 
+                                  fill="clear" 
+                                  size="small" 
+                                  color="primary"
+                                  (click)="viewUnsurePhoto(r.photoUrl, r.details)">
+                                  <ion-icon name="camera" slot="start"></ion-icon>
+                                  View Photo
+                                </ion-button>
+                              </div>
+                            </ion-label>
+                          </ion-item>
+                        </ion-list>
+                      </ng-container>
+                      <ng-template #noCurr>
+                        <ion-text color="medium">No current report.</ion-text>
+                      </ng-template>
+                    </div>
+                  </div>
+                </ion-card-content>
+              </ion-card>
+            </ion-col>
+          </ion-row>
+        </ion-grid>
+      </div>
+    </div>
+
+    <!-- Photos Section: two separate cards for Previous and Current -->
+    <div class="photos-section">
+      <div class="photos-titles">
+        <h2 class="section-title photos-title photos-title-left">Previous</h2>
+        <div class="photos-title-spacer"></div>
+        <h2 class="section-title photos-title photos-title-right">Current</h2>
+      </div>
+      
+      <!-- Mobile Photos Layout: Grouped by side -->
+      <div class="photos-mobile">
+        <div class="photo-group-box" *ngFor="let row of comparisonRows">
+          <ng-container *ngIf="row.prevUrl || row.currUrl">
+            <div class="photo-group-content">
+              <h3 class="photo-group-title">{{ row.side | titlecase }}</h3>
+              <!-- Previous Photo -->
+              <div class="photo-wrapper" *ngIf="row.prevUrl">
+                <img class="photo"
+                     [src]="row.prevUrl"
+                     [class.expanded]="expandedImage === row.prevUrl"
+                     (click)="toggleImageExpansion(row.prevUrl)"
+                     (load)="alignArrowsToImageCenters()" />
+              </div>
+              <!-- Chevron Down Arrow -->
+              <div class="chevron-down-container" *ngIf="row.prevUrl && row.currUrl">
+                <ion-icon class="chevron-down" name="chevron-down-outline" aria-hidden="true"></ion-icon>
+              </div>
+              <!-- Current Photo -->
+              <div class="photo-wrapper" *ngIf="row.currUrl">
+                <img class="photo"
+                     [src]="row.currUrl"
+                     [class.expanded]="expandedImage === row.currUrl"
+                     (click)="toggleImageExpansion(row.currUrl)"
+                     (load)="alignArrowsToImageCenters()" />
+              </div>
+            </div>
+          </ng-container>
+        </div>
+      </div>
+
+      <!-- Desktop Photos Layout: Side by side -->
+      <div class="photos-desktop">
+        <ion-grid>
+          <ion-row class="photos-row">
+            <!-- Previous Day Card -->
+            <ion-col size="12" sizeMd="12">
+              <ion-card>
+                <ion-card-content>
+                  <div class="photo-list" #photoListPrevious>
+                    <div class="img-wrap" *ngFor="let row of comparisonRows; let i = index">
+                      <ng-container *ngIf="row.prevUrl">
+                        <img class="photo"
+                             [src]="row.prevUrl"
+                             [class.expanded]="expandedImage === row.prevUrl"
+                             (click)="toggleImageExpansion(row.prevUrl)"
+                             (load)="alignArrowsToImageCenters()" />
+                        <div class="photo-label">{{ row.side | titlecase }}</div>
+                      </ng-container>
+                    </div>
+                  </div>
+                </ion-card-content>
+              </ion-card>
+            </ion-col>
+
+            <!-- Arrow Containers (desktop only) -->
+            <ion-col size="12" sizeMd="12" class="arrow-containers-col">
+              <div class="arrow-containers">
+                <ng-container *ngFor="let row of comparisonRows; let i = index">
+                  <div class="arrow-container" *ngIf="row.prevUrl || row.currUrl">
+                    <ion-icon class="arrow" name="chevron-forward-outline" aria-hidden="true"></ion-icon>
+                  </div>
+                </ng-container>
+              </div>
+            </ion-col>
+
+            <!-- Current Day Card -->
+            <ion-col size="12" sizeMd="12">
+              <ion-card>
+                <ion-card-content>
+                  <div class="photo-list" #photoListCurrent>
+                    <div class="img-wrap" *ngFor="let row of comparisonRows; let i = index">
+                      <ng-container *ngIf="row.currUrl">
+                        <img class="photo"
+                             [src]="row.currUrl"
+                             [class.expanded]="expandedImage === row.currUrl"
+                             (click)="toggleImageExpansion(row.currUrl)"
+                             (load)="alignArrowsToImageCenters()" />
+                        <div class="photo-label">{{ row.side | titlecase }}</div>
+                      </ng-container>
+                    </div>
+                  </div>
+                </ion-card-content>
+              </ion-card>
+            </ion-col>
+          </ion-row>
+        </ion-grid>
+      </div>
+    </div>
+
+    <ion-text color="danger" *ngIf="errorMsg">{{ errorMsg }}</ion-text>
+  </div>
+  
+  <!-- Backdrop overlay for expanded image -->
+  <div class="image-backdrop" 
+       *ngIf="expandedImage" 
+       (click)="toggleImageExpansion(expandedImage || '')">
+  </div>
+
+  <!-- Expanded Image - Separate element to break out of parent containers -->
+  <div *ngIf="expandedImage" class="expanded-photo-container">
+    <img class="expanded-photo" 
+         [src]="expandedImage"
+         (click)="toggleImageExpansion(expandedImage || '')" />
+    
+    <!-- Navigation Arrows -->
+    <button *ngIf="canNavigateToPrevious()" 
+            class="nav-arrow nav-arrow-left"
+            (click)="navigateToPreviousPhoto(); $event.stopPropagation()"
+            aria-label="View previous photo">
+      <ion-icon name="chevron-back-outline"></ion-icon>
+      <span class="nav-label">Previous</span>
+    </button>
+    
+    <button *ngIf="canNavigateToCurrent()" 
+            class="nav-arrow nav-arrow-right"
+            (click)="navigateToCurrentPhoto(); $event.stopPropagation()"
+            aria-label="View current photo">
+      <ion-icon name="chevron-forward-outline"></ion-icon>
+      <span class="nav-label">Current</span>
+    </button>
+  </div>
+
+  <!-- Unsure Photo Modal -->
+  <div class="unsure-photo-modal" *ngIf="unsurePhotoModal">
+    <div class="modal-backdrop" (click)="closeUnsurePhotoModal()"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Unsure Issue Photo</h3>
+        <ion-button fill="clear" size="small" (click)="closeUnsurePhotoModal()">
+          <ion-icon name="close"></ion-icon>
+        </ion-button>
+      </div>
+      <div class="modal-body">
+        <div class="photo-container">
+          <img [src]="unsurePhotoModal.photoUrl" alt="Unsure issue photo" class="unsure-photo">
+        </div>
+        <div class="photo-description">
+          <h4>Description:</h4>
+          <p>{{ unsurePhotoModal.description }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Approval Overlay - Fixed Bottom (only in review mode) -->
+  <div class="approval-overlay" *ngIf="reviewMode">
+    <div class="approval-content">
+      <div class="approval-info">
+        <h3>Review Submission</h3>
+        <p>Approve or reject this inspection report</p>
+      </div>
+      <div class="approval-buttons">
+        <ion-button 
+          fill="outline" 
+          color="danger" 
+          size="large"
+          (click)="deny()"
+          class="reject-button action-button">
+          <ion-icon name="close-circle" slot="start"></ion-icon>
+          Reject
+        </ion-button>
+        <ion-button 
+          fill="solid" 
+          color="success" 
+          size="large"
+          (click)="approve()"
+          class="approve-button action-button">
+          <ion-icon name="checkmark-circle" slot="start"></ion-icon>
+          Approve
+        </ion-button>
+      </div>
+    </div>
+  </div>
+</ion-content>

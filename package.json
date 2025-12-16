@@ -1,10 +1,17 @@
-﻿{
+{
   "name": "vanguard-fleet",
   "version": "1.0.0",
   "author": "Vanguard Fleet Management",
   "homepage": "https://vanguard-fleet.com",
   "description": "Vanguard Fleet & Condition Tracking Application",
-  "keywords": ["fleet", "inspection", "vehicle", "management", "ionic", "angular"],
+  "keywords": [
+    "fleet",
+    "inspection",
+    "vehicle",
+    "management",
+    "ionic",
+    "angular"
+  ],
   "license": "MIT",
   "scripts": {
     "ng": "ng",

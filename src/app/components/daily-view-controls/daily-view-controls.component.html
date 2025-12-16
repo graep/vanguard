@@ -9,8 +9,31 @@
     </div>
   </div>
 
-  <!-- Date Controls Row -->
-  <div class="controls-row date-row">
+  <!-- Work Assignments Counter (Top Right) -->
+  <div class="assignments-counter-container">
+    <div class="assignments-counter" 
+         [class.has-assignments]="totalAssigned > 0"
+         (click)="openWorkAssignmentsModal()"
+         [class.clickable]="totalAssigned > 0">
+      <ion-icon name="people-outline"></ion-icon>
+      <span class="counter-number">{{ totalAssigned }}</span>
+      <span class="counter-label">Assigned</span>
+    </div>
+    <div class="tooltip" *ngIf="totalAssigned > 0 && roleBreakdown.length > 0">
+      <div class="tooltip-content">
+        <div class="tooltip-title">Work Assignments</div>
+        <div class="tooltip-items">
+          <div class="tooltip-item" *ngFor="let item of roleBreakdown">
+            <span class="tooltip-role">{{ item.role }}:</span>
+            <span class="tooltip-count">{{ item.count }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Date Controls Row - Positioned at bottom right -->
+  <div class="date-controls-bottom-right">
     <div class="date-controls">
       <div class="date-buttons">
         <ion-button 
@@ -41,19 +64,9 @@
     </div>
   </div>
 
-  <!-- Route Generation Row -->
+  <!-- Save Checked Assignments Button -->
   <div class="controls-row route-row">
-    <label class="control-label">Generate Routes</label>
     <div class="route-controls">
-      <ion-button
-        fill="solid"
-        color="primary"
-        size="small"
-        [disabled]="isSaving || !numberOfRoutes || numberOfRoutes <= 0"
-        (click)="onGenerateRoutes()">
-        <ion-icon name="add-circle-outline" slot="start"></ion-icon>
-        Generate
-      </ion-button>
       <ion-button 
         *ngIf="hasCheckedAssignments"
         fill="solid" 
@@ -64,15 +77,6 @@
         <ion-icon name="save" slot="start"></ion-icon>
         Save {{ checkedCount }}
       </ion-button>
-      <div class="input-wrapper">
-        <ion-input
-          type="number"
-          [value]="numberOfRoutes"
-          (ionInput)="onNumberOfRoutesChange($any($event.detail.value))"
-          placeholder="# of routes"
-          min="1">
-        </ion-input>
-      </div>
     </div>
   </div>
 </div>

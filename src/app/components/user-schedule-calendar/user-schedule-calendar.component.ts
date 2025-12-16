@@ -1,11 +1,15 @@
 import { Component, Input, OnInit, OnDestroy, inject, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { 
   IonButton, 
   IonIcon, 
-  IonSpinner
+  IonSpinner,
+  IonInput,
+  IonSelect,
+  IonSelectOption
 } from '@ionic/angular/standalone';
-import { ScheduleService } from '../../services/schedule.service';
+import { ScheduleService, WorkDayDetails } from '../../services/schedule.service';
 import { AuthService } from '../../services/auth.service';
 import { Subscription, firstValueFrom } from 'rxjs';
 
@@ -21,7 +25,7 @@ interface CalendarDay {
 @Component({
   selector: 'app-user-schedule-calendar',
   standalone: true,
-  imports: [CommonModule, IonButton, IonIcon, IonSpinner],
+  imports: [CommonModule, FormsModule, IonButton, IonIcon, IonSpinner, IonInput, IonSelect, IonSelectOption],
   templateUrl: './user-schedule-calendar.component.html',
   styleUrls: ['./user-schedule-calendar.component.scss']
 })
@@ -41,6 +45,15 @@ export class UserScheduleCalendarComponent implements OnInit, OnDestroy {
   isLoading = false;
   selectedDay: CalendarDay | null = null;
   dropdownPosition: { top: number; left: number } | null = null;
+  
+  // Cascading dropdown state
+  showRoleDropdown = false;
+  showTimeDropdown = false;
+  selectedRole: 'Driver' | 'Dispatch' | 'Extra' | null = null;
+  clockInTime: string = '';
+  clockOutTime: string = '';
+  roleDropdownPosition: { top: number; left: number } | null = null;
+  timeDropdownPosition: { top: number; left: number } | null = null;
   
   weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   monthNames = [
@@ -183,7 +196,10 @@ export class UserScheduleCalendarComponent implements OnInit, OnDestroy {
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
     const target = event.target as HTMLElement;
-    if (!target.closest('.day-dropdown') && !target.closest('.calendar-day.clickable')) {
+    if (!target.closest('.day-dropdown') && 
+        !target.closest('.role-dropdown') && 
+        !target.closest('.time-dropdown') &&
+        !target.closest('.calendar-day.clickable')) {
       this.closeDropdown();
     }
   }
@@ -233,12 +249,94 @@ export class UserScheduleCalendarComponent implements OnInit, OnDestroy {
   closeDropdown() {
     this.selectedDay = null;
     this.dropdownPosition = null;
+    this.showRoleDropdown = false;
+    this.showTimeDropdown = false;
+    this.selectedRole = null;
+    this.clockInTime = '';
+    this.clockOutTime = '';
+    this.roleDropdownPosition = null;
+    this.timeDropdownPosition = null;
   }
 
   async handleAssignWork() {
-    if (!this.selectedDay) return;
-    await this.assignWorkDay(this.selectedDay.dateString);
+    if (!this.selectedDay || !this.dropdownPosition) return;
+    
+    // Calculate position for role dropdown (to the right of main dropdown)
+    const roleLeft = this.dropdownPosition.left + 240;
+    const containerElement = document.querySelector('.calendar-container') as HTMLElement;
+    let adjustedLeft = roleLeft;
+    
+    // Adjust if dropdown would go off right edge
+    if (containerElement) {
+      const containerRect = containerElement.getBoundingClientRect();
+      const dropdownWidth = 200;
+      if (roleLeft + dropdownWidth > containerRect.width) {
+        // Position to the left instead
+        adjustedLeft = this.dropdownPosition.left - dropdownWidth - 10;
+        if (adjustedLeft < 10) {
+          adjustedLeft = 10;
+        }
+      }
+    }
+    
+    // Show role selection dropdown to the side
+    this.showRoleDropdown = true;
+    this.roleDropdownPosition = {
+      top: this.dropdownPosition.top,
+      left: adjustedLeft
+    };
+  }
+
+  onRoleSelected(role: 'Driver' | 'Dispatch' | 'Extra') {
+    this.selectedRole = role;
+    
+    // Calculate position for time dropdown (to the right of role dropdown)
+    const timeLeft = this.roleDropdownPosition!.left + 220;
+    const containerElement = document.querySelector('.calendar-container') as HTMLElement;
+    let adjustedLeft = timeLeft;
+    
+    // Adjust if dropdown would go off right edge
+    if (containerElement) {
+      const containerRect = containerElement.getBoundingClientRect();
+      const dropdownWidth = 240;
+      if (timeLeft + dropdownWidth > containerRect.width) {
+        // Position to the left instead
+        adjustedLeft = this.roleDropdownPosition!.left - dropdownWidth - 10;
+        if (adjustedLeft < 10) {
+          adjustedLeft = 10;
+        }
+      }
+    }
+    
+    // Show time input dropdown to the side
+    this.showTimeDropdown = true;
+    this.timeDropdownPosition = {
+      top: this.roleDropdownPosition!.top,
+      left: adjustedLeft
+    };
+  }
+
+  async onTimeSubmit() {
+    if (!this.selectedDay || !this.selectedRole || !this.clockInTime || !this.clockOutTime) {
+      return;
+    }
+
+    await this.assignWorkDayWithDetails(
+      this.selectedDay.dateString,
+      this.selectedRole,
+      this.clockInTime,
+      this.clockOutTime
+    );
+    
     this.closeDropdown();
+  }
+
+  cancelRoleSelection() {
+    this.showRoleDropdown = false;
+    this.showTimeDropdown = false;
+    this.selectedRole = null;
+    this.clockInTime = '';
+    this.clockOutTime = '';
   }
 
   async handleRemoveWork() {
@@ -285,6 +383,32 @@ export class UserScheduleCalendarComponent implements OnInit, OnDestroy {
     }
   }
 
+  async assignWorkDayWithDetails(dateString: string, role: 'Driver' | 'Dispatch' | 'Extra', clockIn: string, clockOut: string) {
+    if (!this.userId) return;
+    
+    try {
+      const currentUser = this.authService.currentUser$.value;
+      const details: WorkDayDetails = {
+        date: dateString,
+        role,
+        clockIn,
+        clockOut
+      };
+      
+      await this.scheduleService.setWorkDayDetails(
+        this.userId,
+        dateString,
+        details,
+        currentUser?.uid
+      );
+      
+      // Reload schedule to get updated work days for the month
+      await this.loadSchedule();
+    } catch (error) {
+      console.error('[UserScheduleCalendar] Error assigning work day with details:', error);
+    }
+  }
+
   async removeWorkDay(dateString: string) {
     if (!this.userId) return;
     
@@ -309,4 +433,6 @@ export class UserScheduleCalendarComponent implements OnInit, OnDestroy {
     }
   }
 }
+
+
 

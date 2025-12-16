@@ -33,7 +33,9 @@ export class WeeklyViewControlsComponent implements OnInit {
 
   getWeekOfYear(): number {
     if (!this.selectedDate) return 0;
-    const date = new Date(this.selectedDate);
+    // Parse date string (YYYY-MM-DD) to avoid timezone issues
+    const [year, month, day] = this.selectedDate.split('-').map(Number);
+    const date = new Date(year, month - 1, day);
     // Set to nearest Thursday: current date + 4 - current day number
     // Make Sunday's day number 7
     const dayOfWeek = date.getDay() || 7;

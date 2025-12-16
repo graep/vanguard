@@ -1,0 +1,256 @@
+<ion-content>
+  <div class="content-container">
+
+  <!-- Error -->
+  <ion-card *ngIf="errorMsg" color="danger">
+    <ion-card-content>
+      <ion-icon name="alert-circle" slot="start"></ion-icon>
+      {{ errorMsg }}
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Main -->
+  <div *ngIf="van" class="van-details-container">
+    <ion-card class="van-header-card" 
+      [style.background]="!isMobile ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)' : 'transparent'"
+      [style.borderRadius]="!isMobile ? '10px' : '0'"
+      [style.backdropFilter]="!isMobile ? 'blur(10px)' : 'none'"
+      [style.border]="!isMobile ? '1px solid rgba(255, 255, 255, 0.1)' : 'none'"
+      [style.boxShadow]="!isMobile ? '0 8px 32px rgba(0, 0, 0, 0.3)' : 'none'"
+      [style.transition]="'all 0.3s ease'">
+      <ion-card-content>
+        <div class="van-header">
+            
+          <!-- LEFT: info, notes, actions -->
+          <div class="van-basic-info">
+            <h1 class="van-title">{{ getVanDisplayName() }}</h1>
+            <h2 class="van-subtitle">{{ getVanTypeLabel() }}</h2>
+
+            <ion-chip [color]="getStatusColor()" class="status-chip">
+              <ion-icon [name]="getStatusIcon()"></ion-icon>
+              <ion-label>{{ getStatusText() }}</ion-label>
+            </ion-chip>
+
+            <!-- Details (vertical list) -->
+            <div class="van-details-list">
+              <!-- Vehicle Information -->
+              <div class="detail-item" *ngIf="van.year || van.make || van.model">
+                <ion-icon name="car-sport" class="info-icon"></ion-icon>
+                <div class="info-content">
+                  <h3>Vehicle</h3>
+                  <p>{{ getVehicleInfo() }}</p>
+                </div>
+              </div>
+
+              <div class="detail-item">
+                <ion-icon name="information-circle" class="info-icon"></ion-icon>
+                <div class="info-content">
+                  <h3>VIN</h3>
+                  <p>{{ van.VIN || 'Not available' }}</p>
+                </div>
+              </div>
+
+              <div class="detail-item">
+                <ion-icon name="car" class="info-icon"></ion-icon>
+                <div class="info-content">
+                  <h3>Van ID</h3>
+                  <p>{{ van.docId }}</p>
+                </div>
+              </div>
+
+              <div class="detail-item">
+                <ion-icon name="card" class="info-icon"></ion-icon>
+                <div class="info-content">
+                  <h3>License Plate</h3>
+                  <div *ngIf="!isEditingLicensePlate" class="license-plate-display">
+                    <p>{{ van.licensePlate || 'Not set' }}</p>
+                    <ion-button 
+                      fill="clear" 
+                      size="small" 
+                      color="primary"
+                      (click)="startEditingLicensePlate()">
+                      <ion-icon name="create-outline" slot="icon-only"></ion-icon>
+                    </ion-button>
+                  </div>
+                  <div *ngIf="isEditingLicensePlate" class="license-plate-edit">
+                    <ion-input
+                      [(ngModel)]="editingLicensePlate"
+                      placeholder="Enter license plate"
+                      [autofocus]="true">
+                    </ion-input>
+                    <div class="edit-actions">
+                      <ion-button 
+                        fill="clear" 
+                        size="small" 
+                        color="success"
+                        (click)="saveLicensePlate()"
+                        [disabled]="isSavingLicensePlate">
+                        <ion-icon name="checkmark-outline" slot="icon-only"></ion-icon>
+                      </ion-button>
+                      <ion-button 
+                        fill="clear" 
+                        size="small" 
+                        color="medium"
+                        (click)="cancelEditingLicensePlate()"
+                        [disabled]="isSavingLicensePlate">
+                        <ion-icon name="close-outline" slot="icon-only"></ion-icon>
+                      </ion-button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Registration Status -->
+              <div class="detail-item">
+                <ion-icon name="document-text" class="info-icon"></ion-icon>
+                <div class="info-content">
+                  <h3 (click)="handleRegistrationClick()" 
+                      [class.clickable]="van.registrationInfo?.imageUrl"
+                      class="cursor-pointer">
+                    Registration
+                  </h3>
+                  <p (click)="handleRegistrationClick()" 
+                     [class.clickable]="!van.registrationInfo?.imageUrl"
+                     class="cursor-pointer">
+                    {{ van.registrationInfo?.imageUrl ? 'On file' : 'Add registration' }}
+                  </p>
+                </div>
+              </div>
+
+              <!-- Insurance Status -->
+              <div class="detail-item">
+                <ion-icon name="shield-checkmark" class="info-icon"></ion-icon>
+                <div class="info-content">
+                  <h3 (click)="handleInsuranceClick()"
+                      [class.clickable]="van.insuranceInfo?.imageUrl"
+                      class="cursor-pointer">
+                    Insurance
+                  </h3>
+                  <p (click)="handleInsuranceClick()"
+                     [class.clickable]="!van.insuranceInfo?.imageUrl"
+                     class="cursor-pointer">
+                    {{ van.insuranceInfo?.imageUrl ? 'On file' : 'Add insurance' }}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- ACTIONS: side-by-side, small -->
+            <div class="action-buttons">
+                <ion-button
+                  fill="solid"
+                  color="primary"
+                  (click)="startInspection()"
+                  class="action-button">
+                  <ion-icon name="camera" slot="start"></ion-icon>
+                  New Inspection
+                </ion-button>
+
+                <ion-button
+                  fill="outline"
+                  color="secondary"
+                  (click)="viewLatestInspection()"
+                  [disabled]="!latestInspectionId"
+                  class="action-button">
+                  <ion-icon name="document-text" slot="start"></ion-icon>
+                  Reports
+                  <span *ngIf="!latestInspectionId" class="button-note">
+                    (No reports)
+                  </span>
+                </ion-button>
+              </div>
+          </div>
+
+          <!-- RIGHT: image + toggle -->
+          <div class="van-actions-section">
+            <div class="van-image-section">
+              <img
+                [src]="getVanImage()"
+                [alt]="van.type"
+                class="van-image" />
+
+              <ion-button
+                [fill]="van.isGrounded ? 'solid' : 'outline'"
+                [color]="van.isGrounded ? 'success' : 'danger'"
+                (click)="toggleGroundedStatus()"
+                class="toggle-button">
+                <ion-icon
+                  [name]="van.isGrounded ? 'checkmark-circle' : 'warning'"
+                  
+                  slot="start">
+                </ion-icon>
+                {{ van.isGrounded ? 'Activate Van' : 'Ground Van' }}
+              </ion-button>
+
+            </div>
+          </div>
+
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- NEW: Tabbed History Section -->
+    <ion-card class="history-card"
+      [style.background]="'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)'"
+      [style.borderRadius]="'10px'"
+      [style.backdropFilter]="'blur(10px)'"
+      [style.border]="'1px solid rgba(255, 255, 255, 0.1)'"
+      [style.boxShadow]="'0 8px 32px rgba(0, 0, 0, 0.3)'"
+      [style.transition]="'all 0.3s ease'"
+      [style.marginTop]="'20px'">
+      <div class="history-container">
+        <ion-card-header>
+          <ion-card-title>Van History</ion-card-title>
+        </ion-card-header>
+        
+        <!-- Tab Navigation -->
+        <div class="tab-navigation">
+          <ion-button 
+            *ngFor="let tab of tabs" 
+            (click)="selectTab(tab.id)"
+            [class.tab-button-selected]="activeTab === tab.id"
+            class="tab-button">
+            <ion-icon [name]="tab.icon" slot="start"></ion-icon>
+            <span class="tab-label">{{ tab.label }}</span>
+          </ion-button>
+        </div>
+
+        <!-- Tab Content -->
+        <ion-card-content class="tab-content">
+          
+          <!-- Notes Tab -->
+          <div *ngIf="activeTab === 'notes'" class="tab-panel">
+            <app-notes-tab
+              [vanId]="van.docId" 
+              [currentNotes]="van.notes">
+            </app-notes-tab>
+          </div>
+
+          <!-- Issues Tab -->
+          <div *ngIf="activeTab === 'issues'" class="tab-panel">
+            <app-issues-tab
+              [vanId]="van.docId">
+            </app-issues-tab>
+          </div>
+
+          <!-- Maintenance Tab -->
+          <div *ngIf="activeTab === 'maintenance'" class="tab-panel">
+            <app-maintenance-tab
+              [vanId]="van.docId">
+            </app-maintenance-tab>
+          </div>
+
+          <!-- Drivers Tab -->
+          <div *ngIf="activeTab === 'drivers'" class="tab-panel">
+            <app-drivers-tab
+              [vanId]="van.docId">
+            </app-drivers-tab>
+          </div>
+
+        </ion-card-content>
+      </div>
+    </ion-card>
+
+  </div>
+  </div>
+</ion-content>

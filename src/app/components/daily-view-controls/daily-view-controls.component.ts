@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, ViewChild, ElementRef, inject } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, ViewChild, ElementRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -6,8 +6,11 @@ import {
   IonIcon,
   IonInput,
   IonChip,
-  IonLabel
+  IonLabel,
+  ModalController
 } from '@ionic/angular/standalone';
+import { WorkDayDetails } from '../../services/schedule.service';
+import { WorkAssignmentsModalComponent } from '../work-assignments-modal/work-assignments-modal.component';
 
 @Component({
   selector: 'app-daily-view-controls',
@@ -17,37 +20,77 @@ import {
     FormsModule,
     IonButton,
     IonIcon,
-    IonInput
+    IonInput,
+    IonChip,
+    IonLabel
   ],
   templateUrl: './daily-view-controls.component.html',
   styleUrls: ['./daily-view-controls.component.scss']
 })
-export class DailyViewControlsComponent implements OnInit {
+export class DailyViewControlsComponent implements OnInit, OnChanges {
   @Input() selectedDate: string = '';
-  @Input() numberOfRoutes: number = 0;
   @Input() isSaving: boolean = false;
   @Input() hasCheckedAssignments: boolean = false;
   @Input() checkedCount: number = 0;
   @Input() isTodaySelected: boolean = false;
   @Input() isTomorrowSelected: boolean = false;
+  @Input() workAssignments: Array<WorkDayDetails & { userId: string }> = [];
 
   @Output() dateChange = new EventEmitter<string>();
   @Output() selectToday = new EventEmitter<void>();
   @Output() selectTomorrow = new EventEmitter<void>();
   @Output() openDatePicker = new EventEmitter<void>();
-  @Output() generateRoutes = new EventEmitter<void>();
   @Output() submitChecked = new EventEmitter<void>();
-  @Output() numberOfRoutesChange = new EventEmitter<number>();
 
   private elementRef = inject(ElementRef);
+  private modalCtrl = inject(ModalController);
 
   @ViewChild('dateInput', { static: false }) dateInput?: ElementRef<HTMLInputElement>;
 
-  ngOnInit() {}
+  totalAssigned: number = 0;
+  roleBreakdown: { role: string; count: number }[] = [];
+
+  ngOnInit() {
+    this.updateCounts();
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['workAssignments'] || changes['selectedDate']) {
+      this.updateCounts();
+    }
+  }
+
+  updateCounts() {
+    if (!this.workAssignments || this.workAssignments.length === 0) {
+      this.totalAssigned = 0;
+      this.roleBreakdown = [];
+      return;
+    }
+
+    this.totalAssigned = this.workAssignments.length;
+    
+    // Count by role
+    const roleCounts: Record<string, number> = {};
+    this.workAssignments.forEach(assignment => {
+      const role = assignment.role || 'Unassigned';
+      roleCounts[role] = (roleCounts[role] || 0) + 1;
+    });
+
+    // Convert to array and sort
+    this.roleBreakdown = Object.entries(roleCounts)
+      .map(([role, count]) => ({ role, count }))
+      .sort((a, b) => {
+        // Sort: Driver, Dispatch, Extra, then Unassigned
+        const order: Record<string, number> = { 'Driver': 1, 'Dispatch': 2, 'Extra': 3, 'Unassigned': 4 };
+        return (order[a.role] || 99) - (order[b.role] || 99);
+      });
+  }
 
   getDayOfMonth(): number {
     if (!this.selectedDate) return 0;
-    const date = new Date(this.selectedDate);
+    // Parse date string (YYYY-MM-DD) to avoid timezone issues
+    const [year, month, day] = this.selectedDate.split('-').map(Number);
+    const date = new Date(year, month - 1, day);
     return date.getDate();
   }
 
@@ -76,16 +119,28 @@ export class DailyViewControlsComponent implements OnInit {
     this.openDatePicker.emit();
   }
 
-  onGenerateRoutes(): void {
-    this.generateRoutes.emit();
-  }
-
   onSubmitChecked(): void {
     this.submitChecked.emit();
   }
 
-  onNumberOfRoutesChange(value: number): void {
-    this.numberOfRoutesChange.emit(value);
+  getTooltipText(): string {
+    if (this.roleBreakdown.length === 0) return '';
+    return this.roleBreakdown.map(item => `${item.role}: ${item.count}`).join(', ');
+  }
+
+  async openWorkAssignmentsModal(): Promise<void> {
+    if (this.workAssignments.length === 0) return;
+
+    const modal = await this.modalCtrl.create({
+      component: WorkAssignmentsModalComponent,
+      componentProps: {
+        workAssignments: this.workAssignments,
+        selectedDate: this.selectedDate
+      },
+      cssClass: 'work-assignments-modal'
+    });
+
+    await modal.present();
   }
 }
 

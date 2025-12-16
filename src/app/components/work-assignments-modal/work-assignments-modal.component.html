@@ -1,0 +1,50 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Work Assignments</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="dismiss()">
+        <ion-icon name="close"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div class="modal-content">
+    <div class="date-header" *ngIf="selectedDate">
+      <p class="date-text">{{ getFormattedDate() }}</p>
+    </div>
+
+    <div *ngIf="isLoading" class="loading-container">
+      <ion-spinner></ion-spinner>
+      <p>Loading users...</p>
+    </div>
+
+    <div *ngIf="!isLoading && usersByRole.length === 0" class="empty-state">
+      <ion-icon name="people-outline"></ion-icon>
+      <p>No work assignments for this date</p>
+    </div>
+
+    <div *ngIf="!isLoading && usersByRole.length > 0" class="roles-container">
+      <div *ngFor="let roleGroup of usersByRole" class="role-section">
+        <div class="role-header">
+          <h3 class="role-title">{{ roleGroup.role }}</h3>
+          <ion-chip color="primary" class="role-count">
+            {{ roleGroup.users.length }}
+          </ion-chip>
+        </div>
+        
+        <div class="users-list">
+          <div *ngFor="let user of roleGroup.users" class="user-item">
+            <span class="user-name">{{ getUserDisplayName(user) }}</span>
+            <span class="user-times" *ngIf="user.clockIn || user.clockOut">
+              <ion-icon name="time-outline"></ion-icon>
+              {{ getTimeRange(user.clockIn, user.clockOut) }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</ion-content>
+

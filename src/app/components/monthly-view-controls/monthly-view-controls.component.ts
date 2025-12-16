@@ -36,7 +36,9 @@ export class MonthlyViewControlsComponent implements OnInit {
 
   getMonthOfYear(): number {
     if (!this.selectedDate) return 0;
-    const date = new Date(this.selectedDate);
+    // Parse date string (YYYY-MM-DD) to avoid timezone issues
+    const [year, month, day] = this.selectedDate.split('-').map(Number);
+    const date = new Date(year, month - 1, day);
     // getMonth() returns 0-11, so add 1 to get 1-12
     return date.getMonth() + 1;
   }

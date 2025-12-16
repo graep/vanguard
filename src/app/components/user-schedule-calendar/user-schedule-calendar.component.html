@@ -73,6 +73,83 @@
     </div>
   </div>
 
+  <!-- Role Selection Dropdown -->
+  <div 
+    *ngIf="showRoleDropdown && roleDropdownPosition" 
+    class="role-dropdown"
+    [style.top.px]="roleDropdownPosition.top"
+    [style.left.px]="roleDropdownPosition.left">
+    <div class="dropdown-header">
+      <p class="dropdown-title">Select Role</p>
+    </div>
+    <div class="dropdown-actions">
+      <button 
+        class="dropdown-action role-option"
+        (click)="onRoleSelected('Driver')">
+        <span>Driver</span>
+      </button>
+      <button 
+        class="dropdown-action role-option"
+        (click)="onRoleSelected('Dispatch')">
+        <span>Dispatch</span>
+      </button>
+      <button 
+        class="dropdown-action role-option"
+        (click)="onRoleSelected('Extra')">
+        <span>Extra</span>
+      </button>
+      <button 
+        class="dropdown-action cancel"
+        (click)="cancelRoleSelection()">
+        <span>Cancel</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Time Input Dropdown -->
+  <div 
+    *ngIf="showTimeDropdown && timeDropdownPosition" 
+    class="time-dropdown"
+    [style.top.px]="timeDropdownPosition.top"
+    [style.left.px]="timeDropdownPosition.left">
+    <div class="dropdown-header">
+      <p class="dropdown-title">Set Times</p>
+      <p class="dropdown-subtitle" *ngIf="selectedRole">{{ selectedRole }}</p>
+    </div>
+    <div class="time-inputs">
+      <div class="time-input-group">
+        <label>Clock In</label>
+        <ion-input
+          type="time"
+          [(ngModel)]="clockInTime"
+          placeholder="HH:mm">
+        </ion-input>
+      </div>
+      <div class="time-input-group">
+        <label>Clock Out</label>
+        <ion-input
+          type="time"
+          [(ngModel)]="clockOutTime"
+          placeholder="HH:mm">
+        </ion-input>
+      </div>
+    </div>
+    <div class="dropdown-actions">
+      <button 
+        class="dropdown-action assign"
+        [disabled]="!clockInTime || !clockOutTime"
+        (click)="onTimeSubmit()">
+        <ion-icon name="checkmark-circle"></ion-icon>
+        <span>Confirm</span>
+      </button>
+      <button 
+        class="dropdown-action cancel"
+        (click)="cancelRoleSelection()">
+        <span>Cancel</span>
+      </button>
+    </div>
+  </div>
+
   <div class="calendar-legend">
     <div class="legend-item">
       <div class="legend-color work-day"></div>
@@ -84,4 +161,6 @@
     </div>
   </div>
 </div>
+
+
 

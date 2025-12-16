@@ -22,19 +22,17 @@
             <app-daily-view-controls
               *ngIf="viewMode === 'daily'"
               [selectedDate]="selectedDate"
-              [numberOfRoutes]="numberOfRoutes"
               [isSaving]="isSaving"
               [hasCheckedAssignments]="hasCheckedAssignments()"
               [checkedCount]="getCheckedCount()"
               [isTodaySelected]="isTodaySelected()"
               [isTomorrowSelected]="isTomorrowSelected()"
+              [workAssignments]="workAssignments"
               (dateChange)="onDateChange($event)"
               (selectToday)="selectToday()"
               (selectTomorrow)="selectTomorrow()"
               (openDatePicker)="openDatePicker()"
-              (generateRoutes)="generateRoutes()"
-              (submitChecked)="submitCheckedAssignments()"
-              (numberOfRoutesChange)="numberOfRoutes = +$event">
+              (submitChecked)="submitCheckedAssignments()">
             </app-daily-view-controls>
 
             <!-- Weekly View Controls -->
@@ -161,7 +159,7 @@
                 [class.wave-3]="getWaveNumber(assignment) === 3"
                 (click)="handleRowClick(assignment)">
                 
-                <!-- Checkbox - Only show when route is unassigned (no driver) -->
+                <!-- Checkbox - Only show when route is unrouted (no driver) -->
                 <div class="col-checkbox" (click)="$event.stopPropagation()">
                   <ion-checkbox 
                     *ngIf="hasAllInformation(assignment) && isUnassigned(assignment)"
@@ -192,7 +190,7 @@
                   </div>
                   <span *ngIf="!isAssignmentEditing(assignment.id || '')" 
                         [class.empty]="isUnassigned(assignment)">
-                    {{ assignment.driverName || 'Unassigned' }}
+                    {{ assignment.driverName || 'Unrouted' }}
                   </span>
                 </div>
                 
@@ -348,7 +346,7 @@
                         class="assignment-card"
                         [class.unassigned]="isUnassigned(assignment)">
                         <div class="assignment-van">{{ assignment.vanType }} {{ assignment.vanNumber }}</div>
-                        <div class="assignment-driver">{{ assignment.driverName || 'Unassigned' }}</div>
+                        <div class="assignment-driver">{{ assignment.driverName || 'Unrouted' }}</div>
                         <div class="assignment-route" *ngIf="assignment.routeNumber">{{ assignment.routeNumber }}</div>
                       </div>
                     </ng-container>
@@ -384,8 +382,8 @@
                     <div class="day-assignments-count">
                       {{ (getPlanForDate(day.date)?.assignments?.length || 0) }} route(s)
                     </div>
-                    <div class="day-assigned-count" *ngIf="getPlanForDate(day.date)">
-                      {{ getAssignedCount(day.date) }} assigned
+                    <div class="day-assigned-count" *ngIf="!day.isEmpty">
+                      {{ getWorkAssignmentCount(day.date) }} assigned
                     </div>
                   </div>
                 </div>

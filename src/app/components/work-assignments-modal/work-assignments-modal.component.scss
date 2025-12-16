@@ -1,0 +1,177 @@
+ion-header {
+  ion-toolbar {
+    --background: linear-gradient(135deg, rgba(30, 30, 30, 0.95) 0%, rgba(20, 20, 20, 0.95) 100%);
+    --color: #ffffff;
+    --border-color: rgba(255, 255, 255, 0.1);
+    
+    ion-title {
+      font-weight: 600;
+      font-size: 1.2rem;
+    }
+    
+    ion-button {
+      --color: rgba(255, 255, 255, 0.9);
+      
+      &:hover {
+        --color: #ffffff;
+      }
+    }
+  }
+}
+
+ion-content {
+  --background: #1e293b;
+}
+
+.modal-content {
+  padding: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.date-header {
+  text-align: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  
+  .date-text {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 1rem;
+    font-weight: 500;
+  }
+}
+
+.loading-container,
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  
+  ion-spinner {
+    margin-bottom: 16px;
+  }
+  
+  ion-icon {
+    font-size: 3rem;
+    color: rgba(255, 255, 255, 0.3);
+    margin-bottom: 16px;
+  }
+  
+  p {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 1rem;
+    margin: 0;
+  }
+}
+
+.roles-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.role-section {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.03) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 20px;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  }
+}
+
+.role-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  
+  .role-title {
+    margin: 0;
+    color: #ffffff;
+    font-size: 1.3rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .role-count {
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+}
+
+.users-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  padding: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.user-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  gap: 12px;
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.05);
+  }
+  
+  &:not(:last-child) {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  }
+  
+  .user-name {
+    color: #ffffff;
+    font-size: 0.95rem;
+    font-weight: 500;
+    flex: 1;
+  }
+  
+  .user-times {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.85rem;
+    font-weight: 500;
+    white-space: nowrap;
+    
+    ion-icon {
+      font-size: 1rem;
+      color: #3b82f6;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .modal-content {
+    padding: 16px;
+  }
+  
+  .role-section {
+    padding: 16px;
+  }
+  
+  .role-header .role-title {
+    font-size: 1.1rem;
+  }
+}
+

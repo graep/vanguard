@@ -10,6 +10,7 @@ import { Router } from '@angular/router';
 import { Van } from '../../../models/van.model';
 import { PlanningService } from '../../../services/planning.service';
 import { AuthService, UserProfile } from '../../../services/auth.service';
+import { ScheduleService, WorkDayDetails } from '../../../services/schedule.service';
 import {
   DriverAssignment,
   DailyPlan,
@@ -51,6 +52,7 @@ export class PlanningPage implements OnInit, OnDestroy {
   dailyPlan: DailyPlan | null = null;
   weeklyPlans: Map<string, DailyPlan> = new Map(); // Cache for weekly plans
   monthlyPlans: Map<string, DailyPlan> = new Map(); // Cache for monthly plans
+  monthlyWorkAssignments: Map<string, Array<WorkDayDetails & { userId: string }>> = new Map(); // Cache for monthly work assignments
   userProfile: UserProfile | null = null;
   
   // Grouped assignments by vehicle type
@@ -75,6 +77,7 @@ export class PlanningPage implements OnInit, OnDestroy {
   checkedAssignments: Set<string> = new Set(); // Track which assignments are checked
   isGroupedByWave = false; // Track if grouping by wave is enabled
   viewMode: 'daily' | 'weekly' | 'monthly' = 'daily'; // View mode: daily, weekly, or monthly
+  workAssignments: Array<WorkDayDetails & { userId: string }> = []; // Work assignments for selected date
   
   // Dropdown portal state
   dropdownElement: HTMLElement | null = null;
@@ -104,6 +107,7 @@ export class PlanningPage implements OnInit, OnDestroy {
   private firestore = inject(Firestore);
   private planningService = inject(PlanningService);
   private authService = inject(AuthService);
+  private scheduleService = inject(ScheduleService);
   private loadingCtrl = inject(LoadingController);
   private toastCtrl = inject(ToastController);
   private modalCtrl = inject(ModalController);
@@ -126,6 +130,7 @@ export class PlanningPage implements OnInit, OnDestroy {
     setTimeout(() => {
       if (!this.dailyPlan && !this.isLoading) {
         this.loadDailyPlan();
+        this.loadWorkAssignments();
       }
     }, 1000);
     
@@ -265,6 +270,18 @@ export class PlanningPage implements OnInit, OnDestroy {
     });
   }
   
+  private async loadWorkAssignments(): Promise<void> {
+    try {
+      console.log('[PlanningPage] Loading work assignments for date:', this.selectedDate);
+      this.workAssignments = await this.scheduleService.getWorkAssignmentsForDate(this.selectedDate);
+      console.log('[PlanningPage] Loaded work assignments:', this.workAssignments);
+      this.cdr.detectChanges();
+    } catch (error) {
+      console.error('Error loading work assignments:', error);
+      this.workAssignments = [];
+    }
+  }
+  
   private async loadDailyPlan(): Promise<void> {
     this.isLoading = true;
     
@@ -305,6 +322,11 @@ export class PlanningPage implements OnInit, OnDestroy {
       
       // Update cached properties
       this.updateCachedProperties();
+      
+      // Load work assignments for the selected date
+      if (this.viewMode === 'daily') {
+        await this.loadWorkAssignments();
+      }
       
     } catch (error: any) {
       console.error('Error loading daily plan:', error);
@@ -402,6 +424,7 @@ export class PlanningPage implements OnInit, OnDestroy {
   private async loadMonthlyPlans(): Promise<void> {
     this.isLoading = true;
     this.monthlyPlans.clear();
+    this.monthlyWorkAssignments.clear();
     
     try {
       // Parse date string (YYYY-MM-DD) to avoid timezone issues
@@ -429,6 +452,20 @@ export class PlanningPage implements OnInit, OnDestroy {
       plans.forEach(plan => {
         this.monthlyPlans.set(plan.date, plan);
       });
+      
+      // Load work assignments for all days in the month
+      const daysInMonth = lastDay.getDate();
+      for (let i = 1; i <= daysInMonth; i++) {
+        const currentDate = new Date(year, month - 1, i);
+        const dateStr = formatDate(currentDate);
+        try {
+          const workAssignments = await this.scheduleService.getWorkAssignmentsForDate(dateStr);
+          this.monthlyWorkAssignments.set(dateStr, workAssignments);
+        } catch (error) {
+          console.error(`Error loading work assignments for ${dateStr}:`, error);
+          this.monthlyWorkAssignments.set(dateStr, []);
+        }
+      }
       
     } catch (error: any) {
       console.error('Error loading monthly plans:', error);
@@ -557,6 +594,18 @@ export class PlanningPage implements OnInit, OnDestroy {
     return plan.assignments.filter(a => !this.isUnassigned(a)).length;
   }
   
+  getWorkAssignmentCount(date: string): number {
+    if (this.viewMode === 'monthly') {
+      const assignments = this.monthlyWorkAssignments.get(date);
+      return assignments ? assignments.length : 0;
+    }
+    // For daily view, use the workAssignments array
+    if (date === this.selectedDate) {
+      return this.workAssignments.length;
+    }
+    return 0;
+  }
+  
   // Get active vans for a specific type
   getVansForType(type: string): Van[] {
     return this.allVans.filter(van => van.type === type);
@@ -634,6 +683,7 @@ export class PlanningPage implements OnInit, OnDestroy {
         this.loadMonthlyPlans();
       } else {
         this.loadDailyPlan();
+        this.loadWorkAssignments();
       }
     }
   }
@@ -655,6 +705,7 @@ export class PlanningPage implements OnInit, OnDestroy {
       this.loadMonthlyPlans();
     } else {
       this.loadDailyPlan();
+      this.loadWorkAssignments();
     }
   }
   
@@ -667,6 +718,7 @@ export class PlanningPage implements OnInit, OnDestroy {
       this.loadMonthlyPlans();
     } else {
       this.loadDailyPlan();
+      this.loadWorkAssignments();
     }
   }
   
