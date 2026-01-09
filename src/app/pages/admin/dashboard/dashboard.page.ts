@@ -28,6 +28,8 @@ import { Subscription, combineLatest, from, of } from 'rxjs';
 import { map, catchError, filter, take } from 'rxjs/operators';
 import { StatisticsGridComponent, StatCard } from '@app/components/statistics-grid/statistics-grid.component';
 import { RecentSubmissionsModalComponent } from '@app/components/recent-submissions/recent-submissions-modal.component';
+import { SafetyViolationService } from '@app/services/safety-violation.service';
+import { SafetyViolation } from '@app/models/safety-violation.model';
 
 interface VanStats {
   total: number;
@@ -83,6 +85,11 @@ interface UserStats {
   inactive: number;
 }
 
+interface ViolationStats {
+  thisWeek: number;
+  thisMonth: number;
+}
+
 interface StatisticsSection {
   id: string;
   title: string;
@@ -109,6 +116,7 @@ export class DashboardPage implements OnInit, OnDestroy, AfterViewInit {
   vans: Van[] = [];
   inspections: Inspection[] = [];
   users: UserProfile[] = [];
+  violations: SafetyViolation[] = [];
   todayPlan: DailyPlan | null = null;
   
   // Statistics
@@ -157,6 +165,11 @@ export class DashboardPage implements OnInit, OnDestroy, AfterViewInit {
     inactive: 0
   };
   
+  violationStats: ViolationStats = {
+    thisWeek: 0,
+    thisMonth: 0
+  };
+  
   // Loading state
   isLoading = true;
   
@@ -182,6 +195,7 @@ export class DashboardPage implements OnInit, OnDestroy, AfterViewInit {
     { id: 'vans', title: 'Van Statistics', icon: 'car-outline', order: 0 },
     { id: 'inspections', title: 'Inspection Statistics', icon: 'document-text-outline', order: 1 },
     { id: 'drivers', title: 'Driver Statistics', icon: 'people-outline', order: 2 },
+    { id: 'violations', title: 'Safety Violations', icon: 'warning-outline', order: 4 },
     { id: 'health', title: 'Operational Health', icon: 'pulse-outline', order: 3 }
   ];
   
@@ -197,6 +211,7 @@ export class DashboardPage implements OnInit, OnDestroy, AfterViewInit {
   private authService = inject(AuthService);
   private modalCtrl = inject(ModalController);
   private toastCtrl = inject(ToastController);
+  private safetyViolationService = inject(SafetyViolationService);
   
   async ngOnInit() {
     this.breadcrumbService.clearTail();
@@ -258,10 +273,51 @@ export class DashboardPage implements OnInit, OnDestroy, AfterViewInit {
     const vansRef = collection(this.firestore, 'vans') as CollectionReference<Van>;
     const inspectionsRef = collection(this.firestore, 'inspections') as CollectionReference<Inspection>;
     const usersRef = collection(this.firestore, 'users') as CollectionReference<UserProfile>;
+    const violationsRef = collection(this.firestore, 'safetyViolations');
     
     const vans$ = collectionData<Van>(vansRef, { idField: 'docId' });
     const inspections$ = collectionData<Inspection>(inspectionsRef, { idField: 'id' });
     const users$ = collectionData<UserProfile>(usersRef, { idField: 'uid' });
+    const violations$ = collectionData(violationsRef, { idField: 'id' }).pipe(
+      map((violations: any[]) => {
+        return violations.map(v => {
+          let occurredAt: Date;
+          let createdAt: Date;
+          
+          if (v.occurredAt instanceof Timestamp) {
+            occurredAt = v.occurredAt.toDate();
+          } else if (v.occurredAt instanceof Date) {
+            occurredAt = v.occurredAt;
+          } else if (v.occurredAt) {
+            occurredAt = new Date(v.occurredAt);
+          } else {
+            occurredAt = new Date();
+          }
+          
+          if (v.createdAt instanceof Timestamp) {
+            createdAt = v.createdAt.toDate();
+          } else if (v.createdAt instanceof Date) {
+            createdAt = v.createdAt;
+          } else if (v.createdAt) {
+            createdAt = new Date(v.createdAt);
+          } else {
+            createdAt = new Date();
+          }
+          
+          return {
+            id: v.id,
+            userId: v.userId,
+            violationType: v.violationType,
+            occurredAt,
+            createdAt,
+            createdBy: v.createdBy,
+            notes: v.notes,
+            vanId: v.vanId
+          } as SafetyViolation;
+        });
+      }),
+      catchError(() => of([]))
+    );
     
     // Get today's plan
     const today = new Date().toISOString().split('T')[0];
@@ -271,12 +327,13 @@ export class DashboardPage implements OnInit, OnDestroy, AfterViewInit {
     );
     
     this.subscriptions.add(
-      combineLatest([vans$, inspections$, users$, todayPlan$]).subscribe({
-        next: ([vans, inspections, users, plan]) => {
+      combineLatest([vans$, inspections$, users$, violations$, todayPlan$]).subscribe({
+        next: ([vans, inspections, users, violations, plan]) => {
           this.ngZone.run(() => {
             this.vans = vans;
             this.inspections = inspections;
             this.users = users;
+            this.violations = violations;
             this.todayPlan = plan;
             this.calculateAllStats();
             this.initializeCards();
@@ -299,6 +356,7 @@ export class DashboardPage implements OnInit, OnDestroy, AfterViewInit {
     this.calculateDriverStats();
     this.calculateOperationalHealth();
     this.calculateUserStats();
+    this.calculateViolationStats();
     // Update card values after stats are calculated
     this.updateCardValues();
   }
@@ -315,6 +373,34 @@ export class DashboardPage implements OnInit, OnDestroy, AfterViewInit {
     };
   }
   
+  private calculateViolationStats(): void {
+    // Calculate this week (Monday to Sunday)
+    const now = new Date();
+    const dayOfWeek = now.getDay();
+    const diff = now.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1); // Adjust to Monday
+    const monday = new Date(now.getFullYear(), now.getMonth(), diff);
+    monday.setHours(0, 0, 0, 0);
+    
+    const thisWeek = this.violations.filter(v => {
+      const violationDate = new Date(v.occurredAt);
+      return violationDate >= monday;
+    }).length;
+    
+    // Calculate this month
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    monthStart.setHours(0, 0, 0, 0);
+    
+    const thisMonth = this.violations.filter(v => {
+      const violationDate = new Date(v.occurredAt);
+      return violationDate >= monthStart;
+    }).length;
+    
+    this.violationStats = {
+      thisWeek,
+      thisMonth
+    };
+  }
+  
   private updateCardValues(): void {
     // Update card values with latest stats (this doesn't change order)
     if (this.cardsBySection['vans']) {
@@ -328,9 +414,6 @@ export class DashboardPage implements OnInit, OnDestroy, AfterViewInit {
     if (this.cardsBySection['drivers']) {
       this.cardsBySection['drivers'].forEach(card => {
         switch(card.id) {
-          case 'driver-active': card.value = this.driverStats.activeToday; break;
-          case 'driver-week': card.value = this.driverStats.uniqueThisWeek; break;
-          case 'driver-month': card.value = this.driverStats.uniqueThisMonth; break;
           case 'driver-rate': card.value = this.driverStats.assignmentRate; break;
         }
       });
@@ -342,6 +425,7 @@ export class DashboardPage implements OnInit, OnDestroy, AfterViewInit {
         }
       });
     }
+    // Violation timeframe tile values are handled in the template directly
     
     // Update values in allCards array without changing order
     // Only rebuild if we don't have a saved order (to preserve exact positions)
@@ -875,15 +959,16 @@ export class DashboardPage implements OnInit, OnDestroy, AfterViewInit {
         { id: 'insp-severity', sectionId: 'inspections', type: 'card', title: 'Issues', icon: 'flag-outline', value: 'custom', label: 'issues', valueType: 'custom', order: 2, size: '2x2' }
       ],
       drivers: [
-        { id: 'driver-active', sectionId: 'drivers', type: 'card', title: 'Active Today', icon: 'person-outline', iconClass: 'icon-info', value: this.driverStats.activeToday, label: 'Drivers assigned', valueType: 'number', order: 0, size: '1x1' },
-        { id: 'driver-week', sectionId: 'drivers', type: 'compact', title: 'This Week', icon: '', value: this.driverStats.uniqueThisWeek, label: 'This Week', valueType: 'number', order: 1, size: '1x1' },
-        { id: 'driver-month', sectionId: 'drivers', type: 'compact', title: 'This Month', icon: '', value: this.driverStats.uniqueThisMonth, label: 'This Month', valueType: 'number', order: 2, size: '1x1' },
-        { id: 'driver-rate', sectionId: 'drivers', type: 'card', title: 'Assignment Rate', icon: 'pie-chart-outline', value: this.driverStats.assignmentRate, label: 'of active vans assigned', valueType: 'percentage', order: 3, size: '1x1' },
-        { id: 'driver-coverage', sectionId: 'drivers', type: 'card', title: 'Coverage by Type', icon: 'car-sport-outline', value: 'custom', label: 'coverage', valueType: 'custom', order: 4, size: '2x1' },
-        { id: 'driver-top', sectionId: 'drivers', type: 'card', title: 'Most Assigned Drivers', icon: 'star-outline', value: 'custom', label: 'drivers', valueType: 'custom', order: 5, size: '2x2' }
+        { id: 'driver-active', sectionId: 'drivers', type: 'card', title: 'Active Drivers', icon: 'person-outline', iconClass: 'icon-info', value: 'custom', label: 'timeframe', valueType: 'custom', order: 0, size: '1x1' },
+        { id: 'driver-rate', sectionId: 'drivers', type: 'card', title: 'Assignment Rate', icon: 'pie-chart-outline', value: this.driverStats.assignmentRate, label: 'of active vans assigned', valueType: 'percentage', order: 1, size: '1x1' },
+        { id: 'driver-coverage', sectionId: 'drivers', type: 'card', title: 'Coverage by Type', icon: 'car-sport-outline', value: 'custom', label: 'coverage', valueType: 'custom', order: 2, size: '2x1' },
+        { id: 'driver-top', sectionId: 'drivers', type: 'card', title: 'Most Assigned Drivers', icon: 'star-outline', value: 'custom', label: 'drivers', valueType: 'custom', order: 3, size: '2x2' }
       ],
       users: [
         { id: 'users-active', sectionId: 'users', type: 'card', title: 'Active Users', icon: 'person-outline', iconClass: 'icon-success', value: 'custom', label: 'active-inactive', valueType: 'custom', order: 0, size: '1x1' }
+      ],
+      violations: [
+        { id: 'violations-timeframe', sectionId: 'violations', type: 'card', title: 'Safety Violations', icon: 'warning-outline', iconClass: 'icon-warning', value: 'custom', label: 'timeframe', valueType: 'custom', order: 0, size: '1x1' }
       ],
       health: [
         { id: 'health-ready', sectionId: 'health', type: 'card', title: 'Ready for Service', icon: 'checkmark-circle', value: this.operationalHealth.readyForService, label: 'Active, assigned, and recently inspected', valueType: 'number', order: 0, size: '1x1' }

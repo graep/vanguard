@@ -10,6 +10,8 @@ import { provideStorage } from '@angular/fire/storage';
 import { getStorage } from 'firebase/storage';
 import { provideFirestore } from '@angular/fire/firestore';
 import { getFirestore } from 'firebase/firestore';
+import { provideFunctions } from '@angular/fire/functions';
+import { getFunctions } from 'firebase/functions';
 import { defineCustomElements } from '@ionic/pwa-elements/loader';
 import { provideAppCheck, ReCaptchaV3Provider, initializeAppCheck } from '@angular/fire/app-check';
 import { ErrorHandler } from '@angular/core';
@@ -40,6 +42,7 @@ bootstrapApplication(AppComponent, {
     provideAuth(() => getAuth()),
     provideStorage(() => getStorage()),
     provideFirestore(() => getFirestore()),
+    provideFunctions(() => getFunctions()),
     provideServiceWorker('ngsw-worker.js', {
       enabled: !isDevMode(),
       registrationStrategy: 'registerImmediately'

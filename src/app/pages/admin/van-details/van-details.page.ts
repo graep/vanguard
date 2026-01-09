@@ -85,6 +85,19 @@ export class VanDetailsPage implements OnInit {
   editingLicensePlate = '';
   isSavingLicensePlate = false;
   
+  // Vehicle information editing
+  isEditingVehicleInfo = false;
+  editingYear: number | null = null;
+  editingMake = '';
+  editingModel = '';
+  editingVIN = '';
+  isSavingVehicleInfo = false;
+  
+  // Van ID editing
+  isEditingVanId = false;
+  editingVanId = '';
+  isSavingVanId = false;
+  
   // Van type display mapping
   vanTypeLabels: Record<string, string> = {
     'EDV': 'Electric Delivery Van',
@@ -386,6 +399,12 @@ export class VanDetailsPage implements OnInit {
       return 'assets/Ford_Transit.png';
     }
     
+    // Check for Ram ProMaster (Rental only) - use LMR_dodge image
+    // Use contains check to handle variations
+    if (make === 'ram' && model && model.includes('promaster') && van.type && van.type.toUpperCase() === 'RENTAL') {
+      return 'assets/LMR_dodge.png';
+    }
+    
     // Check for Dodge Promaster (Rental only)
     // Use contains check to handle variations
     if (make === 'dodge' && model && model.includes('promaster') && van.type && van.type.toUpperCase() === 'RENTAL') {
@@ -545,6 +564,124 @@ export class VanDetailsPage implements OnInit {
       toast.present();
     } finally {
       this.isSavingLicensePlate = false;
+    }
+  }
+
+  startEditingVehicleInfo(): void {
+    if (!this.van) return;
+    this.editingYear = this.van.year || null;
+    this.editingMake = this.van.make || '';
+    this.editingModel = this.van.model || '';
+    this.editingVIN = this.van.VIN || '';
+    this.isEditingVehicleInfo = true;
+  }
+
+  cancelEditingVehicleInfo(): void {
+    this.isEditingVehicleInfo = false;
+    this.editingYear = null;
+    this.editingMake = '';
+    this.editingModel = '';
+    this.editingVIN = '';
+  }
+
+  async saveVehicleInfo(): Promise<void> {
+    if (!this.van) return;
+
+    this.isSavingVehicleInfo = true;
+
+    try {
+      const vanDocRef = doc(this.firestore, 'vans', this.van.docId);
+      const updateData: any = {
+        year: this.editingYear || null,
+        make: this.editingMake.trim() || null,
+        model: this.editingModel.trim() || null,
+        VIN: this.editingVIN.trim() || ''
+      };
+
+      await setDoc(vanDocRef, updateData, { merge: true });
+
+      // Update local van object
+      this.van.year = this.editingYear || undefined;
+      this.van.make = this.editingMake.trim() || undefined;
+      this.van.model = this.editingModel.trim() || undefined;
+      this.van.VIN = this.editingVIN.trim() || '';
+
+      this.isEditingVehicleInfo = false;
+
+      const toast = await this.toastCtrl.create({
+        message: 'Vehicle information updated successfully',
+        duration: 2000,
+        color: 'success'
+      });
+      toast.present();
+
+    } catch (error: any) {
+      console.error('Error updating vehicle information:', error);
+      
+      const toast = await this.toastCtrl.create({
+        message: 'Failed to update vehicle information',
+        duration: 2000,
+        color: 'danger'
+      });
+      toast.present();
+    } finally {
+      this.isSavingVehicleInfo = false;
+    }
+  }
+
+  startEditingVanId(): void {
+    if (!this.van) return;
+    this.editingVanId = this.van.vanId || '';
+    this.isEditingVanId = true;
+  }
+
+  cancelEditingVanId(): void {
+    this.isEditingVanId = false;
+    this.editingVanId = '';
+  }
+
+  async saveVanId(): Promise<void> {
+    if (!this.van) return;
+
+    this.isSavingVanId = true;
+
+    try {
+      const vanDocRef = doc(this.firestore, 'vans', this.van.docId);
+      const updateData = {
+        vanId: this.editingVanId.trim() || null
+      };
+
+      await setDoc(vanDocRef, updateData, { merge: true });
+
+      // Update local van object
+      this.van.vanId = this.editingVanId.trim() || undefined;
+
+      // Update breadcrumb if it exists
+      const displayName = this.getVanDisplayName();
+      this.breadcrumbService.setTail([
+        { label: displayName, icon: 'car' }
+      ]);
+
+      this.isEditingVanId = false;
+
+      const toast = await this.toastCtrl.create({
+        message: 'Van ID updated successfully',
+        duration: 2000,
+        color: 'success'
+      });
+      toast.present();
+
+    } catch (error: any) {
+      console.error('Error updating Van ID:', error);
+      
+      const toast = await this.toastCtrl.create({
+        message: 'Failed to update Van ID',
+        duration: 2000,
+        color: 'danger'
+      });
+      toast.present();
+    } finally {
+      this.isSavingVanId = false;
     }
   }
 }

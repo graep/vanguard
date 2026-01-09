@@ -382,8 +382,8 @@
                     <div class="day-assignments-count">
                       {{ (getPlanForDate(day.date)?.assignments?.length || 0) }} route(s)
                     </div>
-                    <div class="day-assigned-count" *ngIf="!day.isEmpty">
-                      {{ getWorkAssignmentCount(day.date) }} assigned
+                    <div class="day-assigned-count" *ngIf="getPlanForDate(day.date)">
+                      {{ getAssignedCount(day.date) }} assigned
                     </div>
                   </div>
                 </div>

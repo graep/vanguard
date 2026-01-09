@@ -421,6 +421,80 @@
       </ion-card-content>
     </ion-card>
     
+    <!-- Active Drivers Card (Today/Week/Month Combined) -->
+    <ion-card *ngIf="card.id === 'driver-active'" 
+              class="stat-card"
+              [class.edit-mode]="isEditMode"
+              [class.selected]="isCardSelected(card.id)"
+              [attr.data-card-id]="card.id"
+              [style.--custom-bg-color]="getCardColor(card)"
+              (click)="onCardClick(card, $event)">
+      
+      <!-- Directional Arrows -->
+      <div class="direction-arrows" *ngIf="isEditMode && isCardSelected(card.id)">
+        <ion-button class="arrow-btn arrow-up" (click)="onArrowClick('up', $event)" fill="clear" size="small">
+          <ion-icon name="chevron-up-outline"></ion-icon>
+        </ion-button>
+        <ion-button class="arrow-btn arrow-left" (click)="onArrowClick('left', $event)" fill="clear" size="small">
+          <ion-icon name="chevron-back-outline"></ion-icon>
+        </ion-button>
+        <ion-button class="arrow-btn arrow-right" (click)="onArrowClick('right', $event)" fill="clear" size="small">
+          <ion-icon name="chevron-forward-outline"></ion-icon>
+        </ion-button>
+        <ion-button class="arrow-btn arrow-down" (click)="onArrowClick('down', $event)" fill="clear" size="small">
+          <ion-icon name="chevron-down-outline"></ion-icon>
+        </ion-button>
+        <ion-button class="arrow-btn color-btn" (click)="onColorButtonClick(card, $event)" fill="clear" size="small">
+          <ion-icon name="color-palette-outline"></ion-icon>
+        </ion-button>
+      </div>
+      
+      <!-- Color Picker -->
+      <div class="color-picker" *ngIf="isEditMode && showColorPicker && colorPickerCardId === card.id">
+        <div class="color-picker-header">
+          <span>Choose Color</span>
+          <ion-button fill="clear" size="small" (click)="showColorPicker = false; colorPickerCardId = null">
+            <ion-icon name="close-outline"></ion-icon>
+          </ion-button>
+        </div>
+        <div class="color-options">
+          <button 
+            *ngFor="let colorOption of colorOptions" 
+            class="color-option"
+            [class.active]="card.customColor === colorOption.value"
+            [style.background-color]="colorOption.value || 'transparent'"
+            [title]="colorOption.name"
+            (click)="onColorSelect(card, colorOption.value)">
+            <ion-icon *ngIf="!colorOption.value" name="close-outline"></ion-icon>
+            <ion-icon *ngIf="card.customColor === colorOption.value" name="checkmark-outline"></ion-icon>
+          </button>
+        </div>
+      </div>
+      
+      <ion-card-header>
+        <ion-card-title>
+          <ion-icon [name]="card.icon" [class]="card.iconClass || ''"></ion-icon>
+          {{ card.title }}
+        </ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <div class="driver-timeframe-breakdown">
+          <div class="timeframe-item">
+            <span class="timeframe-value">{{ formatNumber(driverStats?.activeToday || 0) }}</span>
+            <span class="timeframe-label">Today</span>
+          </div>
+          <div class="timeframe-item">
+            <span class="timeframe-value">{{ formatNumber(driverStats?.uniqueThisWeek || 0) }}</span>
+            <span class="timeframe-label">This Week</span>
+          </div>
+          <div class="timeframe-item">
+            <span class="timeframe-value">{{ formatNumber(driverStats?.uniqueThisMonth || 0) }}</span>
+            <span class="timeframe-label">This Month</span>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+    
     <!-- Document Status Card -->
     <ion-card *ngIf="card.id === 'vans-documents'" 
               class="stat-card"
@@ -809,6 +883,76 @@
           <div class="approved-rejected-item">
             <span class="approved-rejected-value pending">{{ formatNumber(inspectionStats.pending) }}</span>
             <ion-icon name="time-outline" class="approved-rejected-icon icon-pending"></ion-icon>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+    
+    <!-- Violations Timeframe Card (Week/Month Combined) -->
+    <ion-card *ngIf="card.id === 'violations-timeframe'" 
+              class="stat-card"
+              [class.edit-mode]="isEditMode"
+              [class.selected]="isCardSelected(card.id)"
+              [attr.data-card-id]="card.id"
+              [style.--custom-bg-color]="getCardColor(card)"
+              (click)="onCardClick(card, $event)">
+      
+      <!-- Directional Arrows -->
+      <div class="direction-arrows" *ngIf="isEditMode && isCardSelected(card.id)">
+        <ion-button class="arrow-btn arrow-up" (click)="onArrowClick('up', $event)" fill="clear" size="small">
+          <ion-icon name="chevron-up-outline"></ion-icon>
+        </ion-button>
+        <ion-button class="arrow-btn arrow-left" (click)="onArrowClick('left', $event)" fill="clear" size="small">
+          <ion-icon name="chevron-back-outline"></ion-icon>
+        </ion-button>
+        <ion-button class="arrow-btn arrow-right" (click)="onArrowClick('right', $event)" fill="clear" size="small">
+          <ion-icon name="chevron-forward-outline"></ion-icon>
+        </ion-button>
+        <ion-button class="arrow-btn arrow-down" (click)="onArrowClick('down', $event)" fill="clear" size="small">
+          <ion-icon name="chevron-down-outline"></ion-icon>
+        </ion-button>
+        <ion-button class="arrow-btn color-btn" (click)="onColorButtonClick(card, $event)" fill="clear" size="small">
+          <ion-icon name="color-palette-outline"></ion-icon>
+        </ion-button>
+      </div>
+      
+      <!-- Color Picker -->
+      <div class="color-picker" *ngIf="isEditMode && showColorPicker && colorPickerCardId === card.id">
+        <div class="color-picker-header">
+          <span>Choose Color</span>
+          <ion-button fill="clear" size="small" (click)="showColorPicker = false; colorPickerCardId = null">
+            <ion-icon name="close-outline"></ion-icon>
+          </ion-button>
+        </div>
+        <div class="color-options">
+          <button 
+            *ngFor="let colorOption of colorOptions" 
+            class="color-option"
+            [class.active]="card.customColor === colorOption.value"
+            [style.background-color]="colorOption.value || 'transparent'"
+            [title]="colorOption.name"
+            (click)="onColorSelect(card, colorOption.value)">
+            <ion-icon *ngIf="!colorOption.value" name="close-outline"></ion-icon>
+            <ion-icon *ngIf="card.customColor === colorOption.value" name="checkmark-outline"></ion-icon>
+          </button>
+        </div>
+      </div>
+      
+      <ion-card-header>
+        <ion-card-title>
+          <ion-icon [name]="card.icon" [class]="card.iconClass || ''"></ion-icon>
+          {{ card.title }}
+        </ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <div class="violation-timeframe-breakdown">
+          <div class="timeframe-item">
+            <span class="timeframe-value">{{ formatNumber(violationStats?.thisWeek || 0) }}</span>
+            <span class="timeframe-label">This Week</span>
+          </div>
+          <div class="timeframe-item">
+            <span class="timeframe-value">{{ formatNumber(violationStats?.thisMonth || 0) }}</span>
+            <span class="timeframe-label">This Month</span>
           </div>
         </div>
       </ion-card-content>

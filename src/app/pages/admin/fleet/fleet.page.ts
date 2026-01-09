@@ -250,6 +250,12 @@ export class FleetPage implements OnInit, OnDestroy {
       return 'assets/Ford_Transit.png';
     }
     
+    // Check for Ram ProMaster (Rental only) - use LMR_dodge image
+    // Use contains check to handle variations
+    if (make === 'ram' && model && model.includes('promaster') && van.type && van.type.toUpperCase() === 'RENTAL') {
+      return 'assets/LMR_dodge.png';
+    }
+    
     // Check for Dodge Promaster (Rental only)
     // Use contains check to handle variations
     if (make === 'dodge' && model && model.includes('promaster') && van.type && van.type.toUpperCase() === 'RENTAL') {

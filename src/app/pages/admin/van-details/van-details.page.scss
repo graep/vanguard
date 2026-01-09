@@ -194,7 +194,7 @@ app-breadcrumb {
     .van-title {
       font-family: 'Montserrat', 'TikTok Sans', sans-serif;
       margin: 0 0 0.5rem 0;
-      font-size: 3.5rem;
+      font-size: 2.75rem;
       font-weight: 800;
       letter-spacing: -0.02em;
       color: #ffffff;
@@ -322,6 +322,17 @@ app-breadcrumb {
       @media (max-width: 430px) {
         gap: 0.4rem;
       }
+
+      // Edit button alignment
+      ion-button {
+        --padding-start: 4px;
+        --padding-end: 4px;
+        margin: 0;
+        height: 28px;
+        width: 28px;
+        flex-shrink: 0;
+        margin-top: 0.25rem;
+      }
       
       /* Mobile L (425px) - Stack icon and content vertically */
       @media (min-width: 375px) and (max-width: 600px) {
@@ -424,6 +435,58 @@ app-breadcrumb {
         }
       }
 
+      /* Van ID editing styles */
+      .van-id-display {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        width: 100%;
+
+        p {
+          flex: 1;
+          margin: 0;
+        }
+
+        ion-button {
+          --padding-start: 4px;
+          --padding-end: 4px;
+          margin: 0;
+          height: 28px;
+          width: 28px;
+        }
+      }
+
+      .van-id-edit {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        width: 100%;
+
+        ion-input {
+          --background: rgba(255, 255, 255, 0.1);
+          --color: #ffffff;
+          --padding-start: 12px;
+          --padding-end: 12px;
+          border-radius: 8px;
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          margin: 0;
+        }
+
+        .edit-actions {
+          display: flex;
+          gap: 0.5rem;
+          justify-content: flex-end;
+
+          ion-button {
+            --padding-start: 4px;
+            --padding-end: 4px;
+            margin: 0;
+            height: 32px;
+            width: 32px;
+          }
+        }
+      }
+
       .license-plate-edit {
         display: flex;
         flex-direction: column;
@@ -444,6 +507,86 @@ app-breadcrumb {
           display: flex;
           gap: 0.5rem;
           justify-content: flex-end;
+
+          ion-button {
+            --padding-start: 4px;
+            --padding-end: 4px;
+            margin: 0;
+            height: 32px;
+            width: 32px;
+          }
+        }
+      }
+
+      /* Vehicle information editing styles */
+      &.vehicle-info-edit {
+        .info-content {
+          width: 100%;
+        }
+
+        .edit-fields {
+          display: flex;
+          flex-direction: column;
+          gap: 0.75rem;
+          margin-top: 0.5rem;
+          margin-bottom: 0.75rem;
+
+          @media (max-width: 768px) {
+            gap: 0.5rem;
+            margin-top: 0.4rem;
+            margin-bottom: 0.5rem;
+          }
+
+          @media (max-width: 430px) {
+            gap: 0.4rem;
+            margin-top: 0.3rem;
+            margin-bottom: 0.4rem;
+          }
+
+          .edit-field-row {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+
+            label {
+              font-size: 0.75rem;
+              font-weight: 600;
+              color: rgba(255, 255, 255, 0.7);
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+              margin-bottom: 0.25rem;
+
+              @media (max-width: 430px) {
+                font-size: 0.7rem;
+              }
+            }
+
+            ion-input {
+              --background: rgba(255, 255, 255, 0.1);
+              --color: #ffffff;
+              --padding-start: 12px;
+              --padding-end: 12px;
+              border-radius: 8px;
+              border: 1px solid rgba(255, 255, 255, 0.2);
+              margin: 0;
+              font-size: 0.95rem;
+
+              @media (max-width: 768px) {
+                font-size: 0.85rem;
+              }
+
+              @media (max-width: 430px) {
+                font-size: 0.75rem;
+              }
+            }
+          }
+        }
+
+        .edit-actions {
+          display: flex;
+          gap: 0.5rem;
+          justify-content: flex-end;
+          margin-top: 0.5rem;
 
           ion-button {
             --padding-start: 4px;

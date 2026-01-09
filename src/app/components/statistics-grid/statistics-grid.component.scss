@@ -858,7 +858,9 @@
 }
 
 // Inspection Timeframe Breakdown
-.inspection-timeframe-breakdown {
+.inspection-timeframe-breakdown,
+.violation-timeframe-breakdown,
+.driver-timeframe-breakdown {
   display: flex;
   flex-direction: row;
   gap: 0;

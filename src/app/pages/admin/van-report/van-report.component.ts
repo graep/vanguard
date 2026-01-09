@@ -1,13 +1,14 @@
 // src/app/pages/admin/van-report/van-report.component.ts
 import { Component, OnInit, AfterViewInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { IonicModule, AlertController, ToastController } from '@ionic/angular';
+import { IonicModule, AlertController, ToastController, ActionSheetController } from '@ionic/angular';
 import { ActivatedRoute, Router } from '@angular/router';
 import { InspectionService, Inspection } from 'src/app/services/inspection.service';
 import { AuthService } from 'src/app/services/auth.service';
 import { BreadcrumbService } from '@app/services/breadcrumb.service';
 import { BreadcrumbItem } from '@app/components/breadcrumb/breadcrumb.component';
 import { Firestore, collection, query, where, getDocs } from '@angular/fire/firestore';
+import { getFunctions, httpsCallable } from '@angular/fire/functions';
 
 type Side = 'front' | 'passenger' | 'rear' | 'driver';
 
@@ -28,6 +29,7 @@ export class VanReportComponent implements OnInit, AfterViewInit, OnDestroy {
   private auth = inject(AuthService);
   private toast = inject(ToastController);
   private alert = inject(AlertController);
+  private actionSheet = inject(ActionSheetController);
   private breadcrumbService = inject(BreadcrumbService);
   private firestore = inject(Firestore);
   
@@ -287,6 +289,208 @@ export class VanReportComponent implements OnInit, AfterViewInit, OnDestroy {
 
   closeUnsurePhotoModal() {
     this.unsurePhotoModal = null;
+  }
+
+  // ----- Share Functionality -----
+  async openShareOptions() {
+    if (!this.currInspectionId) {
+      const toast = await this.toast.create({
+        message: 'Unable to share: Inspection ID not found',
+        duration: 2000,
+        color: 'danger'
+      });
+      await toast.present();
+      return;
+    }
+
+    const shareUrl = this.getShareUrl();
+    const vanInfo = this.currentInspection 
+      ? `${(this.currentInspection.vanType || '').toUpperCase()} ${this.currentInspection.vanNumber}`
+      : 'Van Report';
+
+    const actionSheet = await this.actionSheet.create({
+      header: 'Share Van Report',
+      subHeader: `Share report for ${vanInfo}`,
+      buttons: [
+        {
+          text: 'Copy Link',
+          icon: 'copy-outline',
+          handler: () => {
+            this.copyToClipboard(shareUrl);
+          }
+        },
+        {
+          text: 'Share via Email',
+          icon: 'mail-outline',
+          handler: () => {
+            this.shareViaEmail(shareUrl, vanInfo);
+          }
+        },
+        {
+          text: 'Cancel',
+          role: 'cancel'
+        }
+      ]
+    });
+
+    await actionSheet.present();
+  }
+
+  private getShareUrl(): string {
+    const baseUrl = window.location.origin;
+    const inspectionId = this.currInspectionId;
+    return `${baseUrl}/admin/van-report/${inspectionId}`;
+  }
+
+  private async copyToClipboard(url: string) {
+    try {
+      // Use the Clipboard API if available
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(url);
+        const toast = await this.toast.create({
+          message: 'Link copied to clipboard!',
+          duration: 2000,
+          color: 'success',
+          position: 'top'
+        });
+        await toast.present();
+      } else {
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = url;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        
+        try {
+          const successful = document.execCommand('copy');
+          document.body.removeChild(textArea);
+          
+          if (successful) {
+            const toast = await this.toast.create({
+              message: 'Link copied to clipboard!',
+              duration: 2000,
+              color: 'success',
+              position: 'top'
+            });
+            await toast.present();
+          } else {
+            throw new Error('Copy command failed');
+          }
+        } catch (err) {
+          document.body.removeChild(textArea);
+          throw err;
+        }
+      }
+    } catch (error) {
+      console.error('Failed to copy to clipboard:', error);
+      const toast = await this.toast.create({
+        message: 'Failed to copy link. Please copy manually.',
+        duration: 3000,
+        color: 'warning',
+        position: 'top'
+      });
+      await toast.present();
+    }
+  }
+
+  private async shareViaEmail(url: string, vanInfo: string) {
+    const alert = await this.alert.create({
+      header: 'Send Email',
+      subHeader: `Share report for ${vanInfo}`,
+      inputs: [
+        {
+          name: 'email',
+          type: 'email',
+          placeholder: 'Enter email address',
+          attributes: {
+            required: true,
+            autocomplete: 'email'
+          }
+        }
+      ],
+      buttons: [
+        {
+          text: 'Cancel',
+          role: 'cancel'
+        },
+        {
+          text: 'Send',
+          handler: async (data) => {
+            if (!data.email || !this.isValidEmail(data.email)) {
+              const toast = await this.toast.create({
+                message: 'Please enter a valid email address',
+                duration: 2000,
+                color: 'danger',
+                position: 'top'
+              });
+              await toast.present();
+              return false; // Keep the alert open
+            }
+            await this.sendEmail(data.email, url, vanInfo);
+            return true; // Close the alert
+          }
+        }
+      ]
+    });
+
+    await alert.present();
+  }
+
+  private isValidEmail(email: string): boolean {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  }
+
+  private async sendEmail(toEmail: string, url: string, vanInfo: string) {
+    let loadingToast: any;
+    try {
+      // Show loading toast
+      loadingToast = await this.toast.create({
+        message: 'Sending email...',
+        duration: 0,
+        position: 'top'
+      });
+      await loadingToast.present();
+
+      // Call Firebase Function to send email
+      // Specify region to match the deployed function
+      const functions = getFunctions(undefined, 'us-central1');
+      const sendEmailFunction = httpsCallable(functions, 'sendVanReportEmail');
+      
+      await sendEmailFunction({
+        to: toEmail,
+        subject: `Van Report: ${vanInfo}`,
+        reportUrl: url,
+        vanInfo: vanInfo
+      });
+
+      await loadingToast.dismiss();
+
+      const successToast = await this.toast.create({
+        message: 'Email sent successfully!',
+        duration: 2000,
+        color: 'success',
+        position: 'top'
+      });
+      await successToast.present();
+    } catch (error: any) {
+      console.error('Failed to send email:', error);
+      
+      if (loadingToast) {
+        await loadingToast.dismiss();
+      }
+      
+      const errorToast = await this.toast.create({
+        message: error?.message || 'Failed to send email. Please try again.',
+        duration: 3000,
+        color: 'danger',
+        position: 'top'
+      });
+      await errorToast.present();
+    }
   }
 
   // ----- Approve / Deny -----

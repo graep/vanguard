@@ -5,6 +5,16 @@
     <div class="reports-section">
       <div class="reports-header">
         <h1 class="section-title reports-title">Reports</h1>
+        <div class="share-button-container">
+          <ion-button 
+            fill="solid" 
+            size="small" 
+            (click)="openShareOptions()"
+            class="share-button">
+            <ion-icon name="share-outline" slot="start"></ion-icon>
+            Share
+          </ion-button>
+        </div>
       </div>
       
       <!-- Mobile Reports Layout: Both in one box -->

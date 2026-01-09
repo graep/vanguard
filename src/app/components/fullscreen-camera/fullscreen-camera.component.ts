@@ -366,12 +366,12 @@ export class FullscreenCameraComponent implements OnInit, OnDestroy, OnChanges, 
 
     this.isCapturing = true;
 
-    // Try to use ImageCapture API with flash if available
+    // Try to use ImageCapture API if available
     if (this.imageCapture && 'ImageCapture' in window) {
       try {
-        // Set flash mode to 'flash' for single flash on capture
+        // Set flash mode to 'off' to disable flash
         const photoSettings: PhotoSettings = {
-          fillLightMode: 'flash'
+          fillLightMode: 'off'
         };
         
         const blob = await this.imageCapture.takePhoto(photoSettings);
